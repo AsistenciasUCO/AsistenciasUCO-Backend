@@ -117,11 +117,6 @@ public final class GrupoController {
             @RequestBody final RegistrarEstudianteRequest request
     ) {
         RequestValidationGuard.validate(REQUEST_VALIDATOR.validate(grupoId, request));
-        if (request.getEstudianteId() != null) {
-            throw new FeatureUnavailableException(
-                    "La matricula de un estudiante existente requiere un command publico de DB que aun no esta disponible."
-            );
-        }
         final RegistrarEstudianteResultadoDTO resultado = registrarEstudianteInputPort.execute(
                 RegistrarEstudianteHttpMapper.toApplicationDTO(
                         grupoId,

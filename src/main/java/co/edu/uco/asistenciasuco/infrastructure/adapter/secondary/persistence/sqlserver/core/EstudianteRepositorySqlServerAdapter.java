@@ -60,6 +60,7 @@ public final class EstudianteRepositorySqlServerAdapter implements EstudianteRep
             """;
 
     static final String ORDER_PAGINADO = """
+
             ORDER BY u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id
             OFFSET :offset ROWS FETCH NEXT :size ROWS ONLY
             """;
@@ -250,7 +251,8 @@ public final class EstudianteRepositorySqlServerAdapter implements EstudianteRep
         LOGGER.error(
                 "SQL operation failed. operation={}, correlationId={}",
                 operation,
-                CorrelationIdContext.getAsString()
+                CorrelationIdContext.getAsString(),
+                exception
         );
     }
 

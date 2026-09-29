@@ -143,11 +143,21 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     private final CanonicalStoredProcedureExecutor procedureExecutor;
     private final NamedParameterJdbcOperations jdbcOperations;
     private final TransactionOperations transactionOperations;
+    private final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence;
 
     public GrupoRepositorySqlServerAdapter(
             final CanonicalStoredProcedureExecutor procedureExecutor,
             final NamedParameterJdbcOperations jdbcOperations,
             final TransactionOperations transactionOperations
+    ) {
+        this(procedureExecutor, jdbcOperations, transactionOperations, null);
+    }
+
+    public GrupoRepositorySqlServerAdapter(
+            final CanonicalStoredProcedureExecutor procedureExecutor,
+            final NamedParameterJdbcOperations jdbcOperations,
+            final TransactionOperations transactionOperations,
+            final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence
     ) {
         this.procedureExecutor = Objects.requireNonNull(
                 procedureExecutor,
@@ -161,6 +171,7 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                 transactionOperations,
                 "Las operaciones transaccionales de grupo son obligatorias."
         );
+        this.jpaCommandPersistence = jpaCommandPersistence;
     }
 
     @Override
@@ -197,6 +208,9 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     public RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(final RegistrarEstudianteRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El DTO para registrar estudiante en grupo es obligatorio.");
+        }
+        if (jpaCommandPersistence != null) {
+            return jpaCommandPersistence.registrarEstudianteEnGrupo(dto);
         }
         return transactionOperations.execute(status -> {
             final CanonicalProcedureResult result = procedureExecutor.execute(

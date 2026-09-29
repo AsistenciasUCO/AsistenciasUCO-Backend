@@ -102,6 +102,26 @@ class GrupoRepositorySqlServerAdapterTest {
     }
 
     @Test
+    void registrarEstudiante_delega_a_jpa_cuando_esta_configurado() {
+        final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaPersistence =
+                mock(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence.class);
+        when(jpaPersistence.registrarEstudianteEnGrupo(any()))
+                .thenReturn(new RegistrarEstudianteRepositoryProjection("Estudiante registrado via JPA."));
+
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                mock(CanonicalStoredProcedureExecutor.class),
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(new AtomicBoolean(false)),
+                jpaPersistence
+        );
+
+        final RegistrarEstudianteRepositoryProjection resultado = adapter.registrarEstudianteEnGrupo(dtoValido());
+
+        assertEquals("Estudiante registrado via JPA.", resultado.getMensajeUsuario());
+        verify(jpaPersistence).registrarEstudianteEnGrupo(any());
+    }
+
+    @Test
     void registrarEstudiante_propaga_error_de_negocio_del_ejecutor_canonico() {
         final CanonicalStoredProcedureExecutor procedureExecutor = mock(CanonicalStoredProcedureExecutor.class);
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(

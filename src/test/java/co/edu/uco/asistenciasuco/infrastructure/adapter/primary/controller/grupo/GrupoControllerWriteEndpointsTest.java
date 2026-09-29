@@ -206,7 +206,11 @@ class GrupoControllerWriteEndpointsTest {
     }
 
     @Test
-    void matricular_estudiante_existente_responde_como_capacidad_no_disponible() throws Exception {
+    void matricular_estudiante_existente_responde_201_y_delega_al_caso_de_uso() throws Exception {
+        when(registrarEstudiantePort.execute(any())).thenReturn(
+                new co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.primaryports.dto.RegistrarEstudianteResultadoDTO(true, "Estudiante matriculado.")
+        );
+
         mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -222,9 +226,11 @@ class GrupoControllerWriteEndpointsTest {
                                   "password": "Clave123!"
                                 }
                                 """.formatted(ESTUDIANTE, TIPO_IDENTIFICACION)))
-                .andExpect(jsonPath("$.code").value("FEATURE_UNAVAILABLE"));
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.mensajeUsuario").value("Estudiante matriculado."));
 
-        verifyNoInteractions(registrarEstudiantePort);
+        verify(registrarEstudiantePort).execute(any());
     }
 
     @Test

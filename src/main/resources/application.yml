@@ -92,6 +92,8 @@ app:
       # LB-002.2: tecnologia de SOLO registrarAsistenciasSesion (jdbc | jpa); los demas commands son
       # siempre JDBC. Independiente del selector de query. Rollback = jdbc. Valor no soportado => falla el arranque.
       asistencia-command-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_COMMAND_PROVIDER:jdbc}
+      # HU050: tecnologia para registrarEstudianteEnGrupo (jdbc | jpa). Rollback = jdbc.
+      grupo-command-provider: ${APP_ADAPTERS_PERSISTENCE_GRUPO_COMMAND_PROVIDER:jpa}
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:

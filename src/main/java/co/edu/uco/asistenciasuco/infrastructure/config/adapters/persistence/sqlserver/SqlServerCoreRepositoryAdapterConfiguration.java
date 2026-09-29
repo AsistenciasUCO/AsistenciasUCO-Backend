@@ -50,8 +50,8 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
 
     static final String ASISTENCIA_QUERY_PROVIDER_PROPERTY = "app.adapters.persistence.asistencia-query-provider";
     static final String ASISTENCIA_COMMAND_PROVIDER_PROPERTY = "app.adapters.persistence.asistencia-command-provider";
+    static final String GRUPO_COMMAND_PROVIDER_PROPERTY = "app.adapters.persistence.grupo-command-provider";
 
-    @Bean
     public GrupoRepositoryPort grupoRepositoryPort(
             final CanonicalStoredProcedureExecutor canonicalStoredProcedureExecutor,
             final NamedParameterJdbcOperations namedParameterJdbcOperations,
@@ -61,6 +61,31 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
                 canonicalStoredProcedureExecutor,
                 namedParameterJdbcOperations,
                 transactionOperations
+        );
+    }
+
+    @Bean
+    public GrupoRepositoryPort grupoRepositoryPort(
+            final CanonicalStoredProcedureExecutor canonicalStoredProcedureExecutor,
+            final NamedParameterJdbcOperations namedParameterJdbcOperations,
+            final TransactionOperations transactionOperations,
+            final ObjectProvider<EntityManagerFactory> entityManagerFactory,
+            final Environment environment
+    ) {
+        final String provider = environment.getProperty(GRUPO_COMMAND_PROVIDER_PROPERTY, "jdbc").trim().toLowerCase(Locale.ROOT);
+        final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence;
+        if ("jpa".equals(provider)) {
+            final EntityManagerFactory emf = entityManagerFactory.getIfAvailable();
+            jpaCommandPersistence = emf != null ? new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence(emf) : null;
+        } else {
+            jpaCommandPersistence = null;
+        }
+
+        return new GrupoRepositorySqlServerAdapter(
+                canonicalStoredProcedureExecutor,
+                namedParameterJdbcOperations,
+                transactionOperations,
+                jpaCommandPersistence
         );
     }
 

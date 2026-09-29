@@ -103,13 +103,9 @@ public class SecurityConfig {
                 // en docs/security/runtime-security-provider-architecture.md).
                 .requestMatchers("/api/v1/docentes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/estudiante/**").hasRole("ESTUDIANTE")
-                // Directorio general/institucional de estudiantes (distinto del portal propio
-                // en /estudiante/**): expone datos de CUALQUIER estudiante filtrando por
-                // grupo/programa/facultad. El docente ya tiene su vertical específica y
-                // acotada por grupo en GET /api/v1/grupos/{grupoId}/estudiantes; por eso este
-                // directorio general NO se abre a DOCENTE (ver política documentada en
-                // docs/security/runtime-security-provider-architecture.md).
-                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                // Directorio general/institucional de estudiantes: permite a DOCENTE consultar y validar
+                // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
+                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole("DOCENTE")

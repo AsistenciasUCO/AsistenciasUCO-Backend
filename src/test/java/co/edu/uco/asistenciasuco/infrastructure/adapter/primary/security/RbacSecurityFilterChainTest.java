@@ -318,11 +318,10 @@ class RbacSecurityFilterChainTest {
     // propio en /estudiante/**), restringido en este mismo prompt correctivo ---
 
     @Test
-    void estudiantes_directorio_docente_recibe_403() throws Exception {
-        // El docente tiene su vertical especifica y acotada por grupo
-        // (GET /api/v1/grupos/{grupoId}/estudiantes); el directorio general no se le abre.
+    void estudiantes_directorio_docente_es_permitido() throws Exception {
+        // Habilitado para que el docente pueda buscar y validar estudiantes a matricular en su grupo
         mockMvc.perform(get("/api/v1/estudiantes").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test
