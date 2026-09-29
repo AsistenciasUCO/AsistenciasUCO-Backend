@@ -86,9 +86,12 @@ app:
   adapters:
     persistence:
       provider: ${APP_ADAPTERS_PERSISTENCE_PROVIDER:sqlserver}
-      # LB-002.1: tecnologia de SOLO consultarAsistenciasPorGrupo (jdbc | jpa). Los commands son
-      # siempre JDBC. Rollback = jdbc. Valor no soportado => falla el arranque.
+      # LB-002.1: tecnologia de SOLO consultarAsistenciasPorGrupo (jdbc | jpa).
+      # Rollback = jdbc. Valor no soportado => falla el arranque.
       asistencia-query-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER:jdbc}
+      # LB-002.2: tecnologia de SOLO registrarAsistenciasSesion (jdbc | jpa); los demas commands son
+      # siempre JDBC. Independiente del selector de query. Rollback = jdbc. Valor no soportado => falla el arranque.
+      asistencia-command-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_COMMAND_PROVIDER:jdbc}
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:

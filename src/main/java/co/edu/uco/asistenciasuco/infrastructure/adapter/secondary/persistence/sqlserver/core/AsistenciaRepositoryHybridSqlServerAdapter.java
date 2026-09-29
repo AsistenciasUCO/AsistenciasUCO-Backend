@@ -13,21 +13,42 @@ import java.util.List;
 import java.util.Objects;
 
 /**
- * Adapter hibrido (LB-002.1): la query de asistencia se resuelve con {@link AsistenciaQueryPersistence}
- * (JPA) y TODOS los commands delegan al adapter JDBC. Un solo provider por invocacion: no hay
- * lectura dual ni shadow traffic. La autorizacion sigue viviendo en Application.
+ * Adapter hibrido (LB-002.1 / LB-002.2): la query de asistencia se resuelve con
+ * {@link AsistenciaQueryPersistence}, el command {@code registrarAsistenciasSesion} con
+ * {@link AsistenciaCommandPersistence} y el RESTO de commands delega SIEMPRE al adapter JDBC baseline
+ * (no migran). Un solo provider por invocacion: no hay dual-write, lectura dual ni shadow traffic. La
+ * autorizacion sigue viviendo en Application.
  */
 public final class AsistenciaRepositoryHybridSqlServerAdapter implements AsistenciaRepositoryPort {
 
     private final AsistenciaRepositoryPort commands;
     private final AsistenciaQueryPersistence query;
+    private final AsistenciaCommandPersistence registrarAsistenciasSesionCommand;
 
+    /** {@code registrarAsistenciasSesion} sigue en el baseline JDBC ({@code commands}). */
     public AsistenciaRepositoryHybridSqlServerAdapter(
             final AsistenciaRepositoryPort commands,
             final AsistenciaQueryPersistence query
     ) {
+        this(commands, query, baselineBatchCommand(commands));
+    }
+
+    public AsistenciaRepositoryHybridSqlServerAdapter(
+            final AsistenciaRepositoryPort commands,
+            final AsistenciaQueryPersistence query,
+            final AsistenciaCommandPersistence registrarAsistenciasSesionCommand
+    ) {
         this.commands = Objects.requireNonNull(commands, "El adapter JDBC de commands de asistencia es obligatorio.");
         this.query = Objects.requireNonNull(query, "La persistencia de la query de asistencia es obligatoria.");
+        this.registrarAsistenciasSesionCommand = Objects.requireNonNull(
+                registrarAsistenciasSesionCommand,
+                "La persistencia del command de registro en lote de asistencia es obligatoria."
+        );
+    }
+
+    private static AsistenciaCommandPersistence baselineBatchCommand(final AsistenciaRepositoryPort commands) {
+        return Objects.requireNonNull(commands, "El adapter JDBC de commands de asistencia es obligatorio.")
+                ::registrarAsistenciasSesion;
     }
 
     @Override
@@ -37,7 +58,7 @@ public final class AsistenciaRepositoryHybridSqlServerAdapter implements Asisten
 
     @Override
     public void registrarAsistenciasSesion(final RegistrarAsistenciasSesionRepositoryDTO dto) {
-        commands.registrarAsistenciasSesion(dto);
+        registrarAsistenciasSesionCommand.registrarAsistenciasSesion(dto);
     }
 
     @Override

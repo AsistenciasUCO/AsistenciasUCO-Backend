@@ -7,6 +7,8 @@ import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepo
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.TipoIdentificacionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaCommandPersistence;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaQueryPersistence;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.DocenteRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.EstudianteRepositorySqlServerAdapter;
@@ -16,6 +18,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.UsuarioRepositorySqlServerAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.CanonicalStoredProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core.AsistenciaRepositoryHybridSqlServerAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.AsistenciaJpaCommandPersistence;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.AsistenciaJpaQueryPersistence;
 import jakarta.persistence.EntityManagerFactory;
 import org.springframework.beans.factory.ObjectProvider;
@@ -46,6 +49,7 @@ import java.util.Locale;
 public class SqlServerCoreRepositoryAdapterConfiguration {
 
     static final String ASISTENCIA_QUERY_PROVIDER_PROPERTY = "app.adapters.persistence.asistencia-query-provider";
+    static final String ASISTENCIA_COMMAND_PROVIDER_PROPERTY = "app.adapters.persistence.asistencia-command-provider";
 
     @Bean
     public GrupoRepositoryPort grupoRepositoryPort(
@@ -92,10 +96,15 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
     }
 
     /**
-     * LB-002.1: unico {@link AsistenciaRepositoryPort}. {@code app.adapters.persistence.asistencia-query-provider}
-     * (jdbc por defecto | jpa) elige la tecnologia SOLO de {@code consultarAsistenciasPorGrupo}; los
-     * commands siempre son JDBC. Un valor no soportado falla el arranque (fail-closed). El
-     * {@code EntityManagerFactory} solo se resuelve con {@code jpa}.
+     * LB-002.1/LB-002.2: unico {@link AsistenciaRepositoryPort}, con dos selectors INDEPENDIENTES
+     * (jdbc por defecto | jpa, fail-closed ante cualquier otro valor):
+     * <ul>
+     *   <li>{@code asistencia-query-provider}: tecnologia SOLO de {@code consultarAsistenciasPorGrupo};</li>
+     *   <li>{@code asistencia-command-provider}: durante LB-002.2 gobierna EXCLUSIVAMENTE
+     *       {@code registrarAsistenciasSesion}; el resto de commands es siempre JDBC.</li>
+     * </ul>
+     * Con {@code (jdbc, jdbc)} se retorna el adapter JDBC sin envoltorio. Sin dual-write ni shadow write. El
+     * {@code EntityManagerFactory} solo se resuelve si algun selector es {@code jpa}.
      */
     @Bean
     public AsistenciaRepositoryPort asistenciaRepositoryPort(
@@ -106,27 +115,54 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
     ) {
         final AsistenciaRepositoryPort jdbcAdapter =
                 new AsistenciaRepositorySqlServerAdapter(namedParameterJdbcOperations, procedureExecutor);
-        return switch (AsistenciaQueryProvider.from(environment.getProperty(ASISTENCIA_QUERY_PROVIDER_PROPERTY))) {
-            case JDBC -> jdbcAdapter;
-            case JPA -> new AsistenciaRepositoryHybridSqlServerAdapter(
-                    jdbcAdapter,
-                    new AsistenciaJpaQueryPersistence(entityManagerFactory.getObject())
-            );
-        };
+        final AsistenciaQueryProvider queryProvider =
+                AsistenciaQueryProvider.from(environment.getProperty(ASISTENCIA_QUERY_PROVIDER_PROPERTY));
+        final AsistenciaCommandProvider commandProvider =
+                AsistenciaCommandProvider.from(environment.getProperty(ASISTENCIA_COMMAND_PROVIDER_PROPERTY));
+        if (queryProvider == AsistenciaQueryProvider.JDBC && commandProvider == AsistenciaCommandProvider.JDBC) {
+            return jdbcAdapter;
+        }
+        final AsistenciaQueryPersistence query = queryProvider == AsistenciaQueryProvider.JPA
+                ? new AsistenciaJpaQueryPersistence(entityManagerFactory.getObject())
+                : jdbcAdapter::consultarAsistenciasPorGrupo;
+        final AsistenciaCommandPersistence registrarAsistenciasSesion =
+                commandProvider == AsistenciaCommandProvider.JPA
+                        ? new AsistenciaJpaCommandPersistence(entityManagerFactory.getObject())
+                        : jdbcAdapter::registrarAsistenciasSesion;
+        return new AsistenciaRepositoryHybridSqlServerAdapter(jdbcAdapter, query, registrarAsistenciasSesion);
     }
 
     enum AsistenciaQueryProvider {
         JDBC, JPA;
 
         static AsistenciaQueryProvider from(final String value) {
+            return AsistenciaProviderValue.selectsJpa(ASISTENCIA_QUERY_PROVIDER_PROPERTY, value) ? JPA : JDBC;
+        }
+    }
+
+    enum AsistenciaCommandProvider {
+        JDBC, JPA;
+
+        static AsistenciaCommandProvider from(final String value) {
+            return AsistenciaProviderValue.selectsJpa(ASISTENCIA_COMMAND_PROVIDER_PROPERTY, value) ? JPA : JDBC;
+        }
+    }
+
+    /** Unica regla de parseo de los selectors jdbc|jpa: null -> jdbc; trim + minusculas; cualquier otro falla. */
+    private static final class AsistenciaProviderValue {
+
+        private AsistenciaProviderValue() {
+        }
+
+        static boolean selectsJpa(final String property, final String value) {
             if (value == null) {
-                return JDBC;
+                return false;
             }
             return switch (value.trim().toLowerCase(Locale.ROOT)) {
-                case "jdbc" -> JDBC;
-                case "jpa" -> JPA;
+                case "jdbc" -> false;
+                case "jpa" -> true;
                 default -> throw new IllegalStateException(
-                        ASISTENCIA_QUERY_PROVIDER_PROPERTY + " no soporta el valor '" + value + "'. Valores: jdbc, jpa.");
+                        property + " no soporta el valor '" + value + "'. Valores: jdbc, jpa.");
             };
         }
     }

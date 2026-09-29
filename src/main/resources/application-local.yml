@@ -2,9 +2,13 @@ asistencias:
   swagger-ui:
     enabled: true
 
-# LB-002.1B: la query de asistencia usa JPA en este perfil. Los commands siguen en JDBC.
+# LB-002.1B: la query de asistencia usa JPA en este perfil.
 # Rollback sin cambiar codigo: APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER=jdbc
+# LB-002.2E: registrarAsistenciasSesion (unico command en alcance de LB-002.2) tambien usa JPA en
+# este perfil; el resto de commands de Asistencia sigue siempre en JDBC (ver Composition Root).
+# Rollback sin cambiar codigo: APP_ADAPTERS_PERSISTENCE_ASISTENCIA_COMMAND_PROVIDER=jdbc
 app:
   adapters:
     persistence:
       asistencia-query-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_QUERY_PROVIDER:jpa}
+      asistencia-command-provider: ${APP_ADAPTERS_PERSISTENCE_ASISTENCIA_COMMAND_PROVIDER:jpa}

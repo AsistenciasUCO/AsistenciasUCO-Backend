@@ -3,7 +3,7 @@ status: active
 type: ledger
 scope: backend
 owner: backend-team
-last-reviewed: 2026-09-27
+last-reviewed: 2026-09-29
 ---
 
 # Ledger único de deuda técnica
@@ -14,14 +14,14 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 
 | ID | Descripción | Estado | Bloquea línea base |
 |---|---|---|---|
-| [TD-001](#td-001) | Piloto JDBC → JPA pendiente | ABIERTA | sí, LB-002 |
+| [TD-001](#td-001) | Piloto JDBC → JPA pendiente | CLOSED (LB-002.2) | no |
 | [TD-002](#td-002) | Contrato OpenAPI no consolidado | CLOSED (LB-001C.1) | no |
 | [TD-003](#td-003) | Realtime local efímero y por JVM | ABIERTA | sí, LB-005 |
 | [TD-004](#td-004) | Storage local y ownership | ABIERTA | sí, LB-004 |
 | [TD-005](#td-005) | Política temporal DB/API | CLOSED_FOR_GOLDEN_PATH (wire HTTP congelado en LB-001C.1; política global no cerrada) | no para Golden Path |
 | [TD-006](#td-006) | Identificación numérica | ABIERTA | no, salvo alcance de identificación |
 | [TD-007](#td-007) | Códigos DB machine-readable | ABIERTA | sí, si bloquea contrato de errores LB-001/002 |
-| [TD-008](#td-008) | Validación runtime de sesión/asistencia | ABIERTA | sí, LB-003 |
+| [TD-008](#td-008) | Validación runtime de sesión/asistencia | CLOSED — LB-003 | no |
 | [TD-009](#td-009) | Estados de asistencia y registro individual | ABIERTA | sí, para contrato afectado; individual fuera del Golden Path |
 | [TD-010](#td-010) | Auditoría SQL con DML directo | ABIERTA | no para LB-000; revisar release DB |
 | [TD-011](#td-011) | Outbox y consistencia durable | ABIERTA | sí, LB-005 si exige durabilidad |
@@ -36,7 +36,7 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 | [TD-020](#td-020) | Hashing DB y autenticación histórica | PENDIENTE DE VALIDACIÓN | no para LB-000; sí release de credenciales |
 | [TD-021](#td-021) | Serialización común de errores de seguridad | CLOSED (LB-001C.1) | no |
 | [TD-022](#td-022) | Exposición Actuator y Prometheus | ABIERTA | sí, LB-006 |
-| [TD-023](#td-023) | CI DB reproducible y gates remotos | ABIERTA | sí, LB-003/006 según alcance |
+| [TD-023](#td-023) | CI DB reproducible y gates remotos | OPEN / PARTIAL (LB-003: ruleset/required checks OBSERVED, pendiente run sobre checkout actual) | sí, LB-003/006 según alcance |
 | [TD-024](#td-024) | Verificación histórica de uploads | CERRADA EN ÍNDICE LOCAL; HISTORIAL NO EVALUADO | no |
 | [TD-025](#td-025) | Limpieza oportunista de helpers | ABIERTA | no |
 | [TD-026](#td-026) | Nombre FeaturesBeansConfigTest | ABIERTA | no |
@@ -71,13 +71,20 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 
 ## TD-001
 
-- **Descripción:** Piloto JDBC → JPA pendiente. La persistencia vigente es JDBC; brecha respecto al objetivo, no un defecto funcional.
+- **Descripción:** Piloto JDBC → JPA pendiente. La persistencia vigente era JDBC; brecha respecto al objetivo, no un defecto funcional.
 - **Impacto:** Medio.
-- **Evidencia:** pom.xml; adapters persistence/sqlserver.
-- **Motivo:** LB-002 requiere contrato y paridad antes del retiro JDBC.
+- **Evidencia:** pom.xml; adapters persistence/sqlserver; work item [LB-002-jpa-incremental](../work-items/LB-002-jpa-incremental/).
+- **Motivo:** LB-002 requería contrato y paridad antes de activar JPA junto al fallback JDBC.
 - **Resolución esperada:** Golden Path con JPA/paridad y rollback certificados.
-- **Bloquea línea base:** sí, LB-002.
-- **Estado:** ABIERTA.
+- **Bloquea línea base:** no (cerrada).
+- **Estado:** **CLOSED (2026-09-29, LB-002.2).** Condición de cierre cumplida: JPA query pilot PASS
+  (LB-002.0/LB-002.1); JPA query activation PASS en `local`/`dev` (LB-002.1B); JPA command pilot PASS
+  para `registrarAsistenciasSesion` (LB-002.2A-C); paridad JDBC↔JPA en SQL Server real
+  `PARITY_MISMATCHES = 0` (LB-002.2D); fallback JDBC preservado en Composition Root (selectores
+  independientes, default `jdbc`, fail-closed); runtime local JPA (`query=jpa`, `command=jpa`) PASS;
+  Golden Path manual PASS, incluyendo realtime (dos clientes SSE y reconexión, reconvergencia ~25 s)
+  (LB-002.2E). No se afirma retiro de JDBC: los demás commands de `Asistencia` permanecen en JDBC,
+  sin cambio. Ver [LB-002.2-FINAL-CLOSURE](../work-items/LB-002-jpa-incremental/LB-002.2-jpa-command-pilot/LB-002.2-FINAL-CLOSURE.md).
 
 ## TD-002
 
@@ -151,13 +158,13 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 
 ## TD-008
 
-- **Descripción:** Validación runtime de sesión/asistencia. Adapters e IT existen; no hay corrida contra la DB actual aportada en LB-000.
-- **Impacto:** Alto.
-- **Evidencia:** [SesionRepositorySqlServerAdapter](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/persistence/sqlserver/core/SesionRepositorySqlServerAdapter.java); AsistenciaRepositorySqlServerIT; archive/pendientes-arquitectura.md.
-- **Motivo:** Una inspección estática no certifica E2E ni firma desplegada.
-- **Resolución esperada:** IT real con fixtures, cero skips relevantes, versión DB y E2E trazables.
-- **Bloquea línea base:** sí, LB-003.
-- **Estado:** ABIERTA.
+- **Descripción:** Validación runtime de sesión/asistencia sobre la DB actual.
+- **Impacto:** Alto mientras estuvo abierta.
+- **Evidencia de cierre:** [LB-003 VALIDATION](../work-items/LB-003-quality-gate-golden-path/VALIDATION.md) registra la suite targeted sobre SQL Server 16.0 / `gestionasistenciadb`: 59 tests, 0 failures, 0 errors y 0 skips, con fixtures reales, firma Golden Path 16/16, write/read, paridad JDBC/JPA, atomicidad, concurrencia y realtime posterior al commit. [MV-006](MANUAL_VALIDATION_LEDGER.md) conserva la validación runtime/E2E manual de POST, readback, AN/SJC/EX, dos clientes SSE y reconvergencia HTTP.
+- **Motivo del cierre:** se satisfizo la resolución esperada: IT real con fixtures, cero skips relevantes, versión DB y E2E trazables. La certificación no depende de inspección estática.
+- **Resolución esperada:** cumplida por LB-003.
+- **Bloquea línea base:** no; condición resuelta para LB-003.
+- **Estado:** CLOSED — LB-003 (2026-09-29).
 
 ## TD-009
 
@@ -313,7 +320,20 @@ Las propuestas Redis, RabbitMQ, CQRS, MinIO, SBOM y técnicas avanzadas se manti
 - **Motivo:** No convertir integración en required check sin DB CI reproducible.
 - **Resolución esperada:** CI DB controlada/versionada, evidencia remota y MV-004.
 - **Bloquea línea base:** sí, LB-003/006 según alcance.
-- **Estado:** ABIERTA.
+- **Estado:** OPEN / PARTIAL.
+- **Actualización LB-003 (2026-09-29) — gobernanza remota OBSERVED, deuda NO cerrada:** para la
+  revisión `0bfc02a` se observaron Backend CI/Quality Gate y SonarQube Cloud SUCCESS, Backend
+  Security y CodeQL SUCCESS, y Dependency Review SUCCESS en el PR inmediato. Revisión humana
+  autenticada de GitHub confirmó además el ruleset `Protect develop` (`status: active`,
+  `target: refs/heads/develop`; PR requerido, `deletion`/`non-fast-forward` bloqueados, sin bypass)
+  y sus 4 required status checks: `Backend Quality Gate`, `CodeQL Java Analysis`,
+  `Dependency Review`, `SonarCloud Code Analysis`. Ruleset + required checks quedan **OBSERVED**.
+  Lo pendiente para cerrar el gate LB-003 es la ejecución remota de esos 4 checks sobre el
+  commit/PR que contenga los cambios actuales de LB-002/LB-003; los runs citados corresponden solo
+  al commit base. [MV-004](MANUAL_VALIDATION_LEDGER.md) queda `PARTIAL / PENDING` y LB-003 queda
+  `BLOCKED_PENDING_REMOTE_CI`. La deuda de CI DB reproducible/versionada se mantiene como pendiente
+  posterior, previsiblemente LB-006, salvo nueva decisión normativa. Ver
+  [LB-003 VALIDATION](../work-items/LB-003-quality-gate-golden-path/VALIDATION.md).
 
 ## TD-024
 
