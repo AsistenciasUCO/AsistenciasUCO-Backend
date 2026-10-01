@@ -34,7 +34,7 @@ class ConsultarEstudiantesGrupoUseCaseImplTest {
     void docente_propietario_del_grupo_consulta_sus_estudiantes() {
         when(institutionalScopePort.findDocenteIdByUsuario(DOCENTE_A)).thenReturn(Optional.of(UUID.randomUUID()));
         when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_A, GRUPO_PROPIO)).thenReturn(true);
-        when(grupoRepositoryPort.consultarEstudiantesGrupo(GRUPO_PROPIO)).thenReturn(List.of());
+        when(grupoRepositoryPort.consultarEstudiantesGrupo(GRUPO_PROPIO, DOCENTE_A)).thenReturn(List.of());
 
         final List<EstudianteGrupoEntity> resultado =
                 useCase.execute(new ConsultarEstudiantesGrupoDomain(GRUPO_PROPIO, DOCENTE_A));
@@ -54,7 +54,7 @@ class ConsultarEstudiantesGrupoUseCaseImplTest {
     @Test
     void coordinador_sin_identidad_docente_conserva_visibilidad_institucional_amplia() {
         when(institutionalScopePort.findDocenteIdByUsuario(COORDINADOR)).thenReturn(Optional.empty());
-        when(grupoRepositoryPort.consultarEstudiantesGrupo(GRUPO_AJENO))
+        when(grupoRepositoryPort.consultarEstudiantesGrupo(GRUPO_AJENO, COORDINADOR))
                 .thenReturn(List.of(new EstudianteGrupoRepositoryProjection(
                         UUID.randomUUID(), UUID.randomUUID(), "123", "Ana Perez", "ana@uco.edu.co", "ACTIVO", "Activo")));
 

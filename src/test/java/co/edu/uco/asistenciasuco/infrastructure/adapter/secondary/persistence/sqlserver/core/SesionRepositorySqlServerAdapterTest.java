@@ -284,9 +284,10 @@ class SesionRepositorySqlServerAdapterTest {
         final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(jdbc).query(sql.capture(), params.capture(), any(RowMapper.class));
-        assertTrue(sql.getValue().contains("FROM dbo.uv_sesion"));
-        assertTrue(sql.getValue().contains("WHERE idGrupo = :idGrupo"));
+        assertTrue(sql.getValue().contains("dbo.usp_consultar_sesiones_grupo_paginado"));
         assertEquals(GROUP, params.getValue().getValue("idGrupo"));
+        assertEquals(1, params.getValue().getValue("numeroPagina"));
+        assertEquals(100, params.getValue().getValue("tamanoPagina"));
     }
 
     @Test
@@ -303,5 +304,26 @@ class SesionRepositorySqlServerAdapterTest {
         when(jdbc.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenThrow(new DataAccessResourceFailureException("sin conexión"));
         assertThrows(DatabaseOperationException.class, () -> adapter.consultarSesionesPorGrupo(GROUP));
+    }
+
+    @Test
+    void consultarSesionesPorGrupoDelegaAJpaCuandoEstaConfigurado() {
+        final var jpaQueryPersistence = mock(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.SesionJpaQueryPersistence.class);
+        final var proySesion = mock(SesionRepositoryProjection.class);
+
+        when(jpaQueryPersistence.consultarSesionesPorGrupo(org.mockito.ArgumentMatchers.eq(GROUP), org.mockito.ArgumentMatchers.isNull())).thenReturn(List.of(proySesion));
+
+        final SesionRepositorySqlServerAdapter adapterJpa = new SesionRepositorySqlServerAdapter(
+                procedures,
+                jdbc,
+                jpaQueryPersistence
+        );
+
+        final List<SesionRepositoryProjection> resultado = adapterJpa.consultarSesionesPorGrupo(GROUP);
+
+        assertEquals(1, resultado.size());
+        assertEquals(proySesion, resultado.getFirst());
+        verify(jpaQueryPersistence).consultarSesionesPorGrupo(GROUP, null);
+        org.mockito.Mockito.verifyNoMoreInteractions(jdbc);
     }
 }

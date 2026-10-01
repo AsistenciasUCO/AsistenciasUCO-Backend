@@ -34,7 +34,7 @@ class ConsultarSesionesPorGrupoUseCaseImplTest {
     @Test
     void docente_propietario_del_grupo_obtiene_sus_sesiones() {
         when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_A, GRUPO_PROPIO)).thenReturn(true);
-        when(sesionRepositoryPort.consultarSesionesPorGrupo(GRUPO_PROPIO)).thenReturn(List.of(
+        when(sesionRepositoryPort.consultarSesionesPorGrupo(GRUPO_PROPIO, DOCENTE_A)).thenReturn(List.of(
                 new SesionRepositoryProjection(UUID.randomUUID(), GRUPO_PROPIO, "S1", 1, "C1", 1, "G1", "Grupo 1", null, null)
         ));
 
@@ -55,7 +55,7 @@ class ConsultarSesionesPorGrupoUseCaseImplTest {
     @Test
     void grupo_propio_sin_sesiones_devuelve_lista_vacia() {
         when(institutionalScopePort.canDocenteAccessGrupo(DOCENTE_A, GRUPO_PROPIO)).thenReturn(true);
-        when(sesionRepositoryPort.consultarSesionesPorGrupo(GRUPO_PROPIO)).thenReturn(List.of());
+        when(sesionRepositoryPort.consultarSesionesPorGrupo(GRUPO_PROPIO, DOCENTE_A)).thenReturn(List.of());
 
         assertTrue(useCase.execute(new ConsultarSesionesPorGrupoDomain(GRUPO_PROPIO, DOCENTE_A)).isEmpty());
     }

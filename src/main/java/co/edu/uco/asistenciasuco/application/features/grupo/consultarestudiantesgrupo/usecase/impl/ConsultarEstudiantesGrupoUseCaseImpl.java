@@ -37,7 +37,7 @@ public final class ConsultarEstudiantesGrupoUseCaseImpl implements ConsultarEstu
             throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo consultado.");
         }
         return ConsultarEstudiantesGrupoRepositoryMapper.toEntities(
-                grupoRepositoryPort.consultarEstudiantesGrupo(domain.grupoId())
+                grupoRepositoryPort.consultarEstudiantesGrupo(domain.grupoId(), domain.usuarioEjecutor())
         );
     }
 }

@@ -36,15 +36,33 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     private static final Logger LOGGER = LoggerFactory.getLogger(GrupoRepositorySqlServerAdapter.class);
     private static final RowMapper<GrupoRepositoryProjection> GRUPO_ROW_MAPPER = new GrupoRepositoryRowMapper();
     private static final RowMapper<EstudianteGrupoRepositoryProjection> ESTUDIANTE_GRUPO_ROW_MAPPER =
-            (resultSet, rowNum) -> new EstudianteGrupoRepositoryProjection(
-                    JdbcValueMapper.toUuid(resultSet.getObject("id")),
-                    JdbcValueMapper.toUuid(resultSet.getObject("idEstudiante")),
-                    JdbcValueMapper.toString(resultSet.getObject("documento")),
-                    JdbcValueMapper.toString(resultSet.getObject("nombreCompleto")),
-                    JdbcValueMapper.toString(resultSet.getObject("correo")),
-                    JdbcValueMapper.toString(resultSet.getObject("codigoEstado")),
-                    JdbcValueMapper.toString(resultSet.getObject("nombreEstado"))
-            );
+            (resultSet, rowNum) -> {
+                final Object idObj = obtenerValorColumna(resultSet, "idEstudianteGrupo", "id");
+                final Object docObj = obtenerValorColumna(resultSet, "numeroIdentificacion", "documento");
+                final Object codEstadoObj = obtenerValorColumna(resultSet, "codigoEstadoEstudiante", "codigoEstado");
+                final Object nomEstadoObj = obtenerValorColumna(resultSet, "nombreEstadoEstudiante", "nombreEstado");
+                return new EstudianteGrupoRepositoryProjection(
+                        JdbcValueMapper.toUuid(idObj),
+                        JdbcValueMapper.toUuid(resultSet.getObject("idEstudiante")),
+                        JdbcValueMapper.toString(docObj),
+                        JdbcValueMapper.toString(resultSet.getObject("nombreCompleto")),
+                        JdbcValueMapper.toString(resultSet.getObject("correo")),
+                        JdbcValueMapper.toString(codEstadoObj),
+                        JdbcValueMapper.toString(nomEstadoObj)
+                );
+            };
+
+    private static Object obtenerValorColumna(final java.sql.ResultSet rs, final String columnaPrincipal, final String columnaFallback) {
+        try {
+            return rs.getObject(columnaPrincipal);
+        } catch (java.sql.SQLException ignored) {
+            try {
+                return rs.getObject(columnaFallback);
+            } catch (java.sql.SQLException e) {
+                return null;
+            }
+        }
+    }
 
     private static final String OPERATION_CREAR_GRUPO = "crearGrupo";
     private static final String OPERATION_ACTUALIZAR_GRUPO = "actualizarGrupo";
@@ -69,6 +87,10 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
     static final String PARAM_CUPO_MAXIMO = "cupoMaximo";
     static final String PARAM_ID_CORRELACION = "idCorrelacion";
     static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+    static final String PARAM_FILTRO_TEXTO = "filtroTexto";
+    static final String PARAM_ID_ESTADO_ESTUDIANTE = "idEstadoEstudiante";
+    static final String PARAM_NUMERO_PAGINA = "numeroPagina";
+    static final String PARAM_TAMANO_PAGINA = "tamanoPagina";
 
     static final String SQL_CREAR_GRUPO = """
             EXEC dbo.usp_crear_grupo
@@ -106,51 +128,38 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                  @idTipoIdIdentificacion = :idTipoIdIdentificacion
             """;
     static final String SQL_CONSULTAR_GRUPOS = """
-            SELECT
-                id,
-                codigo,
-                nombre,
-                idAsignatura,
-                nombreAsignatura,
-                idDocente,
-                capacidadMaximaPermitida,
-                estudiantesActivos,
-                cuposDisponibles,
-                grupoEstaHablitado,
-                fechaInicioPeriodoAcademico,
-                fechaFinPeriodoAcademico
-            FROM dbo.uv_grupo
-            ORDER BY nombreAsignatura, codigo, nombre, id
+            EXEC dbo.usp_consultar_grupos_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @idPeriodoAcademico = :idPeriodoAcademico,
+                 @idAsignatura = :idAsignatura,
+                 @filtroTexto = :filtroTexto,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina
             """;
     static final String SQL_CONSULTAR_ESTUDIANTES_GRUPO = """
-            SELECT
-                eg.id,
-                eg.idEstudiante,
-                CAST(ei.numeroIdentificacion AS VARCHAR(20)) AS documento,
-                ei.nombreCompleto AS nombreCompleto,
-                u.correo AS correo,
-                eg.codigoEstadoEstudiante AS codigoEstado,
-                eg.nombreEstadoEstudiante AS nombreEstado
-            FROM dbo.uv_estudiante_grupo eg
-            INNER JOIN dbo.uv_estudiante_identidad ei
-                    ON ei.id = eg.idEstudiante
-            INNER JOIN dbo.uv_usuario u
-                    ON u.id = ei.idUsuario
-            WHERE eg.idGrupo = :idGrupo
-            ORDER BY ei.nombreCompleto, eg.id
+            EXEC dbo.usp_consultar_estudiantes_grupo_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @idGrupo = :idGrupo,
+                 @filtroTexto = :filtroTexto,
+                 @idEstadoEstudiante = :idEstadoEstudiante,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina
             """;
 
     private final CanonicalStoredProcedureExecutor procedureExecutor;
     private final NamedParameterJdbcOperations jdbcOperations;
     private final TransactionOperations transactionOperations;
     private final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence;
+    private final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaQueryPersistence jpaQueryPersistence;
 
     public GrupoRepositorySqlServerAdapter(
             final CanonicalStoredProcedureExecutor procedureExecutor,
             final NamedParameterJdbcOperations jdbcOperations,
             final TransactionOperations transactionOperations
     ) {
-        this(procedureExecutor, jdbcOperations, transactionOperations, null);
+        this(procedureExecutor, jdbcOperations, transactionOperations, null, null);
     }
 
     public GrupoRepositorySqlServerAdapter(
@@ -158,6 +167,16 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
             final NamedParameterJdbcOperations jdbcOperations,
             final TransactionOperations transactionOperations,
             final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence
+    ) {
+        this(procedureExecutor, jdbcOperations, transactionOperations, jpaCommandPersistence, null);
+    }
+
+    public GrupoRepositorySqlServerAdapter(
+            final CanonicalStoredProcedureExecutor procedureExecutor,
+            final NamedParameterJdbcOperations jdbcOperations,
+            final TransactionOperations transactionOperations,
+            final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence,
+            final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaQueryPersistence jpaQueryPersistence
     ) {
         this.procedureExecutor = Objects.requireNonNull(
                 procedureExecutor,
@@ -172,6 +191,7 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
                 "Las operaciones transaccionales de grupo son obligatorias."
         );
         this.jpaCommandPersistence = jpaCommandPersistence;
+        this.jpaQueryPersistence = jpaQueryPersistence;
     }
 
     @Override
@@ -224,8 +244,26 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
 
     @Override
     public List<GrupoRepositoryProjection> consultarGrupos() {
+        return consultarGrupos(null);
+    }
+
+    @Override
+    public List<GrupoRepositoryProjection> consultarGrupos(final UUID usuarioEjecutor) {
+        if (jpaQueryPersistence != null) {
+            return jpaQueryPersistence.consultarGrupos(usuarioEjecutor);
+        }
         try {
-            return jdbcOperations.query(SQL_CONSULTAR_GRUPOS, GRUPO_ROW_MAPPER);
+            final UUID correlationId = CorrelationIdContext.get();
+            final MapSqlParameterSource parameters = new MapSqlParameterSource()
+                    .addValue(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor)
+                    .addValue(PARAM_ID_CORRELACION, correlationId)
+                    .addValue(PARAM_ID_PERIODO_ACADEMICO, null)
+                    .addValue(PARAM_ID_ASIGNATURA, null)
+                    .addValue(PARAM_FILTRO_TEXTO, null)
+                    .addValue(PARAM_NUMERO_PAGINA, 1)
+                    .addValue(PARAM_TAMANO_PAGINA, 100);
+
+            return jdbcOperations.query(SQL_CONSULTAR_GRUPOS, parameters, GRUPO_ROW_MAPPER);
         } catch (DataAccessException exception) {
             LOGGER.error(
                     "SQL operation failed. operation={}, correlationId={}",
@@ -238,10 +276,28 @@ public final class GrupoRepositorySqlServerAdapter implements GrupoRepositoryPor
 
     @Override
     public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId) {
+        return consultarEstudiantesGrupo(grupoId, null);
+    }
+
+    @Override
+    public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
+        if (jpaQueryPersistence != null) {
+            return jpaQueryPersistence.consultarEstudiantesGrupo(grupoId, usuarioEjecutor);
+        }
         try {
+            final UUID correlationId = CorrelationIdContext.get();
+            final MapSqlParameterSource parameters = new MapSqlParameterSource()
+                    .addValue(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor)
+                    .addValue(PARAM_ID_CORRELACION, correlationId)
+                    .addValue(PARAM_ID_GRUPO, grupoId)
+                    .addValue(PARAM_FILTRO_TEXTO, null)
+                    .addValue(PARAM_ID_ESTADO_ESTUDIANTE, null)
+                    .addValue(PARAM_NUMERO_PAGINA, 1)
+                    .addValue(PARAM_TAMANO_PAGINA, 100);
+
             return jdbcOperations.query(
                     SQL_CONSULTAR_ESTUDIANTES_GRUPO,
-                    new MapSqlParameterSource().addValue(PARAM_ID_GRUPO, grupoId),
+                    parameters,
                     ESTUDIANTE_GRUPO_ROW_MAPPER
             );
         } catch (DataAccessException exception) {

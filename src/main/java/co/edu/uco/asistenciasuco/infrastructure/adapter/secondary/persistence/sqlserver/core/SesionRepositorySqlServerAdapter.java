@@ -38,6 +38,11 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
     private static final String PARAM_ID_SESION = "idSesion";
     private static final String PARAM_ID_CORRELACION = "idCorrelacion";
     private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+    private static final String PARAM_FECHA_DESDE = "fechaDesde";
+    private static final String PARAM_FECHA_HASTA = "fechaHasta";
+    private static final String PARAM_NUMERO_SEMANA = "numeroSemana";
+    private static final String PARAM_NUMERO_PAGINA = "numeroPagina";
+    private static final String PARAM_TAMANO_PAGINA = "tamanoPagina";
 
     static final String SQL_CREAR_SESION = """
             EXEC dbo.usp_crear_sesion
@@ -91,31 +96,36 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
             """;
 
     static final String SQL_CONSULTAR_POR_GRUPO = """
-            SELECT
-                id,
-                idGrupo,
-                nombre,
-                numero,
-                codigo,
-                numeroSemana,
-                codigoGrupo,
-                nombreGrupo,
-                fechaHoraInicio,
-                fechaHoraFin
-            FROM dbo.uv_sesion
-            WHERE idGrupo = :idGrupo
-            ORDER BY fechaHoraInicio, numero, id
+            EXEC dbo.usp_consultar_sesiones_grupo_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @idGrupo = :idGrupo,
+                 @fechaDesde = :fechaDesde,
+                 @fechaHasta = :fechaHasta,
+                 @numeroSemana = :numeroSemana,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina
             """;
 
     private final CanonicalStoredProcedureExecutor procedureExecutor;
     private final NamedParameterJdbcOperations jdbcOperations;
+    private final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.SesionJpaQueryPersistence jpaQueryPersistence;
 
     public SesionRepositorySqlServerAdapter(
             final CanonicalStoredProcedureExecutor procedureExecutor,
             final NamedParameterJdbcOperations jdbcOperations
     ) {
+        this(procedureExecutor, jdbcOperations, null);
+    }
+
+    public SesionRepositorySqlServerAdapter(
+            final CanonicalStoredProcedureExecutor procedureExecutor,
+            final NamedParameterJdbcOperations jdbcOperations,
+            final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.SesionJpaQueryPersistence jpaQueryPersistence
+    ) {
         this.procedureExecutor = Objects.requireNonNull(procedureExecutor, "El ejecutor canonico de sesiones es obligatorio.");
         this.jdbcOperations = Objects.requireNonNull(jdbcOperations, "Las operaciones JDBC nombradas de sesiones son obligatorias.");
+        this.jpaQueryPersistence = jpaQueryPersistence;
     }
 
     @Override
@@ -191,12 +201,32 @@ public final class SesionRepositorySqlServerAdapter implements SesionRepositoryP
 
     @Override
     public List<SesionRepositoryProjection> consultarSesionesPorGrupo(final UUID grupoId) {
+        return consultarSesionesPorGrupo(grupoId, null);
+    }
+
+    @Override
+    public List<SesionRepositoryProjection> consultarSesionesPorGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
         if (ObjectHelper.isNull(grupoId)) {
             throw new CrosscuttingException("El identificador del grupo para consultar sesiones es obligatorio.");
         }
 
+        if (jpaQueryPersistence != null) {
+            return jpaQueryPersistence.consultarSesionesPorGrupo(grupoId, usuarioEjecutor);
+        }
+
         try {
-            return jdbcOperations.query(SQL_CONSULTAR_POR_GRUPO, new MapSqlParameterSource(PARAM_ID_GRUPO, grupoId), (rs, rowNum) ->
+            final UUID correlationId = CorrelationIdContext.get();
+            final MapSqlParameterSource parameters = new MapSqlParameterSource()
+                    .addValue(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor)
+                    .addValue(PARAM_ID_CORRELACION, correlationId)
+                    .addValue(PARAM_ID_GRUPO, grupoId)
+                    .addValue(PARAM_FECHA_DESDE, null)
+                    .addValue(PARAM_FECHA_HASTA, null)
+                    .addValue(PARAM_NUMERO_SEMANA, null)
+                    .addValue(PARAM_NUMERO_PAGINA, 1)
+                    .addValue(PARAM_TAMANO_PAGINA, 100);
+
+            return jdbcOperations.query(SQL_CONSULTAR_POR_GRUPO, parameters, (rs, rowNum) ->
                     new SesionRepositoryProjection(
                             JdbcValueMapper.toUuid(rs.getObject("id")),
                             JdbcValueMapper.toUuid(rs.getObject("idGrupo")),

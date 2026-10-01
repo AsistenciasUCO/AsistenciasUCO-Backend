@@ -74,18 +74,22 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
     ) {
         final String provider = environment.getProperty(GRUPO_COMMAND_PROVIDER_PROPERTY, "jdbc").trim().toLowerCase(Locale.ROOT);
         final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence jpaCommandPersistence;
+        final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaQueryPersistence jpaQueryPersistence;
         if ("jpa".equals(provider)) {
             final EntityManagerFactory emf = entityManagerFactory.getIfAvailable();
             jpaCommandPersistence = emf != null ? new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaCommandPersistence(emf) : null;
+            jpaQueryPersistence = emf != null ? new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaQueryPersistence(emf) : null;
         } else {
             jpaCommandPersistence = null;
+            jpaQueryPersistence = null;
         }
 
         return new GrupoRepositorySqlServerAdapter(
                 canonicalStoredProcedureExecutor,
                 namedParameterJdbcOperations,
                 transactionOperations,
-                jpaCommandPersistence
+                jpaCommandPersistence,
+                jpaQueryPersistence
         );
     }
 
@@ -115,9 +119,19 @@ public class SqlServerCoreRepositoryAdapterConfiguration {
     @Bean
     public SesionRepositoryPort sesionRepositoryPort(
             final CanonicalStoredProcedureExecutor procedureExecutor,
-            final NamedParameterJdbcOperations namedParameterJdbcOperations
+            final NamedParameterJdbcOperations namedParameterJdbcOperations,
+            final ObjectProvider<EntityManagerFactory> entityManagerFactory,
+            final Environment environment
     ) {
-        return new SesionRepositorySqlServerAdapter(procedureExecutor, namedParameterJdbcOperations);
+        final String provider = environment.getProperty(GRUPO_COMMAND_PROVIDER_PROPERTY, "jdbc").trim().toLowerCase(Locale.ROOT);
+        final co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.SesionJpaQueryPersistence jpaQueryPersistence;
+        if ("jpa".equals(provider)) {
+            final EntityManagerFactory emf = entityManagerFactory.getIfAvailable();
+            jpaQueryPersistence = emf != null ? new co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.SesionJpaQueryPersistence(emf) : null;
+        } else {
+            jpaQueryPersistence = null;
+        }
+        return new SesionRepositorySqlServerAdapter(procedureExecutor, namedParameterJdbcOperations, jpaQueryPersistence);
     }
 
     /**

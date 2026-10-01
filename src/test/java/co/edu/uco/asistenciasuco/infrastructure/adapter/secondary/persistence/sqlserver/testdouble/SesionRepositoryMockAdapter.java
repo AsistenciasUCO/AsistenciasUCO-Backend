@@ -60,6 +60,11 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
 
     @Override
     public List<SesionRepositoryProjection> consultarSesionesPorGrupo(final UUID grupoId) {
+        return consultarSesionesPorGrupo(grupoId, null);
+    }
+
+    @Override
+    public List<SesionRepositoryProjection> consultarSesionesPorGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
         if (ObjectHelper.isNull(grupoId)) {
             throw new CrosscuttingException("El identificador del grupo para consultar sesiones es obligatorio.");
         }

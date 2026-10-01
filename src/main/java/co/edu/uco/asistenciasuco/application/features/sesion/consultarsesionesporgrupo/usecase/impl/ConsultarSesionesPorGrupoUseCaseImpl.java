@@ -45,7 +45,7 @@ public final class ConsultarSesionesPorGrupoUseCaseImpl implements ConsultarSesi
             throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo consultado.");
         }
 
-        return sesionRepositoryPort.consultarSesionesPorGrupo(domain.getGrupo()).stream()
+        return sesionRepositoryPort.consultarSesionesPorGrupo(domain.getGrupo(), domain.getUsuarioEjecutor()).stream()
                 .map(ConsultarSesionRepositoryMapper::toUseCaseEntity)
                 .toList();
     }

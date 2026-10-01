@@ -169,7 +169,7 @@ class GrupoRepositorySqlServerAdapterTest {
     @Test
     void errores_jdbc_en_consultarGrupos_se_convierten_en_databaseOperationException() {
         final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
-        when(jdbcOperations.query(anyString(), any(RowMapper.class)))
+        when(jdbcOperations.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class)))
                 .thenThrow(new DataAccessResourceFailureException("fallo tecnico"));
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
                 mock(CanonicalStoredProcedureExecutor.class),
@@ -201,7 +201,7 @@ class GrupoRepositorySqlServerAdapterTest {
     }
 
     @Test
-    void consultarGrupos_usa_vista_uv_grupo_y_mapea_columnas_confirmadas() {
+    void consultarGrupos_usa_procedimiento_usp_consultar_grupos_paginado_y_mapea_columnas() {
         final NamedParameterJdbcOperations jdbcOperations = mock(NamedParameterJdbcOperations.class);
         final GrupoRepositoryProjection entity = new GrupoRepositoryProjection(
                 GRUPO,
@@ -217,7 +217,7 @@ class GrupoRepositorySqlServerAdapterTest {
                 LocalDate.of(2026, 1, 20),
                 LocalDate.of(2026, 5, 30)
         );
-        when(jdbcOperations.query(anyString(), any(RowMapper.class))).thenReturn(List.of(entity));
+        when(jdbcOperations.query(anyString(), any(MapSqlParameterSource.class), any(RowMapper.class))).thenReturn(List.of(entity));
         final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
                 mock(CanonicalStoredProcedureExecutor.class),
                 jdbcOperations,
@@ -227,10 +227,12 @@ class GrupoRepositorySqlServerAdapterTest {
         final List<GrupoRepositoryProjection> resultado = adapter.consultarGrupos();
 
         final ArgumentCaptor<String> sqlCaptor = ArgumentCaptor.forClass(String.class);
-        verify(jdbcOperations).query(sqlCaptor.capture(), any(RowMapper.class));
+        final ArgumentCaptor<MapSqlParameterSource> paramsCaptor = ArgumentCaptor.forClass(MapSqlParameterSource.class);
+        verify(jdbcOperations).query(sqlCaptor.capture(), paramsCaptor.capture(), any(RowMapper.class));
         assertEquals(1, resultado.size());
-        assertTrue(sqlCaptor.getValue().contains("FROM dbo.uv_grupo"));
-        assertFalse(sqlCaptor.getValue().toUpperCase().contains("SELECT *"));
+        assertTrue(sqlCaptor.getValue().contains("dbo.usp_consultar_grupos_paginado"));
+        assertEquals(1, paramsCaptor.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_NUMERO_PAGINA));
+        assertEquals(100, paramsCaptor.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_TAMANO_PAGINA));
         assertEquals("Backend", resultado.getFirst().getNombreAsignatura());
     }
 
@@ -380,8 +382,10 @@ class GrupoRepositorySqlServerAdapterTest {
         final var sql = ArgumentCaptor.forClass(String.class);
         final var params = ArgumentCaptor.forClass(MapSqlParameterSource.class);
         verify(jdbcOperations).query(sql.capture(), params.capture(), any(RowMapper.class));
-        assertTrue(sql.getValue().contains("FROM dbo.uv_estudiante_grupo"));
+        assertTrue(sql.getValue().contains("dbo.usp_consultar_estudiantes_grupo_paginado"));
         assertEquals(GRUPO, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_ID_GRUPO));
+        assertEquals(1, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_NUMERO_PAGINA));
+        assertEquals(100, params.getValue().getValue(GrupoRepositorySqlServerAdapter.PARAM_TAMANO_PAGINA));
     }
 
     @Test
@@ -396,6 +400,35 @@ class GrupoRepositorySqlServerAdapterTest {
         );
 
         assertThrows(DatabaseOperationException.class, () -> adapter.consultarEstudiantesGrupo(GRUPO));
+    }
+
+    @Test
+    void queries_delega_a_jpa_cuando_esta_configurado() {
+        final var jpaQueryPersistence = mock(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.GrupoJpaQueryPersistence.class);
+        final var proyGrupo = mock(GrupoRepositoryProjection.class);
+        final var proyEstudiante = mock(EstudianteGrupoRepositoryProjection.class);
+
+        when(jpaQueryPersistence.consultarGrupos(org.mockito.ArgumentMatchers.isNull())).thenReturn(List.of(proyGrupo));
+        when(jpaQueryPersistence.consultarEstudiantesGrupo(org.mockito.ArgumentMatchers.eq(GRUPO), org.mockito.ArgumentMatchers.isNull())).thenReturn(List.of(proyEstudiante));
+
+        final GrupoRepositorySqlServerAdapter adapter = new GrupoRepositorySqlServerAdapter(
+                mock(CanonicalStoredProcedureExecutor.class),
+                mock(NamedParameterJdbcOperations.class),
+                transactionOperations(new AtomicBoolean(false)),
+                null,
+                jpaQueryPersistence
+        );
+
+        final List<GrupoRepositoryProjection> grupos = adapter.consultarGrupos();
+        final List<EstudianteGrupoRepositoryProjection> estudiantes = adapter.consultarEstudiantesGrupo(GRUPO);
+
+        assertEquals(1, grupos.size());
+        assertEquals(proyGrupo, grupos.getFirst());
+        verify(jpaQueryPersistence).consultarGrupos(null);
+
+        assertEquals(1, estudiantes.size());
+        assertEquals(proyEstudiante, estudiantes.getFirst());
+        verify(jpaQueryPersistence).consultarEstudiantesGrupo(GRUPO, null);
     }
 
     private RegistrarEstudianteRepositoryDTO dtoValido() {

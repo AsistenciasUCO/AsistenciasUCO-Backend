@@ -24,5 +24,13 @@ public interface GrupoRepositoryPort {
 
     List<GrupoRepositoryProjection> consultarGrupos();
 
+    default List<GrupoRepositoryProjection> consultarGrupos(UUID usuarioEjecutor) {
+        return consultarGrupos();
+    }
+
     List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(UUID grupoId);
+
+    default List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(UUID grupoId, UUID usuarioEjecutor) {
+        return consultarEstudiantesGrupo(grupoId);
+    }
 }

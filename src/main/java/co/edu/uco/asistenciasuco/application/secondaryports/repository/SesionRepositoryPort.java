@@ -23,6 +23,10 @@ public interface SesionRepositoryPort {
 
     List<SesionRepositoryProjection> consultarSesionesPorGrupo(UUID grupoId);
 
+    default List<SesionRepositoryProjection> consultarSesionesPorGrupo(UUID grupoId, UUID usuarioEjecutor) {
+        return consultarSesionesPorGrupo(grupoId);
+    }
+
     void cerrarSesion(CerrarSesionRepositoryDTO dto);
 
     void generarSesionesGrupo(GenerarSesionesGrupoRepositoryDTO dto);
