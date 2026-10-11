@@ -24,7 +24,13 @@ public class ParameterCatalogJpaRepository implements ParameterCatalogPort {
 
     static final String HQL_PARAMETRO = "select p.valor from UvParametroEntity p where p.grupo = :grupo and p.clave = :clave";
     private final EntityManager entityManager;
-    private final Map<String, String> cache = new ConcurrentHashMap<>();
+    private final Map<ParameterKey, String> cache = new ConcurrentHashMap<>();
+
+    /**
+     * Structural key: concatenating group + "::" + key is ambiguous when either
+     * identifier contains the separator (e.g., "a::b"/"c" vs "a"/"b::c").
+     */
+    private record ParameterKey(String group, String key) { }
 
     public ParameterCatalogJpaRepository(final EntityManager entityManager) {
         this.entityManager = Objects.requireNonNull(entityManager, "El EntityManager de parametros es obligatorio.");
@@ -36,13 +42,16 @@ public class ParameterCatalogJpaRepository implements ParameterCatalogPort {
             return Optional.empty();
         }
 
-        final String cacheKey = group.trim() + "::" + key.trim();
-        if (cache.containsKey(cacheKey)) {
-            return Optional.ofNullable(cache.get(cacheKey));
+        final String normalizedGroup = group.trim();
+        final String normalizedKey = key.trim();
+        final ParameterKey cacheKey = new ParameterKey(normalizedGroup, normalizedKey);
+        final String cached = cache.get(cacheKey);
+        if (cached != null) {
+            return Optional.of(cached);
         }
 
         try {
-            final Optional<String> valor = buscarParametro(group.trim(), key.trim());
+            final Optional<String> valor = buscarParametro(normalizedGroup, normalizedKey);
             valor.ifPresent(contenido -> cache.put(cacheKey, contenido));
             return valor;
         } catch (final Exception e) {

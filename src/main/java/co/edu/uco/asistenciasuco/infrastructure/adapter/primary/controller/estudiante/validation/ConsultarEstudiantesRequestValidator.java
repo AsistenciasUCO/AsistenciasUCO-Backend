@@ -33,6 +33,7 @@ public final class ConsultarEstudiantesRequestValidator implements Validator<Con
         validateCorreo(builder, request.getCorreo());
         validatePage(builder, request.getPage());
         validateSize(builder, request.getSize());
+        validateOffset(builder, request.getPage(), request.getSize());
         return builder.build();
     }
 
@@ -102,6 +103,24 @@ public final class ConsultarEstudiantesRequestValidator implements Validator<Con
                 ValidationErrorType.OUT_OF_RANGE,
                 HttpValidationMessages.INVALID_PAGE
         );
+    }
+
+    /**
+     * Both parameters can be valid independently but exceed the JPA int offset
+     * when multiplied. The repository repeats this invariant for non-HTTP callers.
+     */
+    private static void validateOffset(
+            final ValidationResultBuilder builder,
+            final Integer page,
+            final Integer size
+    ) {
+        if (page != null && size != null && page >= 0
+                && size >= MIN_PAGE_SIZE && size <= MAX_PAGE_SIZE) {
+            builder.addIf((long) page * size > Integer.MAX_VALUE,
+                    "page",
+                    ValidationErrorType.OUT_OF_RANGE,
+                    HttpValidationMessages.INVALID_PAGE);
+        }
     }
 
     private static void validateSize(final ValidationResultBuilder builder, final Integer value) {

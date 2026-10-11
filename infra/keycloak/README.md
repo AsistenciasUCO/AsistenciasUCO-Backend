@@ -267,7 +267,7 @@ Para pruebas manuales de autenticacion/autorizacion, no forma parte del realm ba
 .\scripts\seed-e2e-users.ps1
 ```
 
-Lee `E2E_DOCENTE_*` / `E2E_ADMIN_*` desde `.env`. Si falta el username o el `ID_USUARIO`, ese
+Lee `E2E_DOCENTE_*`, `E2E_ADMIN_*`, `E2E_COORDINADOR_*` y `E2E_ESTUDIANTE_*` desde `.env`. Si falta el username o el `ID_USUARIO`, ese
 usuario se omite (nunca se inventa un UUID institucional). Para `E2E_DOCENTE_ID_USUARIO` en
 particular, debe ser un `dbo.Usuario.id` **real** en SQL Server si se quiere probar autorizacion
 contextual (por ejemplo, asignaciones academicas del docente). No resetea la password de un

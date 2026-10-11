@@ -54,6 +54,26 @@ class ParameterCatalogJpaBehaviorTest {
     }
 
     @Test
+    void grupos_y_claves_distintos_no_colisionan_si_contienen_el_separador_del_cache() {
+        // Previously "a::b"/"c" and "a"/"b::c" both encoded to "a::b::c".
+        final TypedQuery<String> query = queryReturning(List.of("primer-valor"));
+        when(query.getResultList()).thenReturn(List.of("primer-valor"), List.of("segundo-valor"));
+        final ParameterCatalogJpaRepository catalog = new ParameterCatalogJpaRepository(manager);
+
+        assertEquals(Optional.of("primer-valor"), catalog.getParameter(" a::b ", " c "));
+        assertEquals(Optional.of("segundo-valor"), catalog.getParameter("a", "b::c"));
+        assertEquals(Optional.of("primer-valor"), catalog.getParameter("a::b", "c"));
+        assertEquals(Optional.of("segundo-valor"), catalog.getParameter("a", "b::c"));
+
+        // Two distinct physical queries, then two cache hits. No state leaks.
+        verify(manager, times(2)).createQuery(anyString(), eq(String.class));
+        verify(query).setParameter("grupo", "a::b");
+        verify(query).setParameter("clave", "c");
+        verify(query).setParameter("grupo", "a");
+        verify(query).setParameter("clave", "b::c");
+    }
+
+    @Test
     void parametro_inexistente_no_se_cachea_y_puede_aparecer_despues() {
         final TypedQuery<String> query = queryReturning(List.of());
         when(query.getResultList()).thenReturn(List.of(), List.of("nuevo"));

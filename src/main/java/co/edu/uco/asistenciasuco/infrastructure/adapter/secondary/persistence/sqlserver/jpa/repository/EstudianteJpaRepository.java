@@ -71,6 +71,9 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El DTO para consultar estudiantes es obligatorio.");
         }
+        // The JPA page offset is a non-negative int. Validate before the query
+        // executor so invalid paging cannot be misreported as a SQL failure.
+        final int offset = validatedOffset(dto);
         return JpaQueryExecutor.execute(
                 "consultarEstudiantes",
                 "No fue posible consultar los estudiantes.",
@@ -84,7 +87,7 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
                             entityManager.createQuery(HQL_PAGE, EstudianteResumenQueryRow.class);
                     bind(rows, parameters);
                     final List<EstudianteResumenRepositoryProjection> items = rows
-                            .setFirstResult(dto.page() * dto.size()).setMaxResults(dto.size()).getResultList().stream()
+                            .setFirstResult(offset).setMaxResults(dto.size()).getResultList().stream()
                             .map(CoreViewJpaProjectionMapper::toEstudianteResumen).toList();
                     return new EstudiantePaginaRepositoryProjection(
                             items, total, totalPages(total, dto.size()), dto.page(), dto.size());
@@ -137,6 +140,22 @@ public class EstudianteJpaRepository implements EstudianteRepositoryPort {
 
     private static void bind(final Query query, final Map<String, Object> parameters) {
         parameters.forEach(query::setParameter);
+    }
+
+    /**
+     * JPA accepts an int offset; do not let untrusted pagination overflow and
+     * silently query a different page. Positive, representable offsets preserve
+     * the existing query and HTTP contract.
+     */
+    private static int validatedOffset(final ConsultarEstudiantesRepositoryDTO dto) {
+        if (dto.page() < 0 || dto.size() <= 0) {
+            throw new CrosscuttingException("La pagina debe ser no negativa y el tamano mayor que cero.");
+        }
+        final long offset = (long) dto.page() * dto.size();
+        if (offset > Integer.MAX_VALUE) {
+            throw new CrosscuttingException("El desplazamiento de pagina supera el rango permitido por JPA.");
+        }
+        return (int) offset;
     }
 
     private static int totalPages(final long total, final int size) {

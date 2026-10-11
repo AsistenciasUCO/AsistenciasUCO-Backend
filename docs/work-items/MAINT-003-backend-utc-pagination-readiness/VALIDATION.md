@@ -135,3 +135,7 @@ Fecha/zona: 2026-10-10, `America/Bogota`. Los secretos de conexión se inyectaro
 La prueba HTTP v2 contra un IdP/JWT real queda `NOT_RUN`; los tests JWT unitarios/contractuales sí forman parte del build unitario verde. La integración Java bloqueada y la ausencia de una prueba HTTP real impiden cerrar `BACKEND_READY_FOR_FRONTEND`.
 
 No se ejecutaron merge, despliegue en base principal, activación productiva de v2 ni eliminación de `utc_d06_sqltest`.
+
+## Reconciliación contra develop — 2026-10-10
+
+La evidencia anterior es una bitácora histórica de pruebas ejecutadas el 2026-10-09. Los PR #18, #19 y #20 ya fueron fusionados a develop. Las diferencias de PR #21 se reconciliaron preservando las versiones actuales del código; detalles en [PR21_CONFLICT_RESOLUTION.md](PR21_CONFLICT_RESOLUTION.md). Nuevos checks y `-Pintegration` siguen pendientes de ejecución/verificación sobre el nuevo HEAD.

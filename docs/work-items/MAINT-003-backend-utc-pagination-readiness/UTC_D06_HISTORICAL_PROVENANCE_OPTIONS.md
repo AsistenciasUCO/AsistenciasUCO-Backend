@@ -5,6 +5,8 @@ scope: backend
 owner: backend-team
 last-reviewed: 2026-10-09
 ---
+> **Archivo de evidencia histórica (2026-10-09).** Registra decisiones y pruebas de la fase inicial. Desde entonces los PR #18, #19 y #20 se fusionaron a `develop` el 2026-10-10. La implementación UTC v2 de MAINT-003K sigue en una rama separada, todavía sin integración a `develop`; la DB correspondiente también sigue pendiente de PR y aprobación. Los estados `OPEN`, `NOT_READY`, `NOT_RUN` y las propuestas siguientes describen el momento en que se redactó este documento, no el estado actual de todos los repositorios. Ver `PR21_CONFLICT_RESOLUTION.md`.
+
 
 # UTC-D06 — procedencia de sesiones históricas: alternativas
 

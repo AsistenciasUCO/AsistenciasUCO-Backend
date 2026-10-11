@@ -56,3 +56,7 @@ Para no romper consumidores v1, proponer endpoints **v2 diferenciados** (nombre 
 * Caché PR #19: 3 GitHub Actions PASS, SQL real aún sin evidencia.
 * Codec nuevo: source preparado, JDK25 y tests aún por correr en CI de este PR.
 * Activación UTC wire v2: CONTRACT_DECISION_REQUIRED (NO IMPLEMENTADA). No se declara backend completamente certificado.
+
+## 2026-10-09 — hardening del códec inactivo UTC-D02
+
+El códec opt-in ahora exige forma `yyyy-MM-ddTHH:mm:ss[.1..7]Z|±HH:mm`, sin whitespace, offset abreviado, segundos en offset ni precisión >7 decimales; se rechaza `-00:00` porque es offset desconocido RFC3339. Después de normalizar el instante comprueba rango SQL Server `datetime2(7)` y nanosegundos divisibles por 100, sin truncamiento/rounding silencioso. Pruebas nuevas para entradas inválidas, límites y roundtrip exacto. **No conecta API v2**, no cambia el wire v1, la DB o la política de históricos. UTC-D06 y la decisión v2 de código HTTP quedan pendientes. Exigir Java25 CI del nuevo SHA y pruebas SQL reales después de aprobación del owner DB.

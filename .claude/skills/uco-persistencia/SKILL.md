@@ -68,3 +68,7 @@ Integración real SQL Server, paridad query/command/errores/rollback y correlati
 Firma DB con versión, fixtures, resultados observables equivalentes, configuración segura, rollback y selección por Composition Root.
 
 Registrar resultados en el [work item](../../../docs/work-items/README.md). Ante evidencia necesaria ausente o contradicción autoritativa, aplicar los protocolos de AGENTS y no implementar el alcance bloqueado.
+
+## Paginación JPA sobre vistas físicas (MAINT-001, 2026-10-09)
+
+En SQL Server, vistas `dbo.uv_*` que representan entidades de lectura se mapean con `@Entity @Immutable @Table(schema="dbo")`; paginar y filtrar sobre ellas mediante JPA/SQL (Pageable o EntityManager + setFirstResult/setMaxResults, según contrato), nunca traer la vista completa a memoria para subList. Utilizar fuente de identidad 1:1 para totales de estudiantes y `EXISTS` para filtros en vistas de contexto 1:N. ORDER BY debe ser estable e incluir desempate por ID. Validar page/size y multiplicación con long en HTTP y secondary adapter; no exponer Spring Data `Pageable` desde Application sin decisión. Ver [análisis Arquisoft](../../../docs/work-items/MAINT-001-maintainability-audit/PAGINATION_REFERENCE_ANALYSIS.md). El ejemplo Arquisoft usa Pageable/Specification y `@Subselect` PostgreSQL; **no** copiar LATERAL ni reemplazar vistas SQL congeladas. Integración `-Pintegration` real y fixture multigrupo/11+ son necesarias para demostrar separación de páginas.

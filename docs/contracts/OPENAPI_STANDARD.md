@@ -31,7 +31,7 @@ Toda API nueva o modificada debe definirse en contrato aprobado antes de impleme
 | Bearer auth | Documentar JWT Bearer, roles y alcance institucional reales; distinguir 401 de 403. Tokens no van en URLs |
 | Tiempo | Para instantes globales nuevos/objetivo, ISO-8601 con UTC u offset explícito. El Golden Path congela explícitamente el wire legacy de sesión ISO local sin offset y su semántica UTC persistida; migrarlo exige fase compatible; [TD-005](../baseline/TECHNICAL_DEBT.md#td-005) |
 | Filtros | Query params tipados y whitelist; no nombres de columnas SQL del cliente |
-| Paginación | Decisión explícita para listados que crecen. El Golden Path actual devuelve lista sin page/size; no afirmar ni implementar límites nuevos sin aprobar contrato |
+| Paginación | Decisión explícita para listados que crecen. El Golden Path actual devuelve lista sin page/size; no afirmar ni implementar límites nuevos sin aprobar contrato. Excepción publicada por operación: `GET /api/v1/estudiantes` (MAINT-001, AS-IS `page>=0` default 0, `size` 1..100 default 20) |
 | Sort | Campos/direcciones permitidos y comportamiento por defecto explícitos cuando se apruebe; no prometer orden estable que el SQL actual no garantiza |
 
 La propuesta del paquete `page >= 0`, `size 1..100` era una recomendación pendiente: **no es una convención aprobada ni el AS-IS universal**. LB-001B/C debe decidir por operación y comprobar consumidores; no aplicar esos números automáticamente.

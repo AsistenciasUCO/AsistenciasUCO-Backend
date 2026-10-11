@@ -6,8 +6,9 @@ info:
   description: |
     Contrato canónico LB-001C.1 para el Golden Path del backend AsistenciasUCO.
     Sigue el estilo PRAGMATIC_RESOURCE_PLUS_BUSINESS_COMMAND. HTTP/DB es la fuente
-    de verdad; SSE solo notifica cambios best-effort. No incluye endpoints legacy,
-    administrativos ni operaciones fuera del Golden Path.
+    de verdad; SSE solo notifica cambios best-effort. No incluye endpoints legacy ni
+    administrativos. Fuera del Golden Path solo publica, por decisión contract-first de
+    MAINT-001, el directorio paginado GET /api/v1/estudiantes en su comportamiento AS-IS.
     1.1.0 (MAINT-003F): agrega el contrato UTC v2 de sesiones (/api/v2/sesiones, UTC-D01..D09)
     sin modificar ninguna operación ni schema v1; v1 conserva su wire ISO local sin offset.
 servers:
@@ -18,6 +19,8 @@ tags:
     description: Consultas scopeadas al docente autenticado.
   - name: Grupos
     description: Subrecursos de grupos académicos.
+  - name: Estudiantes
+    description: Directorio institucional paginado de estudiantes.
   - name: Sesiones
     description: Creación, lectura por grupo y actualización compatible de sesiones.
   - name: Asistencias
@@ -157,6 +160,152 @@ paths:
                         codigoEstado: ACT
                         nombreEstado: Activo
                     total: 1
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v1/estudiantes:
+    get:
+      tags: [Estudiantes]
+      summary: Consultar directorio paginado de estudiantes
+      operationId: consultarEstudiantes
+      description: |
+        Directorio institucional general (distinto del portal propio /api/v1/estudiante/**).
+        Devuelve identidades distintas de estudiante desde uv_estudiante_identidad + uv_usuario;
+        los filtros académicos usan EXISTS sobre uv_estudiante, de modo que un estudiante
+        inscrito en varios grupos aparece una sola vez. Orden fijo: primerApellido,
+        primerNombre, numeroIdentificacion, id. No se abre a DOCENTE (usa
+        /api/v1/grupos/{grupoId}/estudiantes) ni a ESTUDIANTE. Todos los filtros son
+        opcionales y se combinan con AND. Respuesta sin envoltorio exitoso/datos.
+      x-roles: [COORDINADOR, ADMINISTRADOR]
+      x-idempotency: YES
+      security:
+        - bearerAuth: []
+      parameters:
+        - name: tipoIdentificacionId
+          in: query
+          required: false
+          description: Igualdad exacta sobre el tipo de identificación del usuario.
+          schema:
+            type: string
+            format: uuid
+        - name: numeroIdentificacion
+          in: query
+          required: false
+          description: Igualdad exacta; debe ser positivo.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+        - name: nombre
+          in: query
+          required: false
+          description: |
+            Coincidencia parcial, sin distinguir mayúsculas, sobre nombreCompleto. Debe cumplir
+            el formato de nombre de persona (sin dígitos ni caracteres de control); espacios
+            normalizados; máximo 100 caracteres.
+          schema:
+            type: string
+            maxLength: 100
+        - name: correo
+          in: query
+          required: false
+          description: |
+            Debe ser un correo electrónico válido (máximo 100 caracteres); se busca por
+            coincidencia parcial sin distinguir mayúsculas.
+          schema:
+            type: string
+            maxLength: 100
+        - name: institucionId
+          in: query
+          required: false
+          description: Algún contexto académico del estudiante pertenece a la institución.
+          schema:
+            type: string
+            format: uuid
+        - name: facultadId
+          in: query
+          required: false
+          description: Algún contexto académico del estudiante pertenece a la facultad.
+          schema:
+            type: string
+            format: uuid
+        - name: programaId
+          in: query
+          required: false
+          description: Algún contexto académico del estudiante pertenece al programa.
+          schema:
+            type: string
+            format: uuid
+        - name: grupoId
+          in: query
+          required: false
+          description: El estudiante está inscrito en el grupo.
+          schema:
+            type: string
+            format: uuid
+        - name: activo
+          in: query
+          required: false
+          description: Estado activo del usuario asociado.
+          schema:
+            type: boolean
+        - name: page
+          in: query
+          required: false
+          description: |
+            Página 0-based. Además, page*size no puede superar 2147483647; si lo supera
+            responde 400 VALIDATION_ERROR. Una página posterior a la última responde 200 con
+            items vacío y los totales reales.
+          schema:
+            type: integer
+            format: int32
+            minimum: 0
+            default: 0
+        - name: size
+          in: query
+          required: false
+          description: Tamaño de página; fuera de 1..100 responde 400 VALIDATION_ERROR.
+          schema:
+            type: integer
+            format: int32
+            minimum: 1
+            maximum: 100
+            default: 20
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Página de estudiantes.
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/EstudiantePagina'
+              examples:
+                pagina:
+                  value:
+                    items:
+                      - id: 3403376f-88de-44ee-bad3-bae038f49831
+                        idUsuario: 8b1f3c2e-5d4a-4f6b-9c7d-2e1a0b9c8d7e
+                        tipoIdentificacionId: 0f9e8d7c-6b5a-4c3d-8e2f-1a0b9c8d7e6f
+                        numeroIdentificacion: 1000000001
+                        primerApellido: Ejemplo
+                        segundoApellido: ''
+                        primerNombre: Ana
+                        segundoNombre: ''
+                        nombreCompleto: Ana Ejemplo
+                        correo: ana.ejemplo@example.edu
+                        estaActivoUsuario: true
+                    totalItems: 11
+                    totalPages: 3
+                    page: 0
+                    size: 5
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1148,6 +1297,65 @@ components:
             $ref: '#/components/schemas/Asistencia'
         total:
           type: integer
+          minimum: 0
+    EstudianteResumen:
+      type: object
+      additionalProperties: false
+      description: Identidad de estudiante; todas las columnas de origen son NOT NULL.
+      required: [id, idUsuario, tipoIdentificacionId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, nombreCompleto, correo, estaActivoUsuario]
+      properties:
+        id:
+          type: string
+          format: uuid
+        idUsuario:
+          type: string
+          format: uuid
+        tipoIdentificacionId:
+          type: string
+          format: uuid
+        numeroIdentificacion:
+          type: integer
+          format: int32
+        primerApellido:
+          type: string
+        segundoApellido:
+          type: string
+          description: Puede ser cadena vacía.
+        primerNombre:
+          type: string
+        segundoNombre:
+          type: string
+          description: Puede ser cadena vacía.
+        nombreCompleto:
+          type: string
+        correo:
+          type: string
+        estaActivoUsuario:
+          type: boolean
+    EstudiantePagina:
+      type: object
+      additionalProperties: false
+      required: [items, totalItems, totalPages, page, size]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: '#/components/schemas/EstudianteResumen'
+        totalItems:
+          type: integer
+          format: int64
+          minimum: 0
+        totalPages:
+          type: integer
+          format: int32
+          minimum: 0
+        page:
+          type: integer
+          format: int32
+          minimum: 0
+        size:
+          type: integer
+          format: int32
           minimum: 0
     ApiFieldError:
       type: object

@@ -107,6 +107,36 @@ class EstudianteJpaQueryContractTest {
     }
 
     @Test
+    void pagina_negativa_es_rechazada_antes_de_consultar_sql() {
+        final ConsultarEstudiantesRepositoryDTO invalid = dto(
+                null, null, null, null, null, null, null, null, null, -1, 10);
+
+        assertThrows(CrosscuttingException.class,
+                () -> new EstudianteJpaRepository(manager).consultarEstudiantes(invalid));
+        verifyNoInteractions(manager);
+    }
+
+    @Test
+    void tamano_cero_o_negativo_se_rechaza_sin_acceder_a_jpa() {
+        final EstudianteJpaRepository repository = new EstudianteJpaRepository(manager);
+        assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(
+                dto(null, null, null, null, null, null, null, null, null, 0, 0)));
+        assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(
+                dto(null, null, null, null, null, null, null, null, null, 0, -10)));
+        verifyNoInteractions(manager);
+    }
+
+    @Test
+    void offset_desbordado_se_rechaza_antes_de_jpa_y_sin_wrap_de_excepcion_sql() {
+        final ConsultarEstudiantesRepositoryDTO invalid = dto(
+                null, null, null, null, null, null, null, null, null, Integer.MAX_VALUE, 2);
+
+        assertThrows(CrosscuttingException.class,
+                () -> new EstudianteJpaRepository(manager).consultarEstudiantes(invalid));
+        verifyNoInteractions(manager);
+    }
+
+    @Test
     void entradas_nulas_se_rechazan_sin_consultar() {
         final EstudianteJpaRepository repository = new EstudianteJpaRepository(manager);
         assertThrows(CrosscuttingException.class, () -> repository.consultarEstudiantes(null));

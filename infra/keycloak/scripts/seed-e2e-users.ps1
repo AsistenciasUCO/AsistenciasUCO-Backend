@@ -1,6 +1,7 @@
 <#
 .SYNOPSIS
-    Crea/verifica usuarios E2E opcionales para pruebas manuales de AsistenciasUCO.
+    Crea/verifica usuarios E2E opcionales (DOCENTE, ADMIN, COORDINADOR, ESTUDIANTE) para
+    pruebas manuales de AsistenciasUCO.
 
 .DESCRIPTION
     NO forma parte del realm base (realm-import/asistencias-uco-realm.json). Lee los datos
@@ -51,7 +52,9 @@ $failures = New-Object System.Collections.Generic.List[string]
 
 $userSpecs = @(
     @{ Key = 'DOCENTE'; Role = 'DOCENTE' },
-    @{ Key = 'ADMIN'; Role = 'ADMINISTRADOR' }
+    @{ Key = 'ADMIN'; Role = 'ADMINISTRADOR' },
+    @{ Key = 'COORDINADOR'; Role = 'COORDINADOR' },
+    @{ Key = 'ESTUDIANTE'; Role = 'ESTUDIANTE' }
 )
 
 function Test-E2ePasswordPolicy {

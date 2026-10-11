@@ -12,7 +12,10 @@ last-reviewed: 2026-10-08
 Inspeccionar deuda técnica en el backend JPA-only / LB-004 posterior al merge PR #15 sin reemplazar arquitectura ni interrumpir PR #16 security. Referencia de develop revisado: `551594179c2de582cbe62b4490276879d1ffc886` (merge #15); 20 suites de arquitectura / 82 tests pasan en run de PR #16, no garantizan maintainability total.
 
 ## Clasificación, restricciones y gobernanza
-- Cambio actual: DOCUMENTATION_ONLY, sin modificaciones Java/DB/Angular/pom/OpenAPI ni tests.
+- Alcance histórico de MAINT-00 (auditoría inicial): DOCUMENTATION_ONLY. Esta clasificación NO describe el alcance acumulado del PR #18.
+- Alcance vigente de PR #18, documentado por microfases: MAINT-01A = BEHAVIOR_CHANGE acotado (validación de offset JPA + tests); MAINT-01B = HTTP_VALIDATION_AND_SQL_PARITY_TESTS (validación combinada y test de vistas); MAINT-01C = CONTRACT_PUBLICATION_OF_AS_IS (OpenAPI canónico + conformance tests + seed E2E de Keycloak opcional).
+- Afecta Java de producción exclusivamente en el adaptador de estudiantes/validador HTTP, tests JPA/HTTP/contrato, docs OpenAPI, script E2E Keycloak y work-item; no cambia DB, SP, vistas, POM ni frontend.
+- Evidencia de autorización por microfase, rollback y ejecución real: secciones MAINT-01A/B/C y [VALIDATION](VALIDATION.md). Esta línea es clasificación actual, no autorización de merge.
 - Fuente de verdad: AGENTS.md → SOURCE_OF_TRUTH → DoR → skill → test plan → contratos.
 - Sonar: comentario PR #15 histórico tenía **206 New issues** con Quality Gate PASSED y Maintainability A; **reglas, líneas y distribución de los 206 NO RECUPERADAS** en esta auditoría. No calificar cada candidato de `Sonar issue`.
 - No tomar número 206 como medida actual de `develop`, ni atribuir seguridad/criticidad sin claves.
@@ -50,3 +53,22 @@ Inspeccionar deuda técnica en el backend JPA-only / LB-004 posterior al merge P
 
 ## Definition of Ready / Done
 READY: inventario/análisis. Implementación: NOT_READY hasta tests y autoridad de microfase. Criterios: GREEN local JDK25, -Pintegration cuando corresponda, Sonar issues cerrados en nuevo SHA, ningún contrato roto, Sonar Quality Gate y ArchUnit PASS. No mover BD durante este work item para desbloquear fixture sin autorización.
+
+
+## MAINT-01A — paginación JPA segura, implementación acotada
+
+- Clase `EstudianteJpaRepository.consultarEstudiantes` calcula `page * size` usando `int`. Como `ConsultarEstudiantesRepositoryDTO` (secondary port) no impone invariantes, un page extremo puede desbordar a negativo y entrar en `setFirstResult`, donde `JpaQueryExecutor` lo traduce potencialmente como error de BD. No hay evidencia de una ruta HTTP pública explotable; es defensa de frontera del adapter.
+- Cambio aprobado por esta microfase: validar `page >=0`, `size>0`, `offset <= Integer.MAX_VALUE` usando multiplicación `long` **antes** del executor. No imponer máximo arbitrario de tamaño ni alterar DTO/JPQL o consulta SQL. Para entradas válidas el offset y la respuesta son idénticos.
+- Pruebas de comportamiento agregadas a `EstudianteJpaQueryContractTest`: page negativa, tamaño 0/negativo y producto > max int rechazados **sin interacción con EntityManager**; conservar pruebas existentes de filtros, página normal, 0 resultados y nulidad.
+- Errores de datos inválidos mantienen el tipo `CrosscuttingException` usado actualmente para DTO nulo. Revisar traducción HTTP end-to-end antes de ampliar la validación a controlador; no añadir 400 inventado en este PR.
+- No SQL/Angular/SP/OpenAPI/sesión JWT modificados. Tests Java25 **NOT_RUN** desde herramienta que escribe, los Actions sobre nuevo PR deben certificar Suite/Sonar/ArchUnit. SQL Server IT posterior (si aplica), `VALIDATION.md` en fase posterior.
+- La microfase M01 de `JpaQueryExecutor` sigue `CONTRACT_DECISION_REQUIRED`: existen tests actuales que **exigen** envolver `ArithmeticException`, `IllegalArgumentException` e `IllegalStateException` dentro de DatabaseOperationException. No cambiar en bloque sin rediseñar contratos/test oracle.
+
+
+## MAINT-01B — referencia Arquisoft y vistas SQL (2026-10-09)
+
+Estudio documentado: [PAGINATION_REFERENCE_ANALYSIS](PAGINATION_REFERENCE_ANALYSIS.md). La arquitectura actual sí pagina mediante JPA sobre `dbo.uv_estudiante_identidad` y filtra con EXISTS contra `dbo.uv_estudiante`. Mantener vistas existentes, no copiar `@Subselect` PostgreSQL ni agregar `Pageable` a Application solo por imitación. Actualizar la validación HTTP combinada page*size, caso SQL Server IT para páginas 0/1/2 y guía de fixtures >10. PR #17 SEC-002 fusionado `bfc4fd3`; PR #18 sincroniza esa base conservando cambios. GREEN nuevo SHA: pendiente.
+
+## MAINT-01C — contrato OpenAPI del directorio paginado (2026-10-09)
+
+Autorización: solicitud explícita del usuario (Fase 1 backend, 2026-10-09) de publicar `GET /api/v1/estudiantes` en el OpenAPI canónico mediante microfase contract-first, sin alterar endpoints ni esquema DB. Clase de cambio: `CONTRACT_PUBLICATION_OF_AS_IS`. Rutas permitidas: `docs/contracts/openapi/**`, `docs/contracts/OPENAPI_STANDARD.md`, `src/test/java/**/openapi/**`, `infra/keycloak/**` (seed E2E opcional) y documentación del work item. Prohibido: `src/main/**`, SQL, `pom.xml`. Secuencia RED → contrato → validación registrada en [VALIDATION](VALIDATION.md). Rollback: revert de `d0468e3`, `1c96162` y `e7803ca` (el contrato vuelve a 9 operaciones sin afectar runtime).
