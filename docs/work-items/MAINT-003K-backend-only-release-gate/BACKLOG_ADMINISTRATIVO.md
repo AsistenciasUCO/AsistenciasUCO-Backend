@@ -8,7 +8,7 @@ work_item: MAINT-003K
 
 ## Alcance y fuentes
 
-Este documento congela el diagnóstico AS-IS observado en el backend de PR #22, sin implementar módulos administrativos ni cambiar el contrato HTTP. La revisión se hizo sobre el HEAD local `6348e2f1ed6dcce1ab3748488d690fd1e6cdd460`, sobre el PR backend #22, y sobre la DB oficial del owner DB en el merge de PR #36 `e2486194d42c6c7a649882a6957273742aa26536`.
+Este documento congela el diagnóstico AS-IS observado en el backend de PR #22, sin implementar módulos administrativos ni cambiar el contrato HTTP. La revisión se hizo sobre el SHA publicado `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8`, sobre el PR backend #22, y sobre la DB oficial del owner DB en el merge de PR #36 `e2486194d42c6c7a649882a6957273742aa26536`.
 
 Fuentes principales: `AdminPortalController`, `CoordinadorPortalController`, `DecanoPortalController`, `UsuarioController`, `SecurityConfig`, los tests de esos controladores y wiring, los repositorios JPA de catálogos, `DB_BASELINE_CONTRACT.md` del repositorio DB y la metadata/ejecución transaccional de `sql_server_asistencias / gestionasistenciadb`. Una prueba no ejecutada o un mock no se cuenta como certificación del proveedor.
 

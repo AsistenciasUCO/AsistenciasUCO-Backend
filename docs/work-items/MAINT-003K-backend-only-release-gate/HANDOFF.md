@@ -16,7 +16,7 @@ Fecha: 2026-10-11
 - Merge normal de reconciliación: `0114939d877f8a6a91b7118af98bf4f7c29c1796`
 - Código certificado: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`)
 - Arnés E2E: `5ab8e8f` (`test(e2e): report connection failures safely`)
-- El commit de esta corrección será el SHA que GitHub evalúe para el cierre de CI; se registrará después del commit/push.
+- Commit publicado y evaluado por GitHub: `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8`.
 - Diagnóstico funcional: [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md).
 
 ## Resultado local
@@ -40,6 +40,6 @@ El PR #36 de `johnjduque/gestion-asistencia-db` está merged en `develop` con `e
 
 La auditoría reversible de `usp_crear_facultad` confirmó actualización por ID/nombre y el defecto de alta SQL 515 por columnas `NOT NULL`; el hallazgo y el backlog de admin/perfil están documentados en [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md).
 
-Los checks remotos del SHA anterior fueron verdes; los checks de esta corrección S5778 se ejecutarán sobre el SHA final después del push y se registrarán aquí. SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit están incluidos. PR #22 queda abierto y sin merge a `develop`.
+Los checks remotos del SHA final fueron verdes: Backend CI/Quality Gate `38177603461`, Backend Security `38177603437` y Backend Deep Security Scan `38177603442`; SonarCloud muestra 0 issues abiertos/confirmados, CodeQL y Dependency Review, Trivy y ArchUnit terminaron en `success`. PR #22 queda abierto y sin merge a `develop`.
 
 Fuera de alcance: frontend, despliegue productivo, merge a `develop`, borrado de ramas, implementación de módulos administrativos/perfil y ampliación de funcionalidades específicas de Keycloak.

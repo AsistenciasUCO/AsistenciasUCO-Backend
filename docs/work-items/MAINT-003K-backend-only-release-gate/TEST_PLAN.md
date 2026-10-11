@@ -1,6 +1,6 @@
 # MAINT-003K — Tests y oráculos de salida
 
-**Estado:** EJECUTADO el 2026-10-11 contra el contenedor existente `sql_server_asistencias` / `gestionasistenciadb`, Java 25, código certificado `8ac519ae` y arnés E2E `5ab8e8f`, sobre el merge reconciliado `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
+**Estado:** EJECUTADO el 2026-10-11 contra el contenedor existente `sql_server_asistencias` / `gestionasistenciadb`, Java 25, SHA final `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8`; conserva el arnés E2E `5ab8e8f` y el merge reconciliado `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
 Evidencia y cifras: [VALIDATION.md](VALIDATION.md). JVM probadas: `UTC`, `America/Bogota`, `Europe/Berlin`.
 
 | Caso | Configuración | Oráculo | Resultado |
@@ -28,7 +28,7 @@ Evidencia y cifras: [VALIDATION.md](VALIDATION.md). JVM probadas: `UTC`, `Americ
 | REG-01 | Surefire + Failsafe SQL/Keycloak/MinIO existentes | 0 fallos, 0 errores, 0 skips | PASS: 1534/1534 unit + 198/198 IT |
 | REG-02 | JaCoCo | líneas ≥80 %, ramas ≥70 % | PASS: 92,78 % / 80,96 % |
 | REG-03 | ArchUnit + guards | sin violaciones | PASS (`CleanArchitectureRulesTest` 20, `JpaRepositoryArchitectureRulesTest` 3) |
-| REG-04 | CI SHA final de esta corrección | checks exigidos | **PENDING FINAL SHA**; se actualizará con Backend CI, Backend Security y Backend Deep Security Scan posteriores al push |
+| REG-04 | CI SHA `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8` | checks exigidos | **PASS**: Backend CI `38177603461`, Backend Security `38177603437` y Backend Deep Security Scan `38177603442`; todos `success` |
 | VOL-01 | ITs de listado de estudiantes con 5003 estudiantes sintéticos | recorren todas las páginas; oráculo SQL == concatenación de páginas | PASS tras volver los ITs independientes del volumen |
 | ORD-01 | reporte de asistencia con estudiantes homónimos | orden total `(numero, inicio, nombre, ei.id, eg.id)` idéntico a JDBC | PASS (3 JVM) |
 

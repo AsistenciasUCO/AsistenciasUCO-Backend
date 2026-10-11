@@ -6,7 +6,7 @@ Base reconciliada: `origin/develop` en `108937cdb2cd0ca1a35b7349fbd0696721b39499
 Merge normal: `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
 Código certificado previo: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`).
 Arnés E2E certificado: `5ab8e8f` (`test(e2e): report connection failures safely`).
-Código auditado antes de esta corrección: `6348e2...` (HEAD local previo al fix Sonar; el SHA final se registra después del commit/push).
+Código final auditado y publicado: `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8`.
 
 ## 1. Estados independientes
 
@@ -15,7 +15,7 @@ Código auditado antes de esta corrección: `6348e2...` (HEAD local previo al fi
 | `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5; la corrección S5778 conserva las aserciones y el comportamiento |
 | `DEV_DB_CONSOLIDATED` | **PASS local** | `sql_server_asistencias` / `gestionasistenciadb`; detalle en `DB_DEV_ADDENDUM.md` y work item SQL |
 | `DB_PR_READY` | **PASS / VERIFIED** | PR #36 está merged en `develop` del repositorio DB con `e2486194d42c6c7a649882a6957273742aa26536`; compatibilidad y objetos se comprobaron en la DB local oficial |
-| `BACKEND_CI_GREEN` | **PENDING FINAL SHA** | Se actualizará después del push: Backend CI, Backend Security, Backend Deep Security Scan y análisis SonarCloud sobre el SHA final |
+| `BACKEND_CI_GREEN` | **PASS** | SHA `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8`: Backend CI `38177603461`, Backend Security `38177603437` y Backend Deep Security Scan `38177603442`; los tres `success` |
 
 No se creó ningún contenedor ni base temporal durante esta certificación. Se utilizó exclusivamente el contenedor existente `sql_server_asistencias` y la base `gestionasistenciadb`. No se hizo merge a `develop`, no se borraron ramas, no se modificó frontend ni se desplegó a producción.
 
@@ -47,6 +47,8 @@ Comandos exactos ejecutados con Java 25 y `-B -ntp`:
 ```
 
 El primer intento de `clean verify` sin elevación quedó en **FAIL de entorno** por permisos de loopback de Windows/JDK25 para los servidores fake de Keycloak/ClamAV; no se contó como PASS. La misma orden se repitió con el entorno de ejecución autorizado y terminó en `BUILD SUCCESS`.
+
+La primera invocación de integración sin cargar `.env` también se descartó por `SPRING_DATASOURCE_URL` sin resolver; se relanzó con `. .\scripts\load-env.ps1` contra la misma DB oficial y terminó en `BUILD SUCCESS` con 198/198 ITs.
 
 | Fase | Resultado real |
 |---|---|
@@ -80,6 +82,10 @@ La consulta final de residuos ejecutó sobre SQL Server:
 ```text
 SELECT 'E2E-sesiones', COUNT(*) FROM dbo.Sesion WHERE nombre LIKE 'E2E-%'
 E2E-sesiones,0
+SELECT 'CODEX-facultades', COUNT(*) FROM dbo.Facultad WHERE nombre LIKE 'CODEX-%'
+CODEX-facultades,0
+SELECT 'CODEX-usuarios', COUNT(*) FROM dbo.Usuario WHERE numeroIdentificacion LIKE 'CODEX-%'
+CODEX-usuarios,0
 ```
 
 No se dejaron sesiones E2E. Los ITs de archivos usan el bucket de desarrollo existente como parte de su comportamiento previo; no se alteró configuración de MinIO.
@@ -98,14 +104,14 @@ Probe funcional reversible de `usp_crear_facultad`: actualización por ID y por 
 - No se amplió funcionalidad exclusiva de Keycloak; se conservaron JWT, roles institucionales, ownership y RBAC actuales.
 - No hay secretos en código, documentación, logs ni evidencia.
 - `AzureCloudIntegrationIT` permanece `NOT_RUN` porque requiere Azure real; no es una regresión del alcance local.
-- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. El resultado remoto del SHA final, incluidos SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit, queda pendiente hasta que termine el nuevo análisis posterior al push. Las pruebas locales no sustituyen esos checks.
+- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. En el SHA final, Sonar Quality Gate, CodeQL, Dependency Review, Trivy y ArchUnit terminaron en `success`; las pruebas locales no sustituyen esos checks.
 - El estado técnico de MAINT-003K queda **REVIEW_READY**: PR #22 continúa abierto, sin merge a `develop`, y requiere la revisión/aprobación humana final. `AzureCloudIntegrationIT` permanece `NOT_RUN` por requerir Azure real, fuera del alcance local.
 
 ## 7. Cierre de calidad PR #22 — `java:S5778`
 
 SonarCloud reportó seis issues nuevos, todos Maintainability/Medium, regla `java:S5778` (“Only one method invocation is expected when testing runtime exceptions”): uno en `SesionV2RequestParserTest.java` (línea 37) y cinco en `UsuarioPlanEstudioProvidersSqlServerIT.java` (líneas 137, 148, 173, 177 y 181 del análisis que originó PR #22). El cambio mantiene el comportamiento y prepara valores/DTOs fuera de cada lambda, dejando una sola invocación potencialmente lanzadora dentro de cada `assertThrows`.
 
-La corrección quedó aplicada localmente. No se aceptaron issues ni se modificaron umbrales; el resultado Sonar remoto del SHA final se actualizará después del push.
+La corrección quedó aplicada localmente y publicada en `8d49a3fc2f638fa752f3a86bd062c9ffed6681a8`. SonarCloud muestra **0 issues abiertos/confirmados** para PR #22 y Quality Gate `Passed`; no se aceptaron issues ni se modificaron umbrales.
 
 ## 8. Backlog funcional auditado
 
