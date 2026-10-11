@@ -37,6 +37,6 @@ El arreglo final `JacksonTemporalConfiguration` vive en Infrastructure y fija el
 
 La compatibilidad técnica del contrato DB del PR #36 fue comprobada contra la base local; su merge a `develop` sigue pendiente y pertenece al owner DB. PR #22 no modifica esquema, procedimientos ni permisos.
 
-Los checks remotos Backend Quality Gate, SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit aún deben verificarse sobre el SHA final publicado. Hasta esa comprobación, `BACKEND_CI_GREEN` permanece `PENDING` y MAINT-003K no se declara cerrado.
+Los checks remotos quedaron verdes sobre `146e1e4ac35921a40fe41c89d92f2685b50ceb12`: Backend CI/Quality Gate `38133562756`, Backend Security `38133562754` y Backend Deep Security Scan `38133562680`, todos con `success`; SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit están incluidos. PR #22 queda listo para revisión final, abierto y sin merge a `develop`.
 
 Fuera de alcance: frontend, despliegue productivo, merge a `develop`, borrado de ramas y ampliación de funcionalidades específicas de Keycloak.

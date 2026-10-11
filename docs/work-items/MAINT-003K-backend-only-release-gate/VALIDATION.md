@@ -14,7 +14,7 @@ Arnés E2E certificado: `5ab8e8f` (`test(e2e): report connection failures safely
 | `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5 sobre `8ac519ae`/`5ab8e8f` |
 | `DEV_DB_CONSOLIDATED` | **PASS local** | `sql_server_asistencias` / `gestionasistenciadb`; detalle en `DB_DEV_ADDENDUM.md` y work item SQL |
 | `DB_PR_READY` | **Certificación técnica observada; merge pendiente** | Contrato PR #36 comprobado en la DB local; no se mezcló ni se usó como autoridad de merge de PR #22 |
-| `BACKEND_CI_GREEN` | **PENDING** | Requiere comprobar los checks de GitHub sobre el SHA final publicado |
+| `BACKEND_CI_GREEN` | **PASS** | GitHub comprobado sobre `146e1e4ac35921a40fe41c89d92f2685b50ceb12`: Backend CI, Backend Security y Backend Deep Security Scan `success` |
 
 No se creó ningún contenedor ni base temporal durante esta certificación. Se utilizó exclusivamente el contenedor existente `sql_server_asistencias` y la base `gestionasistenciadb`. No se hizo merge a `develop`, no se borraron ramas, no se modificó frontend ni se desplegó a producción.
 
@@ -95,5 +95,5 @@ El PR #36 de la DB mantiene estado independiente: su merge a `develop` sigue pen
 - No se amplió funcionalidad exclusiva de Keycloak; se conservaron JWT, roles institucionales, ownership y RBAC actuales.
 - No hay secretos en código, documentación, logs ni evidencia.
 - `AzureCloudIntegrationIT` permanece `NOT_RUN` porque requiere Azure real; no es una regresión del alcance local.
-- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. SonarCloud, Backend Quality Gate, CodeQL, Dependency Review, Trivy y el estado de ArchUnit en GitHub quedan **PENDING** hasta comprobar el SHA final publicado. Las pruebas locales no sustituyen esos checks.
-- El cierre final de MAINT-003K queda condicionado a que GitHub reporte verde sobre el último commit publicado; no se declara `BACKEND_CI_GREEN` antes de esa evidencia.
+- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. En el head `146e1e4ac35921a40fe41c89d92f2685b50ceb12`, GitHub confirmó `success` para Backend CI (incluido SonarCloud), Backend Security (CodeQL y Dependency Review) y Backend Deep Security Scan (Trivy y ArchUnit). Las pruebas locales no sustituyeron esos checks; los checks remotos fueron consultados directamente.
+- El estado técnico de MAINT-003K queda **REVIEW_READY**: PR #22 continúa abierto, sin merge a `develop`, y requiere la revisión/aprobación humana final. `AzureCloudIntegrationIT` permanece `NOT_RUN` por requerir Azure real, fuera del alcance local.

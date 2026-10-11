@@ -28,7 +28,7 @@ Evidencia y cifras: [VALIDATION.md](VALIDATION.md). JVM probadas: `UTC`, `Americ
 | REG-01 | Surefire + Failsafe SQL/Keycloak/MinIO existentes | 0 fallos, 0 errores, 0 skips | PASS: 1534/1534 unit + 198/198 IT |
 | REG-02 | JaCoCo | líneas ≥80 %, ramas ≥70 % | PASS: 92,78 % / 80,96 % |
 | REG-03 | ArchUnit + guards | sin violaciones | PASS (`CleanArchitectureRulesTest` 20, `JpaRepositoryArchitectureRulesTest` 3) |
-| REG-04 | CI HEAD | checks exigidos | **PENDING** hasta comprobar el último SHA publicado en PR #22 |
+| REG-04 | CI HEAD `146e1e4ac35921a40fe41c89d92f2685b50ceb12` | checks exigidos | **PASS**: Backend CI 38133562756, Backend Security 38133562754 y Backend Deep Security Scan 38133562680; todos `success` |
 | VOL-01 | ITs de listado de estudiantes con 5003 estudiantes sintéticos | recorren todas las páginas; oráculo SQL == concatenación de páginas | PASS tras volver los ITs independientes del volumen |
 | ORD-01 | reporte de asistencia con estudiantes homónimos | orden total `(numero, inicio, nombre, ei.id, eg.id)` idéntico a JDBC | PASS (3 JVM) |
 

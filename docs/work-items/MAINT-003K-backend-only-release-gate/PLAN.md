@@ -1,5 +1,5 @@
 ---
-status: BACKEND_LOCAL_GREEN_CI_PENDING
+status: BACKEND_CI_GREEN_REVIEW_READY
 date: 2026-10-11
 base_branch: origin/develop
 scope: BACKEND_AND_LOCAL_DEV_SQL_CONSOLIDATION
@@ -43,6 +43,6 @@ En JVM Bogotá, `java.util.Date` + `toInstant().atZone(UTC)` convertía 14:00 SQ
 | `BACKEND_LOCAL_GREEN` | **PASS** sobre el código certificado `8ac519ae` y el arnés E2E `5ab8e8f`, sobre el merge `0114939d877f8a6a91b7118af98bf4f7c29c1796` | [VALIDATION.md](VALIDATION.md) §2–§9 |
 | `DEV_DB_CONSOLIDATED` | **PASS (local)** | repo DB: `docs/work-items/MAINT-003K-DB-DEV-CONSOLIDATION/VALIDATION.md` |
 | `DB_PR_READY` | certificación técnica observada en `sql_server_asistencias/gestionasistenciadb`; merge del PR #36 sigue fuera de este PR | [DB_DEV_ADDENDUM.md](DB_DEV_ADDENDUM.md) y [VALIDATION.md](VALIDATION.md) §8 |
-| `BACKEND_CI_GREEN` | **PENDING** | debe verificarse en PR #22 sobre el SHA publicado; no se presume por la ejecución local |
+| `BACKEND_CI_GREEN` | **PASS** sobre `146e1e4ac35921a40fe41c89d92f2685b50ceb12` | Backend CI run 38133562756, Backend Security run 38133562754 y Backend Deep Security Scan run 38133562680; todos `success` |
 
-Gates 1–8 y 10 ejecutados con resultados reales. Gate 9 queda pendiente hasta que GitHub publique el resultado del último SHA del PR #22; SonarCloud, CodeQL, Dependency Review y Trivy no se declaran PASS por ejecución local. La recuperación Sonar se hizo con cobertura de comportamiento y una supresión auditada de S4502, sin bajar umbrales ni borrar pruebas: [VALIDATION.md](VALIDATION.md) §6.
+Gates 1–10 ejecutados con resultados reales. Gate 9 quedó **PASS** en el head `146e1e4ac35921a40fe41c89d92f2685b50ceb12`: Backend Quality Gate/SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit. La recuperación Sonar se hizo con cobertura de comportamiento y una supresión auditada de S4502, sin bajar umbrales ni borrar pruebas: [VALIDATION.md](VALIDATION.md) §6. El PR sigue sin merge a `develop` y requiere revisión final humana.
