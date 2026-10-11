@@ -33,15 +33,18 @@ class SesionV2RequestParserTest {
     @Test
     void agrega_errores_de_campos_desconocidos_y_formato_sin_reflejar_el_valor_hostil() {
         final String hostile = "2042-07-15T16:00:00+99:99";
+        final UUID grupo = UUID.randomUUID();
+        final UUID usuarioEjecutor = UUID.randomUUID();
+        final Map<String, Object> invalidRequest = Map.of(
+                "grupo", grupo.toString(),
+                "nombre", "UTC",
+                "fechaHoraInicio", hostile,
+                "fechaHoraFin", "2042-07-15T17:00:00Z",
+                "usuarioEjecutor", usuarioEjecutor.toString()
+        );
 
         final RequestValidationException exception = assertThrows(RequestValidationException.class,
-                () -> SesionV2RequestParser.parseCrear(Map.of(
-                        "grupo", UUID.randomUUID().toString(),
-                        "nombre", "UTC",
-                        "fechaHoraInicio", hostile,
-                        "fechaHoraFin", "2042-07-15T17:00:00Z",
-                        "usuarioEjecutor", UUID.randomUUID().toString()
-                )));
+                () -> SesionV2RequestParser.parseCrear(invalidRequest));
 
         assertEquals(2, exception.getValidationResult().issues().size());
         assertTrue(exception.getValidationResult().issues().stream()

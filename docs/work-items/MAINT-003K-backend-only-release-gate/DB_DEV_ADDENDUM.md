@@ -1,6 +1,6 @@
 # MAINT-003K — Addendum: consolidación SQL local de desarrollo
 
-Fecha: 2026-10-10.
+Fecha original: 2026-10-10. Actualización de estado: 2026-10-11.
 
 **Nota de procedencia.** El prompt de la fase refiere un `DB_DEV_ADDENDUM.md` «adjunto» a este directorio. Ese archivo **no estaba disponible** en el repositorio ni en las rutas de descargas/adjuntos de la máquina al ejecutar.
 Este documento recoge el alcance **tal como lo especifica el prompt de ejecución** (BLOCKED_BY_MISSING_EVIDENCE parcial, resuelto con el texto del prompt); si el addendum original difiere, prevalece el original y debe cargarse en este directorio.
@@ -20,6 +20,12 @@ Frontend, Redis/MinIO, proveedor de identidad, merge a `develop`, borrado de ram
 
 ## Resultado
 Ver [PLAN.md](PLAN.md) (estados), [TEST_PLAN.md](TEST_PLAN.md) y [VALIDATION.md](VALIDATION.md); detalle SQL en el repo DB: `docs/work-items/MAINT-003K-DB-DEV-CONSOLIDATION/`.
+
+## Estado del PR DB al 2026-10-11
+
+El PR #36 del repositorio `johnjduque/gestion-asistencia-db` ya está cerrado/merged en `develop`, con merge commit `e2486194d42c6c7a649882a6957273742aa26536`. Por tanto, la redacción histórica de este addendum que decía “sin merge” ya no describe el estado actual; la autoridad vigente es el SHA merged y la compatibilidad comprobada en `sql_server_asistencias / gestionasistenciadb`. El backend no administró el merge ni modificó el esquema.
+
+El diagnóstico funcional posterior, incluido el hallazgo de `usp_crear_facultad`, está en [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md).
 
 ## Estado final del entorno local
 - `sql_server_asistencias`: única base de usuario `gestionasistenciadb` (36 tablas, 56 vistas, 64 SP, 2 roles, 1 trigger) + fixtures de paginación (`DE0000…`).

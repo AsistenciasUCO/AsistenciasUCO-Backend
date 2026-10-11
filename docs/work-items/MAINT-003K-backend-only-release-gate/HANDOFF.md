@@ -16,7 +16,8 @@ Fecha: 2026-10-11
 - Merge normal de reconciliación: `0114939d877f8a6a91b7118af98bf4f7c29c1796`
 - Código certificado: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`)
 - Arnés E2E: `5ab8e8f` (`test(e2e): report connection failures safely`)
-- El commit documental posterior será el SHA que GitHub evalúe para el cierre de CI.
+- El commit de esta corrección será el SHA que GitHub evalúe para el cierre de CI; se registrará después del commit/push.
+- Diagnóstico funcional: [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md).
 
 ## Resultado local
 
@@ -35,8 +36,10 @@ El arreglo final `JacksonTemporalConfiguration` vive en Infrastructure y fija el
 
 ## DB y riesgos restantes
 
-La compatibilidad técnica del contrato DB del PR #36 fue comprobada contra la base local; su merge a `develop` sigue pendiente y pertenece al owner DB. PR #22 no modifica esquema, procedimientos ni permisos.
+El PR #36 de `johnjduque/gestion-asistencia-db` está merged en `develop` con `e2486194d42c6c7a649882a6957273742aa26536`. La compatibilidad fue comprobada contra el contenedor existente `sql_server_asistencias` y la base `gestionasistenciadb`, sin reconstruir ni alterar la base oficial. PR #22 no modifica esquema, procedimientos ni permisos.
 
-Los checks remotos quedaron verdes sobre `a991c6e5b7c1cda25f66a2046902971144f3744f`: Backend CI/Quality Gate `38133949718`, Backend Security `38133949740` y Backend Deep Security Scan `38133949769`, todos con `success`; SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit están incluidos. PR #22 queda listo para revisión final, abierto y sin merge a `develop`.
+La auditoría reversible de `usp_crear_facultad` confirmó actualización por ID/nombre y el defecto de alta SQL 515 por columnas `NOT NULL`; el hallazgo y el backlog de admin/perfil están documentados en [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md).
 
-Fuera de alcance: frontend, despliegue productivo, merge a `develop`, borrado de ramas y ampliación de funcionalidades específicas de Keycloak.
+Los checks remotos del SHA anterior fueron verdes; los checks de esta corrección S5778 se ejecutarán sobre el SHA final después del push y se registrarán aquí. SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit están incluidos. PR #22 queda abierto y sin merge a `develop`.
+
+Fuera de alcance: frontend, despliegue productivo, merge a `develop`, borrado de ramas, implementación de módulos administrativos/perfil y ampliación de funcionalidades específicas de Keycloak.

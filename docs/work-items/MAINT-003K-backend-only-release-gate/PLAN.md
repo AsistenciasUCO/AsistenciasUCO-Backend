@@ -17,6 +17,7 @@ Sigue prohibido: frontend, Redis, cambios en MinIO, cambio de proveedor de ident
 - El merge conserva paginación del PR #18, caché del #19, correcciones Sonar del #20 y documentación del #21, además de UTC v2 y MAINT-003K.
 - En SQL Server `datetime2(7)` no contiene offset. El mapper de consulta nunca debe aplicar `Date.toInstant()` ni `ZoneId.systemDefault()`; el registro v1 carece de procedencia, lo cual es distinto de que la consulta deba alterar sus campos.
 - PR objetivo: [#22](https://github.com/alejovh12/AsistenciasUCO/pull/22), destino `develop`; no se hará merge desde esta tarea.
+- Diagnóstico funcional asociado: [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md). No autoriza implementar módulos administrativos dentro de PR #22.
 
 ## Hipótesis de defecto prioritario (resultado)
 En JVM Bogotá, `java.util.Date` + `toInstant().atZone(UTC)` convertía 14:00 SQL en 19:00. **Confirmado y certificado corregido** para `uv_sesion` (MAINT-003I) y **encontrado el mismo patrón, ya roto en runtime**, en dos lectores más (`SesionMateriaQueryRow`, `ReporteAsistenciaQueryRow`): corregidos en esta fase. V2 no estaba afectada.
@@ -40,9 +41,9 @@ En JVM Bogotá, `java.util.Date` + `toInstant().atZone(UTC)` convertía 14:00 SQ
 
 | Estado | Valor | Evidencia |
 |---|---|---|
-| `BACKEND_LOCAL_GREEN` | **PASS** sobre el código certificado `8ac519ae` y el arnés E2E `5ab8e8f`, sobre el merge `0114939d877f8a6a91b7118af98bf4f7c29c1796` | [VALIDATION.md](VALIDATION.md) §2–§9 |
+| `BACKEND_LOCAL_GREEN` | **PASS**: 1.534 unit + 198 integration, 0 failures/errors/skips; JaCoCo 92,78 % líneas / 80,96 % ramas; corrección S5778 incluida | [VALIDATION.md](VALIDATION.md) §2–§9 |
 | `DEV_DB_CONSOLIDATED` | **PASS (local)** | repo DB: `docs/work-items/MAINT-003K-DB-DEV-CONSOLIDATION/VALIDATION.md` |
-| `DB_PR_READY` | certificación técnica observada en `sql_server_asistencias/gestionasistenciadb`; merge del PR #36 sigue fuera de este PR | [DB_DEV_ADDENDUM.md](DB_DEV_ADDENDUM.md) y [VALIDATION.md](VALIDATION.md) §8 |
-| `BACKEND_CI_GREEN` | **PASS** sobre `a991c6e5b7c1cda25f66a2046902971144f3744f` | Backend CI run 38133949718, Backend Security run 38133949740 y Backend Deep Security Scan run 38133949769; todos `success` |
+| `DB_PR_READY` | **PASS / VERIFIED**: PR #36 de `johnjduque/gestion-asistencia-db` está merged en `develop` con SHA `e2486194d42c6c7a649882a6957273742aa26536`; compatibilidad comprobada contra `sql_server_asistencias/gestionasistenciadb` | [DB_DEV_ADDENDUM.md](DB_DEV_ADDENDUM.md), [VALIDATION.md](VALIDATION.md) §5 y [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md) |
+| `BACKEND_CI_GREEN` | **PENDING FINAL SHA** | Se actualizará con los runs disparados por el push de la corrección S5778 |
 
-Gates 1–10 ejecutados con resultados reales. Gate 9 quedó **PASS** en el head `a991c6e5b7c1cda25f66a2046902971144f3744f`: Backend Quality Gate/SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit. La recuperación Sonar se hizo con cobertura de comportamiento y una supresión auditada de S4502, sin bajar umbrales ni borrar pruebas: [VALIDATION.md](VALIDATION.md) §6. El PR sigue sin merge a `develop` y requiere revisión final humana.
+Gates 1–10 se conservan con la evidencia histórica indicada por SHA; la corrección de `java:S5778` ya está validada localmente y queda pendiente de análisis remoto sobre el commit final. La recuperación Sonar anterior se hizo con cobertura de comportamiento y una supresión auditada de S4502, sin bajar umbrales ni borrar pruebas: [VALIDATION.md](VALIDATION.md) §6. El PR sigue sin merge a `develop` y requiere revisión final humana.

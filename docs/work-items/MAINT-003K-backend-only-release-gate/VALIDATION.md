@@ -4,17 +4,18 @@ Fecha de ejecución: 2026-10-11. Host Windows, Java 25 (`C:\Program Files\Java\j
 Rama: `jose-valencia/maint-003k-backend-only-release-gate`.
 Base reconciliada: `origin/develop` en `108937cdb2cd0ca1a35b7349fbd0696721b39499`.
 Merge normal: `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
-Código certificado: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`).
+Código certificado previo: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`).
 Arnés E2E certificado: `5ab8e8f` (`test(e2e): report connection failures safely`).
+Código auditado antes de esta corrección: `6348e2...` (HEAD local previo al fix Sonar; el SHA final se registra después del commit/push).
 
 ## 1. Estados independientes
 
 | Estado | Resultado | Evidencia |
 |---|---|---|
-| `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5 sobre `8ac519ae`/`5ab8e8f` |
+| `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5; la corrección S5778 conserva las aserciones y el comportamiento |
 | `DEV_DB_CONSOLIDATED` | **PASS local** | `sql_server_asistencias` / `gestionasistenciadb`; detalle en `DB_DEV_ADDENDUM.md` y work item SQL |
-| `DB_PR_READY` | **Certificación técnica observada; merge pendiente** | Contrato PR #36 comprobado en la DB local; no se mezcló ni se usó como autoridad de merge de PR #22 |
-| `BACKEND_CI_GREEN` | **PASS** | GitHub comprobado sobre `a991c6e5b7c1cda25f66a2046902971144f3744f`: Backend CI, Backend Security y Backend Deep Security Scan `success` |
+| `DB_PR_READY` | **PASS / VERIFIED** | PR #36 está merged en `develop` del repositorio DB con `e2486194d42c6c7a649882a6957273742aa26536`; compatibilidad y objetos se comprobaron en la DB local oficial |
+| `BACKEND_CI_GREEN` | **PENDING FINAL SHA** | Se actualizará después del push: Backend CI, Backend Security, Backend Deep Security Scan y análisis SonarCloud sobre el SHA final |
 
 No se creó ningún contenedor ni base temporal durante esta certificación. Se utilizó exclusivamente el contenedor existente `sql_server_asistencias` y la base `gestionasistenciadb`. No se hizo merge a `develop`, no se borraron ramas, no se modificó frontend ni se desplegó a producción.
 
@@ -51,7 +52,7 @@ El primer intento de `clean verify` sin elevación quedó en **FAIL de entorno**
 |---|---|
 | Surefire | **1.534** tests, 0 failures, 0 errors, 0 skipped |
 | Failsafe `-Pintegration` | **198** ITs, 0 failures, 0 errors, 0 skipped |
-| JaCoCo final | **92,78 % líneas**, **80,96 % ramas**; gates 80/70 cumplidos |
+| JaCoCo final | **92,78 % líneas**, **80,96 % ramas**; gates 80/70 cumplidos sobre `target/site/jacoco/jacoco.xml` después de `-Pintegration clean verify` |
 | ArchUnit | `CleanArchitectureRulesTest` 20/20; `JpaRepositoryArchitectureRulesTest` 3/3; suite arquitectónica verde |
 | OpenAPI | Golden path 9/9; directorio de estudiantes 6/6; validación 2/2; contrato sesiones v2 4/4; hash consistente |
 | SQL/SP/JPA | Contratos públicos, procedimientos, paridad JDBC/JPA, paginación y consultas académicas verdes |
@@ -85,9 +86,11 @@ No se dejaron sesiones E2E. Los ITs de archivos usan el bucket de desarrollo exi
 
 ## 5. Contrato DB / PR #36
 
-La certificación técnica se realizó contra la base local que expone el contrato UTC-D06 y CC-003G-01, incluyendo procedimientos públicos, permisos runtime, vistas y paridad JPA/JDBC. Esa evidencia demuestra compatibilidad técnica del backend con la DB disponible.
+La certificación técnica se realizó contra la única base local autorizada: contenedor existente `sql_server_asistencias`, base `gestionasistenciadb`. La verificación fue de lectura y transaccional reversible, sin crear/reconstruir contenedor o base y sin restaurar sobre la base activa. Los backups existentes permanecen en `C:\Users\josev\AsistenciasUCO\db-backups\`.
 
-El PR #36 de la DB mantiene estado independiente: su merge a `develop` sigue pendiente y no se declara como realizado por esta tarea. El contrato SQL pertenece al owner de DB; PR #22 no modifica esquema, procedimientos ni permisos.
+El PR #36 de `johnjduque/gestion-asistencia-db` está cerrado/merged en `develop` con merge commit `e2486194d42c6c7a649882a6957273742aa26536`; `develop` apunta a ese SHA. La DB local contiene los objetos públicos observados (`usp_sincronizar_usuario`, `usp_registrar_o_actualizar_plan_estudio`, `usp_crear_facultad`, `uv_institucion`, `uv_facultad`, `uv_area`, `uv_usuario`, `uv_usuario_perfil`) y el rol runtime tiene `SELECT` sobre las vistas auditadas y `GRANT EXEC` sobre los providers públicos de PR #36. No se atribuye `GRANT EXEC` a `usp_crear_facultad`: la metadata revisada no lo mostró.
+
+Probe funcional reversible de `usp_crear_facultad`: actualización por ID y por nombre observada dentro de transacción (`1`/`1`, ambas con `ROLLBACK`); alta negativa devuelve SQL 515 por `estado` `NOT NULL` y deja cero filas tras rollback. Es un hallazgo de contrato DB documentado en [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md), no una corrección del backend. PR #22 no modifica esquema, procedimientos ni permisos.
 
 ## 6. Correcciones funcionales y limitaciones
 
@@ -95,5 +98,15 @@ El PR #36 de la DB mantiene estado independiente: su merge a `develop` sigue pen
 - No se amplió funcionalidad exclusiva de Keycloak; se conservaron JWT, roles institucionales, ownership y RBAC actuales.
 - No hay secretos en código, documentación, logs ni evidencia.
 - `AzureCloudIntegrationIT` permanece `NOT_RUN` porque requiere Azure real; no es una regresión del alcance local.
-- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. En el head `a991c6e5b7c1cda25f66a2046902971144f3744f`, GitHub confirmó `success` para Backend CI (incluido SonarCloud), Backend Security (CodeQL y Dependency Review) y Backend Deep Security Scan (Trivy y ArchUnit). Las pruebas locales no sustituyeron esos checks; los checks remotos fueron consultados directamente.
+- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. El resultado remoto del SHA final, incluidos SonarCloud, CodeQL, Dependency Review, Trivy y ArchUnit, queda pendiente hasta que termine el nuevo análisis posterior al push. Las pruebas locales no sustituyen esos checks.
 - El estado técnico de MAINT-003K queda **REVIEW_READY**: PR #22 continúa abierto, sin merge a `develop`, y requiere la revisión/aprobación humana final. `AzureCloudIntegrationIT` permanece `NOT_RUN` por requerir Azure real, fuera del alcance local.
+
+## 7. Cierre de calidad PR #22 — `java:S5778`
+
+SonarCloud reportó seis issues nuevos, todos Maintainability/Medium, regla `java:S5778` (“Only one method invocation is expected when testing runtime exceptions”): uno en `SesionV2RequestParserTest.java` (línea 37) y cinco en `UsuarioPlanEstudioProvidersSqlServerIT.java` (líneas 137, 148, 173, 177 y 181 del análisis que originó PR #22). El cambio mantiene el comportamiento y prepara valores/DTOs fuera de cada lambda, dejando una sola invocación potencialmente lanzadora dentro de cada `assertThrows`.
+
+La corrección quedó aplicada localmente. No se aceptaron issues ni se modificaron umbrales; el resultado Sonar remoto del SHA final se actualizará después del push.
+
+## 8. Backlog funcional auditado
+
+El estado AS-IS de instituciones, facultades, áreas, sedes, espacios físicos, perfil autenticado, coordinación y decanato está en [BACKLOG_ADMINISTRATIVO.md](BACKLOG_ADMINISTRATIVO.md). El documento separa 401/403 de 501, identifica ports/use cases/adapters/views/permisos/tests y conserva fuera de PR #22 toda implementación administrativa.

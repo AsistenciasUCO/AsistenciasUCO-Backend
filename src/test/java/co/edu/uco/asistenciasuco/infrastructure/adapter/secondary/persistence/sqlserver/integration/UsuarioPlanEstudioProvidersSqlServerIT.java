@@ -130,12 +130,13 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
     void plan_con_ejecutor_no_coordinador_o_inexistente_es_rechazado_por_la_db_sin_escribir() {
         final UUID plan = UUID.randomUUID();
         final int inp = 39000 + ThreadLocalRandom.current().nextInt(4000);
+        final UUID ejecutorInexistente = UUID.randomUUID();
         assertNotNull(estudiante, "Falta la fixture de estudiante activo.");
         transactionTemplate.executeWithoutResult(status -> {
             assertThrows(ForbiddenException.class,
                     () -> planEstudioCommandPort.registrarOActualizarPlanEstudio(plan, programa, inp, estudiante));
             assertThrows(ResourceNotFoundException.class,
-                    () -> planEstudioCommandPort.registrarOActualizarPlanEstudio(plan, programa, inp, UUID.randomUUID()));
+                    () -> planEstudioCommandPort.registrarOActualizarPlanEstudio(plan, programa, inp, ejecutorInexistente));
             assertEquals(0, planesConId(plan));
             status.setRollbackOnly();
         });
@@ -144,9 +145,10 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
     @Test
     void plan_con_programa_inexistente_se_rechaza_como_no_encontrado() {
         final UUID plan = UUID.randomUUID();
+        final UUID programaInexistente = UUID.randomUUID();
         transactionTemplate.executeWithoutResult(status -> {
             assertThrows(ResourceNotFoundException.class,
-                    () -> planEstudioCommandPort.registrarOActualizarPlanEstudio(plan, UUID.randomUUID(), 2026, coordinador));
+                    () -> planEstudioCommandPort.registrarOActualizarPlanEstudio(plan, programaInexistente, 2026, coordinador));
             assertEquals(0, planesConId(plan));
             status.setRollbackOnly();
         });
@@ -158,6 +160,12 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
         final int numero = 800000000 + ThreadLocalRandom.current().nextInt(100000000);
         final String correo = "it.cc003g01." + sufijo.substring(0, 20) + "@uco.edu.co";
         final String hashOriginal = "{bcrypt}IT_CC003G01_HASH_ORIGINAL_" + sufijo;
+        final CrearUsuarioRepositoryDTO dtoDocumentoDuplicado =
+                dto(numero, "otro." + correo, "ANA", hashOriginal);
+        final CrearUsuarioRepositoryDTO dtoCorreoDuplicado =
+                dto(numero + 1, correo, "ANA", hashOriginal);
+        final CrearUsuarioRepositoryDTO dtoPerfilDistinto =
+                dto(numero, correo, "OTRA", hashOriginal);
         transactionTemplate.executeWithoutResult(status -> {
             final CrearUsuarioRepositoryProjection creado = usuarioRepositoryPort.crearUsuario(
                     dto(numero, correo, "ANA", hashOriginal));
@@ -171,15 +179,15 @@ class UsuarioPlanEstudioProvidersSqlServerIT {
             assertEquals(1, usuariosCon(numero, correo));
 
             final ConflictException porDocumento = assertThrows(ConflictException.class, () -> usuarioRepositoryPort.crearUsuario(
-                    dto(numero, "otro." + correo, "ANA", hashOriginal)));
+                    dtoDocumentoDuplicado));
             assertEquals("ERR_UNICIDAD_DOCUMENTO", porDocumento.getCode());
 
             final ConflictException porCorreo = assertThrows(ConflictException.class, () -> usuarioRepositoryPort.crearUsuario(
-                    dto(numero + 1, correo, "ANA", hashOriginal)));
+                    dtoCorreoDuplicado));
             assertEquals("CONFLICT", porCorreo.getCode());
 
             final ConflictException perfilDistinto = assertThrows(ConflictException.class, () -> usuarioRepositoryPort.crearUsuario(
-                    dto(numero, correo, "OTRA", hashOriginal)));
+                    dtoPerfilDistinto));
             assertEquals("ERR_UNICIDAD_DOCUMENTO", perfilDistinto.getCode());
             assertNotEquals(0, usuariosCon(numero, correo));
             assertEquals(1, usuariosCon(numero, correo), "Los rechazos no deben crear ni duplicar usuarios.");
