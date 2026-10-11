@@ -6,7 +6,9 @@ import jakarta.persistence.Id;
 import jakarta.persistence.Table;
 import org.hibernate.annotations.Immutable;
 
-import java.util.Date;
+import java.time.LocalDateTime;
+import org.hibernate.annotations.JdbcType;
+import org.hibernate.type.descriptor.jdbc.LocalDateTimeJdbcType;
 import java.util.UUID;
 
 @Entity
@@ -21,8 +23,10 @@ public class UvSesionEntity {
     @Column(name = "numeroSemana") private Integer numeroSemana;
     @Column(name = "codigoGrupo") private Integer codigoGrupo;
     @Column(name = "nombreGrupo") private String nombreGrupo;
-    @Column(name = "fechaHoraInicio") private Date fechaHoraInicio;
-    @Column(name = "fechaHoraFin") private Date fechaHoraFin;
+    @JdbcType(LocalDateTimeJdbcType.class)
+    @Column(name = "fechaHoraInicio") private LocalDateTime fechaHoraInicio;
+    @JdbcType(LocalDateTimeJdbcType.class)
+    @Column(name = "fechaHoraFin") private LocalDateTime fechaHoraFin;
     protected UvSesionEntity() { }
 
     public UUID id() {
@@ -57,11 +61,11 @@ public class UvSesionEntity {
         return nombreGrupo;
     }
 
-    public Date fechaHoraInicio() {
+    public LocalDateTime fechaHoraInicio() {
         return fechaHoraInicio;
     }
 
-    public Date fechaHoraFin() {
+    public LocalDateTime fechaHoraFin() {
         return fechaHoraFin;
     }
 }

@@ -184,7 +184,8 @@ class DbExceptionTranslatorTest {
             "ERR_UNICIDAD_DOCUMENTO, ERR_UNICIDAD_DOCUMENTO",
             "USU_002, ERR_USUARIO_INACTIVO",
             "HOR_001, ERR_CRUCE_HORARIO_ESTUDIANTE",
-            "VAL_006, CONFLICT"
+            "VAL_006, CONFLICT",
+            "GEN_003, CONFLICT"
     })
     void dbcode_formal_de_conflicto_lanza_conflict_con_codigo_especifico(final String dbCode, final String expectedCode) {
         final ConflictException exception = assertThrows(

@@ -27,8 +27,9 @@ class JpaRepositoryBeanUniquenessTest {
     private static final String REPOSITORY_PACKAGE =
             "co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository";
     private static final String PORT_PACKAGE = "co.edu.uco.asistenciasuco.application.secondaryports.";
-    // 27 repositories de Port + AuditEventJpaRepository (@Repository sin Port, TD-010 OPTION A).
-    private static final int EXPECTED_REPOSITORIES = 28;
+    // 28 repositories de Port (MAINT-003F: + SesionProcedenciaJpaRepository) + AuditEventJpaRepository
+    // (@Repository sin Port, TD-010 OPTION A).
+    private static final int EXPECTED_REPOSITORIES = 29;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

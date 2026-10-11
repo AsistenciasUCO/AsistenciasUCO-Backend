@@ -98,6 +98,44 @@ CI remoto al cerrar esta pasada: en `9ed690f` y `b512bb4`, Dependency Review y T
 
 **Resultado:** `PAGINATION_CONTRACT_PUBLISHED_AND_JWT_4_ROLES_PASS / UTC_D06_DECISION_REQUIRED / BACKEND_READY_FOR_FRONTEND = NO`.
 
+## MAINT-003C — 2026-10-09 (Claude Code)
+
+Fecha/zona: 2026-10-09, `America/Bogota`. Credenciales leídas de `.env` local sin imprimirse; consultas con `ApplicationIntent=ReadOnly`.
+
+| Entorno / SHA | Comando o acción | Exit | Resultado |
+|---|---|---:|---|
+| GitHub API | `commits/7e2827d1/check-runs` | 0 | 9/9 `success` (`head_sha` 7e2827d1) |
+| GitHub API | `commits/3985b0ac/check-runs`, `commits/b512bb40/check-runs` | 0 | 9/9 `success` cada uno |
+| SonarCloud | `qualitygates/project_status?pullRequest=18`, `project_pull_requests/list` | 0 | `OK`; PR18 analizado en `7e2827d1`, PR19 `3985b0ac`, PR20 `b512bb40` |
+| git | `diff --stat bfc4fd3..7e2827d1` | 0 | 18 archivos; producción solo validador HTTP + adapter JPA |
+| SQL Server fuente | `d06_impact.sql` (columnas, dependencias, triggers, CHECK, CDC, parámetros SP, conteos, `CatalogoParametro TIEMPO`) | 0 | ver acta MAINT-003C; un primer borrador falló por columna inexistente (`DetalleAsistencia.sesion`) antes de producir resultados |
+| SQL Server fuente | `d06_defs.sql` (`OBJECT_DEFINITION` de 4 vistas, uso de `fechaHora`/`AT TIME ZONE`) | 0 | vistas con lista explícita; solo `usp_generar_sesiones_grupo` convierte |
+| repo owner DB | `git fetch --all`; `git log --since=2026-10-01` | 0 | sin commits nuevos; sin decisión D06 |
+| JDK 25 jshell | parseo `ISO_OFFSET_DATE_TIME` de 15 entradas | 0 | acepta `+02`, `+02:00:30`, `-00:00`, sin segundos, 9 decimales, minúsculas |
+| RED `19b5a95` | `mvnw test -Dtest=HttpUtcInstantCodec*Test,SesionV2HttpContractRedTest,SesionUtcActivationGuardTest,OpenApiSesionesV2ContractRedTest` | 1 esperado | guarda 3/0/0/0; codec 7/0/0/0; estricto 8 tests/4 RED («nothing was thrown»); HTTP 13/13 RED («ningún @RestController mapea /api/v2/sesiones»); OpenAPI 4/3 RED |
+| RED `19b5a95` | `mvnw clean test -Dmaven.test.failure.ignore=true -Djacoco.skip=true` | 0 | 1481 tests, 20 failures = exactamente los RED anteriores, 0 errores, 0 skips |
+
+No se ejecutó: `-Pintegration`, JaCoCo, Sonar/CodeQL/Trivy locales ni HTTP real para MAINT-003C (no hay código de producción nuevo; la rama RED falla por diseño). No se ejecutó DDL, `UPDATE`, merge ni force-push.
+
+**Resultado:** `REVIEW_COMPLETE / OWNER_PROPOSAL_READY / RED_D02_CAUSAL / UTC_V2_NOT_IMPLEMENTED / BACKEND_READY_FOR_FRONTEND = NO`.
+
+## MAINT-003F / UTC-D06 — 2026-10-10
+
+Fecha/zona: 2026-10-10, `America/Bogota`. Los secretos de conexión se inyectaron localmente y no se registran.
+
+| Entorno / SHA | Comando o acción | Exit | Resultado |
+|---|---|---:|---|
+| backend `2199321871aaa024aae2506d1d807c5a34f7fed3` | Java 25 `mvnw.cmd -B -ntp clean verify` | 0 | 1492 tests, 0 failures/errors/skips; JaCoCo LINE 88.80 %, BRANCH 78.31 %; ArchUnit y gates pasan |
+| backend + SQL Server aislado | `mvnw.cmd -B -ntp clean verify -Pintegration` | 1 | 191 tests: 11 failures, 1 error, 3 skips; faltan SP/fixtures y configuración de nombre esperado; no se cuenta como PASS |
+| DB `feat/utc-d06-post-freeze` `6946a73` | `test/test_utc_d06_procedencia_temporal.sql` en `utc_d06_sqltest` | 0 | Todos los checks UTC-D06 pasaron: esquema, históricos, v1/v2, ownership, permisos, clasificación, DST, no-escritura inválida y concurrencia |
+| DB `feat/utc-d06-post-freeze` `6946a73` | `test_summary.ps1 -ContainerName utc_d06_sqltest` | 0 | 179 ejecutados, 178 PASS, 0 FAIL, 1 skip explícito; 31 SP públicos y 56 vistas presentes |
+| DB aislada | inventario post-D06 de `dbo.Sesion` | 0 | 5 filas antes/después, mismos ids y timestamps; 5 `procedenciaTemporal=NULL`; 3 objetos v2 presentes |
+| container | `docker inspect` + `rg` backend/DB | 0 | SQL Server 2022, puerto local 14333, sin volumen, restart `no`; no se hallaron referencias permanentes en repositorios |
+
+La prueba HTTP v2 contra un IdP/JWT real queda `NOT_RUN`; los tests JWT unitarios/contractuales sí forman parte del build unitario verde. La integración Java bloqueada y la ausencia de una prueba HTTP real impiden cerrar `BACKEND_READY_FOR_FRONTEND`.
+
+No se ejecutaron merge, despliegue en base principal, activación productiva de v2 ni eliminación de `utc_d06_sqltest`.
+
 ## Reconciliación contra develop — 2026-10-10
 
 La evidencia anterior es una bitácora histórica de pruebas ejecutadas el 2026-10-09. Los PR #18, #19 y #20 ya fueron fusionados a develop. Las diferencias de PR #21 se reconciliaron preservando las versiones actuales del código; detalles en [PR21_CONFLICT_RESOLUTION.md](PR21_CONFLICT_RESOLUTION.md). Nuevos checks y `-Pintegration` siguen pendientes de ejecución/verificación sobre el nuevo HEAD.

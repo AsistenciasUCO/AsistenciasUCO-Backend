@@ -24,7 +24,16 @@ import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrup
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.interactor.GenerarSesionesGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.usecase.GenerarSesionesGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.usecase.impl.GenerarSesionesGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.primaryports.ConsultarSesionesPorGrupoV2InputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.primaryports.interactor.ConsultarSesionesPorGrupoV2Interactor;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.usecase.ConsultarSesionesPorGrupoV2UseCase;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.usecase.impl.ConsultarSesionesPorGrupoV2UseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.primaryports.ConsultarSesionV2InputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.primaryports.interactor.ConsultarSesionV2Interactor;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.usecase.ConsultarSesionV2UseCase;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.usecase.impl.ConsultarSesionV2UseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -94,6 +103,34 @@ public class SesionWiringConfiguration {
     @Bean
     public ActualizarSesionInputPort actualizarSesionInputPort(final ActualizarSesionUseCase actualizarSesionUseCase) {
         return new ActualizarSesionInteractor(actualizarSesionUseCase);
+    }
+
+    @Bean
+    public ConsultarSesionV2UseCase consultarSesionV2UseCase(
+            final SesionProcedenciaQueryPort sesionProcedenciaQueryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new ConsultarSesionV2UseCaseImpl(sesionProcedenciaQueryPort, institutionalScopePort);
+    }
+
+    @Bean
+    public ConsultarSesionV2InputPort consultarSesionV2InputPort(final ConsultarSesionV2UseCase consultarSesionV2UseCase) {
+        return new ConsultarSesionV2Interactor(consultarSesionV2UseCase);
+    }
+
+    @Bean
+    public ConsultarSesionesPorGrupoV2UseCase consultarSesionesPorGrupoV2UseCase(
+            final SesionProcedenciaQueryPort sesionProcedenciaQueryPort,
+            final InstitutionalScopePort institutionalScopePort
+    ) {
+        return new ConsultarSesionesPorGrupoV2UseCaseImpl(sesionProcedenciaQueryPort, institutionalScopePort);
+    }
+
+    @Bean
+    public ConsultarSesionesPorGrupoV2InputPort consultarSesionesPorGrupoV2InputPort(
+            final ConsultarSesionesPorGrupoV2UseCase consultarSesionesPorGrupoV2UseCase
+    ) {
+        return new ConsultarSesionesPorGrupoV2Interactor(consultarSesionesPorGrupoV2UseCase);
     }
 
     @Bean

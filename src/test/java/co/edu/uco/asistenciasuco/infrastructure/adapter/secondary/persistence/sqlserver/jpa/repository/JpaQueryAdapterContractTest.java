@@ -20,9 +20,7 @@ import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.Test;
 import org.springframework.transaction.support.TransactionOperations;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -95,7 +93,7 @@ class JpaQueryAdapterContractTest {
     @Test
     void sesiones_por_id_y_por_grupo() {
         final UvSesionEntity sesion = HydratedViewRow.of(UvSesionEntity.class, Map.of("id", ID, "idGrupo", OTHER,
-                "nombre", "Parcial", "fechaHoraInicio", Date.from(Instant.parse("2026-10-08T13:00:00Z"))));
+                "nombre", "Parcial", "fechaHoraInicio", LocalDateTime.of(2026, 10, 8, 13, 0)));
         final TypedQuery<UvSesionEntity> porId = query(SesionJpaRepository.HQL_POR_ID, UvSesionEntity.class,
                 List.of(sesion));
         final TypedQuery<UvSesionEntity> porGrupo = query(SesionJpaRepository.HQL_POR_GRUPO, UvSesionEntity.class,
@@ -166,7 +164,7 @@ class JpaQueryAdapterContractTest {
     @Test
     void sesiones_de_materia_filtran_por_estudiante_y_asignatura() {
         final SesionMateriaQueryRow row = new SesionMateriaQueryRow(ID, "Parcial", 1, "S-1", 2, OTHER, null, "G1",
-                Date.from(Instant.parse("2026-10-08T13:00:00Z")), null);
+                LocalDateTime.of(2026, 10, 8, 13, 0), null);
         final TypedQuery<SesionMateriaQueryRow> sesiones = query(
                 SesionMateriaEstudianteJpaRepository.HQL_POR_ESTUDIANTE_Y_ASIGNATURA, SesionMateriaQueryRow.class,
                 List.of(row));

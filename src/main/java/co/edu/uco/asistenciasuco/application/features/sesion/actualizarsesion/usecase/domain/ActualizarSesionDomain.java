@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.domain;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
@@ -16,6 +17,7 @@ public final class ActualizarSesionDomain {
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
     private final UUID usuarioEjecutor;
+    private final ContratoHorarioSesion contratoTemporal;
 
     public ActualizarSesionDomain(
             final UUID sesion,
@@ -24,6 +26,18 @@ public final class ActualizarSesionDomain {
             final LocalDateTime fechaHoraFin,
             final UUID usuarioEjecutor
     ) {
+        this(sesion, nombre, fechaHoraInicio, fechaHoraFin, usuarioEjecutor, ContratoHorarioSesion.LOCAL_SIN_ZONA_V1);
+    }
+
+    public ActualizarSesionDomain(
+            final UUID sesion,
+            final String nombre,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final UUID usuarioEjecutor,
+            final ContratoHorarioSesion contratoTemporal
+    ) {
+        this.contratoTemporal = contratoTemporal == null ? ContratoHorarioSesion.LOCAL_SIN_ZONA_V1 : contratoTemporal;
         validarSesion(sesion);
         validarUsuarioEjecutor(usuarioEjecutor);
         validarFechas(fechaHoraInicio, fechaHoraFin);
@@ -81,5 +95,9 @@ public final class ActualizarSesionDomain {
 
     public UUID getUsuarioEjecutor() {
         return usuarioEjecutor;
+    }
+
+    public ContratoHorarioSesion getContratoTemporal() {
+        return contratoTemporal;
     }
 }

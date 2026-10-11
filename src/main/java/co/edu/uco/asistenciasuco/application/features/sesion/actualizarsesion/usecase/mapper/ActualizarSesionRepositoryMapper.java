@@ -20,7 +20,8 @@ public final class ActualizarSesionRepositoryMapper {
                 domain.getNombre(),
                 domain.getFechaHoraInicio(),
                 domain.getFechaHoraFin(),
-                domain.getUsuarioEjecutor()
+                domain.getUsuarioEjecutor(),
+                domain.getContratoTemporal()
         );
     }
 }

@@ -40,8 +40,8 @@ public final class SesionMateriaEstudianteJdbcBaseline implements SesionMateriaE
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idGrupo")),
                 JdbcBaselineValueMapper.toString(rs.getObject("codigoGrupo")),
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreGrupo")),
-                JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
-                JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin"))
+                rs.getObject("fechaHoraInicio", java.time.LocalDateTime.class),
+                rs.getObject("fechaHoraFin", java.time.LocalDateTime.class)
         ));
     }
 }

@@ -20,7 +20,8 @@ public final class ActualizarSesionMapper {
                 dto.getNombre(),
                 dto.getFechaHoraInicio(),
                 dto.getFechaHoraFin(),
-                dto.getUsuarioEjecutor()
+                dto.getUsuarioEjecutor(),
+                dto.getContratoTemporal()
         );
     }
 }

@@ -23,7 +23,8 @@ public final class CrearSesionRepositoryMapper {
                 domain.getNombre(),
                 domain.getFechaHoraInicio(),
                 domain.getFechaHoraFin(),
-                domain.getUsuarioEjecutor()
+                domain.getUsuarioEjecutor(),
+                domain.getContratoTemporal()
         );
     }
 }

@@ -39,7 +39,7 @@ import java.time.LocalTime;
  * <p>Reproduce las reglas de conversion certificadas en paridad con el baseline JDBC de test, de forma neutral a JPA: flags {@code bit}/{@code int}
  * convierten NULL a {@code false} y {@code int} a {@code v == 1}; numericos a texto con
  * {@code String.valueOf}; horas {@code varchar(5)} a {@link LocalTime} (hora academica LOCAL, nunca UTC);
- * fechas de {@code uv_sesion} con {@link CoreViewJpaProjectionMapper#toUtcLocalDateTime}.</p>
+ * fechas de {@code uv_sesion} como {@link java.time.LocalDateTime} DATETIME2 literal, sin conversion por zona (MAINT-003K).</p>
  */
 public final class AcademicViewJpaProjectionMapper {
 
@@ -85,8 +85,8 @@ public final class AcademicViewJpaProjectionMapper {
     public static SesionMateriaEstudianteProjection toSesionMateria(final SesionMateriaQueryRow row) {
         return new SesionMateriaEstudianteProjection(row.id(), row.nombre(), row.numero(), row.codigo(),
                 row.numeroSemana(), row.idGrupo(), text(row.codigoGrupo()), row.nombreGrupo(),
-                CoreViewJpaProjectionMapper.toUtcLocalDateTime(row.fechaHoraInicio()),
-                CoreViewJpaProjectionMapper.toUtcLocalDateTime(row.fechaHoraFin()));
+                row.fechaHoraInicio(),
+                row.fechaHoraFin());
     }
 
     public static PeriodoAcademicoProjection toPeriodoAcademico(final UvPeriodoAcademicoEntity row) {
@@ -128,8 +128,8 @@ public final class AcademicViewJpaProjectionMapper {
                 row.nombreGrupo(),
                 row.numero(),
                 row.nombre(),
-                CoreViewJpaProjectionMapper.toUtcLocalDateTime(row.fechaHoraInicio()),
-                CoreViewJpaProjectionMapper.toUtcLocalDateTime(row.fechaHoraFin()),
+                row.fechaHoraInicio(),
+                row.fechaHoraFin(),
                 text(row.numeroIdentificacion()),
                 row.nombreCompleto(),
                 row.correo(),

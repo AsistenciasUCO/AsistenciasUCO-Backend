@@ -12,9 +12,11 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -107,6 +109,22 @@ public final class GlobalExceptionHandler {
                 request,
                 exception.getValidationResult().issues().stream().map(ApiFieldErrorMapper::from).toList()
         );
+    }
+
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleMethodNotSupported(
+            final HttpRequestMethodNotSupportedException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.methodNotAllowed();
+        logFrameworkBadRequest(descriptor, exception, request);
+        final ResponseEntity<ApiErrorResponse> response = buildResponse(descriptor, request);
+        if (exception.getSupportedHttpMethods() == null || exception.getSupportedHttpMethods().isEmpty()) {
+            return response;
+        }
+        return ResponseEntity.status(response.getStatusCode())
+                .allow(exception.getSupportedHttpMethods().toArray(new HttpMethod[0]))
+                .body(response.getBody());
     }
 
     @ExceptionHandler(NoResourceFoundException.class)

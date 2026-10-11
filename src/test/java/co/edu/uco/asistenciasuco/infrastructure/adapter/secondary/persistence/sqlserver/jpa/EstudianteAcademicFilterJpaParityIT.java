@@ -14,6 +14,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -61,7 +62,7 @@ class EstudianteAcademicFilterJpaParityIT {
         final List<UUID> expected = oracle(
                 "EXISTS (SELECT 1 FROM dbo.uv_estudiante a WHERE a.id = e.id AND a.idGrupo = ?)", grupo);
 
-        assertEquals(expected, ids(dto(null, null, null, grupo)));
+        assertEquals(expected, ids(null, null, null, grupo));
     }
 
     @Test
@@ -74,12 +75,12 @@ class EstudianteAcademicFilterJpaParityIT {
                 EXISTS (SELECT 1 FROM dbo.uv_estudiante a WHERE a.id = e.id
                         AND a.idInstitucion = ? AND a.idPrograma = ?)""", institucion, programa);
 
-        assertEquals(expected, ids(dto(institucion, null, programa, null)));
+        assertEquals(expected, ids(institucion, null, programa, null));
     }
 
     @Test
     void grupo_inexistente_no_devuelve_estudiantes_ni_paginas() {
-        final var page = estudiantes.consultarEstudiantes(dto(null, null, null, UUID.randomUUID()));
+        final var page = estudiantes.consultarEstudiantes(dto(null, null, null, UUID.randomUUID(), 0));
 
         assertEquals(0L, page.totalItems());
         assertEquals(0, page.totalPages());
@@ -104,15 +105,30 @@ class EstudianteAcademicFilterJpaParityIT {
                 (rs, row) -> UUID.fromString(rs.getString("id")), arguments);
     }
 
-    private List<UUID> ids(final ConsultarEstudiantesRepositoryDTO dto) {
-        final var page = estudiantes.consultarEstudiantes(dto);
-        assertEquals(page.items().size(), page.totalItems(), "El fixture debe caber en una sola pagina.");
-        return page.items().stream().map(EstudianteResumenRepositoryProjection::id).toList();
+    /**
+     * Recorre TODAS las paginas del filtro (independiente del volumen de datos: seed minimo o fixtures de 5000
+     * estudiantes) y exige que el total declarado coincida con las filas recuperadas, sin huecos ni solapes.
+     */
+    private List<UUID> ids(final UUID institucion, final UUID facultad, final UUID programa, final UUID grupo) {
+        final List<UUID> all = new ArrayList<>();
+        long total;
+        int pagina = 0;
+        do {
+            final var page = estudiantes.consultarEstudiantes(dto(institucion, facultad, programa, grupo, pagina));
+            total = page.totalItems();
+            page.items().stream().map(EstudianteResumenRepositoryProjection::id).forEach(all::add);
+            if (page.items().isEmpty()) {
+                break;
+            }
+            pagina++;
+        } while (all.size() < total);
+        assertEquals(total, all.size(), "Las paginas del filtro deben cubrir exactamente totalItems.");
+        return all;
     }
 
     private static ConsultarEstudiantesRepositoryDTO dto(final UUID institucion, final UUID facultad,
-                                                         final UUID programa, final UUID grupo) {
+                                                         final UUID programa, final UUID grupo, final int pagina) {
         return new ConsultarEstudiantesRepositoryDTO(null, null, null, null, institucion, facultad, programa, grupo,
-                null, 0, 500);
+                null, pagina, 500);
     }
 }

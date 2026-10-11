@@ -21,6 +21,7 @@ public final class ApiFieldErrorMapper {
             case INVALID_TYPE -> ApiFieldErrorCode.FIELD_INVALID_TYPE;
             case INVALID_UUID -> ApiFieldErrorCode.FIELD_INVALID_UUID;
             case INVALID_VALUE -> ApiFieldErrorCode.FIELD_INVALID_VALUE;
+            case UNKNOWN_FIELD -> ApiFieldErrorCode.FIELD_UNKNOWN;
         };
     }
 }

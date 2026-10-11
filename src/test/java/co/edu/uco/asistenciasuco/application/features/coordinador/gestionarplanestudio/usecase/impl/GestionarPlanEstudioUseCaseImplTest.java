@@ -49,7 +49,7 @@ class GestionarPlanEstudioUseCaseImplTest {
 
         final ArgumentCaptor<UUID> idCaptor = ArgumentCaptor.forClass(UUID.class);
         verify(commandPort).registrarOActualizarPlanEstudio(idCaptor.capture(), org.mockito.ArgumentMatchers.eq(programa),
-                org.mockito.ArgumentMatchers.eq(2026));
+                org.mockito.ArgumentMatchers.eq(2026), org.mockito.ArgumentMatchers.eq(usuario));
         assertNotNull(idCaptor.getValue());
     }
 
@@ -63,6 +63,20 @@ class GestionarPlanEstudioUseCaseImplTest {
 
         useCase.guardar(domain);
 
-        verify(commandPort).registrarOActualizarPlanEstudio(planId, programa, 2027);
+        verify(commandPort).registrarOActualizarPlanEstudio(planId, programa, 2027, usuario);
+    }
+
+    @Test
+    void guardar_propaga_el_coordinador_autenticado_como_ejecutor_para_que_la_db_revalide_la_autorizacion() {
+        final UUID coordinador = UUID.randomUUID();
+        final UUID programa = UUID.randomUUID();
+        when(scopePort.findProgramaIdByCoordinadorUsuario(coordinador)).thenReturn(Optional.of(programa));
+
+        useCase.guardar(new PlanEstudioDomain(UUID.randomUUID(), 2028, coordinador));
+
+        final ArgumentCaptor<UUID> ejecutor = ArgumentCaptor.forClass(UUID.class);
+        verify(commandPort).registrarOActualizarPlanEstudio(org.mockito.ArgumentMatchers.any(), org.mockito.ArgumentMatchers.eq(programa),
+                org.mockito.ArgumentMatchers.eq(2028), ejecutor.capture());
+        assertEquals(coordinador, ejecutor.getValue());
     }
 }

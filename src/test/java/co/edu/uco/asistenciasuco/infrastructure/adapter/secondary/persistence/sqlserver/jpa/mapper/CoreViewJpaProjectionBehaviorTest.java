@@ -7,9 +7,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
 import org.junit.jupiter.api.Test;
 
-import java.time.Instant;
 import java.time.LocalDateTime;
-import java.util.Date;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -22,7 +20,7 @@ import static org.mockito.Mockito.*;
 class CoreViewJpaProjectionBehaviorTest {
 
     @Test
-    void sesion_con_codigo_y_fechas_convierte_los_instantes_a_utc() {
+    void sesion_con_codigo_y_fechas_conserva_el_reloj_literal_sin_desplazamiento_de_zona() {
         final UvSesionEntity row = mock(UvSesionEntity.class);
         final UUID sesion = UUID.randomUUID();
         final UUID grupo = UUID.randomUUID();
@@ -31,8 +29,8 @@ class CoreViewJpaProjectionBehaviorTest {
         when(row.nombre()).thenReturn("Evaluación");
         when(row.numero()).thenReturn(7);
         when(row.codigoGrupo()).thenReturn(508);
-        when(row.fechaHoraInicio()).thenReturn(Date.from(Instant.parse("2026-10-08T14:00:00Z")));
-        when(row.fechaHoraFin()).thenReturn(Date.from(Instant.parse("2026-10-08T15:30:00Z")));
+        when(row.fechaHoraInicio()).thenReturn(LocalDateTime.parse("2026-10-08T14:00:00"));
+        when(row.fechaHoraFin()).thenReturn(LocalDateTime.parse("2026-10-08T15:30:00"));
         final SesionRepositoryProjection projection = CoreViewJpaProjectionMapper.toSesion(row);
         assertEquals(sesion, projection.getSesion());
         assertEquals(grupo, projection.getGrupo());

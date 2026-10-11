@@ -25,11 +25,11 @@ import java.util.function.Supplier;
  *
  * <p>Cada escenario imprime una linea {@code PARITY_OUTCOME|escenario|excepcion|codigo|mensaje} normalizada
  * (UUID sustituidos). El log del baseline JDBC (BEFORE) y del candidato JPA (AFTER) debe coincidir linea a linea.
- * Escenarios: errores funcionales deterministas (ids inexistentes, validacion) sin efectos DB. TD-043 quedo
- * CERRADO (los tres providers antes ausentes: {@code usp_registrar_estudiante_en_grupo},
- * {@code usp_sincronizar_usuario}, {@code usp_registrar_o_actualizar_plan_estudio} ya existen en la DB); los
- * escenarios de PlanEstudio y Usuario ejercitan ahora el provider publico real con una entrada invalida
- * deterministica, sin asumir el camino de exito con efectos DB (eso queda NOT_RUN aqui).</p>
+ * Escenarios: errores funcionales deterministas (ids inexistentes, validacion) sin efectos DB. Los providers
+ * publicos {@code usp_sincronizar_usuario} y {@code usp_registrar_o_actualizar_plan_estudio} los entrega el work
+ * item DB CC-003G-01 (no existian en la DB publicada hasta ese work item; ver MAINT-003H). Los escenarios de
+ * PlanEstudio y Usuario ejercitan el provider real con una entrada invalida deterministica; el camino de exito con
+ * efectos DB, los duplicados y la autorizacion se certifican en {@code UsuarioPlanEstudioProvidersSqlServerIT}.</p>
  */
 @Tag("integration")
 @SpringBootTest
@@ -119,7 +119,8 @@ class AcademicUserCommandsSpParityIT {
     @Test
     void plan_estudio_registrar_con_programa_inexistente_produce_el_mismo_resultado() {
         registrar("PLA_01_PROGRAMA_INEXISTENTE", () -> {
-            planEstudioCommandPort.registrarOActualizarPlanEstudio(UUID.randomUUID(), UUID.randomUUID(), 2026);
+            planEstudioCommandPort.registrarOActualizarPlanEstudio(UUID.randomUUID(), UUID.randomUUID(), 2026,
+                    UUID.randomUUID());
             return "OK";
         });
     }

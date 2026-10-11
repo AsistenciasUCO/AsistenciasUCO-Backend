@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecas
 
 
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
@@ -22,6 +23,7 @@ public final class CrearSesionDomain {
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
     private final UUID usuarioEjecutor;
+    private final ContratoHorarioSesion contratoTemporal;
 
     public CrearSesionDomain(
             final UUID grupo,
@@ -30,6 +32,22 @@ public final class CrearSesionDomain {
             final LocalDateTime fechaHoraFin,
             final UUID usuarioEjecutor
     ) {
+        this(grupo, nombre, fechaHoraInicio, fechaHoraFin, usuarioEjecutor, ContratoHorarioSesion.LOCAL_SIN_ZONA_V1);
+    }
+
+    /**
+     * @param contratoTemporal origen de las horas; en v2 ambas ya son instantes UTC, por lo que la
+     *                         regla fin > inicio se evalua sobre instantes y no sobre relojes locales.
+     */
+    public CrearSesionDomain(
+            final UUID grupo,
+            final String nombre,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final UUID usuarioEjecutor,
+            final ContratoHorarioSesion contratoTemporal
+    ) {
+        this.contratoTemporal = contratoTemporal == null ? ContratoHorarioSesion.LOCAL_SIN_ZONA_V1 : contratoTemporal;
         validarGrupo(grupo);
         validarUsuarioEjecutor(usuarioEjecutor);
         validarFechas(fechaHoraInicio, fechaHoraFin);
@@ -91,6 +109,10 @@ public final class CrearSesionDomain {
 
     public UUID getUsuarioEjecutor() {
         return usuarioEjecutor;
+    }
+
+    public ContratoHorarioSesion getContratoTemporal() {
+        return contratoTemporal;
     }
 
 }

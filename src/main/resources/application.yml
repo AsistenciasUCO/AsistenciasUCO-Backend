@@ -18,6 +18,11 @@ spring:
   main:
     web-application-type: servlet
     keep-alive: true
+  http:
+    converters:
+      # Boot 4 puede detectar Jackson 2 por dependencias transitivas del proveedor de identidad.
+      # El valor "jackson" selecciona el mapper Jackson 3 configurado en Infrastructure.
+      preferred-json-mapper: jackson
   threads:
     virtual:
       enabled: true
@@ -92,6 +97,11 @@ logging:
 # Ver docs/architecture/adapter-composition-standard.md
 # ──────────────────────────────────────────────────────────────
 app:
+  # MAINT-003F: contrato UTC v2 de sesiones. OFF por defecto; activar solo cuando la DB del ambiente
+  # tenga desplegado UTC-D06-POST-FREEZE (SesionV2SchemaCompatibilityVerifier lo comprueba al arrancar).
+  sesiones:
+    v2:
+      enabled: ${APP_SESIONES_V2_ENABLED:false}
   adapters:
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}

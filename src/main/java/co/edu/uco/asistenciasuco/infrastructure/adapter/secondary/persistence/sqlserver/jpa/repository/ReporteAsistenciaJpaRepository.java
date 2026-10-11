@@ -16,7 +16,7 @@ import java.util.UUID;
 /**
  * Reporte de asistencia por grupo sobre JPA (LB-008 JPA-05). Reutiliza las entidades de vista existentes y
  * devuelve filas de constructor, nunca entidades JPA fuera de Infrastructure.
- * Las sesiones usan la conversion UTC certificada en JPA-04.
+ * Las fechas de sesion son el reloj DATETIME2 literal (LocalDateTime), sin conversion por zona de la JVM (MAINT-003K).
  */
 @Repository
 public class ReporteAsistenciaJpaRepository implements ReporteAsistenciaQueryPort {
@@ -32,7 +32,7 @@ public class ReporteAsistenciaJpaRepository implements ReporteAsistenciaQueryPor
             left join UvAsistenciaEntity a on a.idSesion = s.id and a.idEstudianteGrupo = eg.id
             left join UvDetalleAsistenciaEntity da on da.idAsistencia = a.id
             where s.idGrupo = :idGrupo
-            order by s.numero, s.fechaHoraInicio, ei.nombreCompleto
+            order by s.numero, s.fechaHoraInicio, ei.nombreCompleto, ei.id, eg.id
             """;
 
     private final EntityManager entityManager;

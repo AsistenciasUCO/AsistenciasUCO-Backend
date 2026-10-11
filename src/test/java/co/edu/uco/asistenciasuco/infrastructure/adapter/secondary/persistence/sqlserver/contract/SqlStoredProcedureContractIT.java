@@ -181,7 +181,8 @@ class SqlStoredProcedureContractIT {
                         input("@idPlanEstudio", "uniqueidentifier"),
                         input("@idPrograma", "uniqueidentifier"),
                         input("@inp", "int"),
-                        input("@idCorrelacion", "uniqueidentifier")
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
                 )),
                 Arguments.of("usp_ejecutar_cierre_masivo_periodo", List.of(
                         input("@codigoPeriodo", "nvarchar"),

@@ -9,6 +9,8 @@ info:
     de verdad; SSE solo notifica cambios best-effort. No incluye endpoints legacy ni
     administrativos. Fuera del Golden Path solo publica, por decisión contract-first de
     MAINT-001, el directorio paginado GET /api/v1/estudiantes en su comportamiento AS-IS.
+    1.1.0 (MAINT-003F): agrega el contrato UTC v2 de sesiones (/api/v2/sesiones, UTC-D01..D09)
+    sin modificar ninguna operación ni schema v1; v1 conserva su wire ISO local sin offset.
 servers:
   - url: /
     description: Servidor que publica esta especificación
@@ -643,6 +645,218 @@ paths:
           $ref: '#/components/responses/NotFound'
         '500':
           $ref: '#/components/responses/InternalError'
+  /api/v2/sesiones:
+    post:
+      tags: [Sesiones]
+      summary: Crear una sesión con instantes UTC confirmados (v2)
+      operationId: crearSesionV2
+      description: |
+        Contrato UTC v2 (MAINT-003F, decisiones UTC-D01..D05 y D08). fechaHoraInicio y fechaHoraFin
+        son obligatorios en RFC 3339 con offset explícito (perfil UTC-D02) y se normalizan una sola vez
+        al instante UTC; la DB registra procedenciaTemporal = UTC_V2 en el mismo INSERT que las horas.
+        La regla fin > inicio se evalúa sobre instantes UTC. El actor se toma del JWT: docente o
+        usuarioEjecutor en el body son FIELD_UNKNOWN. Errores de entrada: 400 VALIDATION_ERROR con
+        detalle por campo (FIELD_REQUIRED, FIELD_INVALID_FORMAT, FIELD_UNKNOWN). Con
+        app.sesiones.v2.enabled=false la ruta responde 404.
+      x-roles: [DOCENTE]
+      x-idempotency: NOT_DEFINED
+      x-contract-version: v2
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CrearSesionV2Request'
+            example:
+              grupo: e38345e1-8b26-45ae-9ee0-07cf7ee535ad
+              nombre: Distribuciones continuas
+              fechaHoraInicio: '2026-07-15T20:00:00-05:00'
+              fechaHoraFin: '2026-07-15T22:00:00-05:00'
+      responses:
+        '201':
+          description: Sesión creada con procedencia UTC_V2.
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiMessageResponse'
+              example:
+                exitoso: true
+                mensaje: Sesion creada correctamente.
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v2/sesiones/{sesionId}:
+    get:
+      tags: [Sesiones]
+      summary: Consultar una sesión con estado temporal (v2)
+      operationId: consultarSesionV2
+      description: |
+        UTC-D07. Sesión CONFIRMADA (procedencia UTC_V2, UTC_GENERADOR o UTC_OWNER): horas como
+        instante UTC con sufijo Z. Sesión INDETERMINADA (procedencia NULL: histórica o escrita por v1):
+        fechaHoraInicio, fechaHoraFin y procedenciaTemporal en null; conserva identificación y datos no
+        temporales. Exige DOCENTE titular del grupo de la sesión (403 si es de otro docente, 404 si no
+        existe).
+      x-roles: [DOCENTE]
+      x-idempotency: YES
+      x-contract-version: v2
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SesionIdPath'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Sesión v2.
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionV2DataResponse'
+              examples:
+                confirmada:
+                  value:
+                    exitoso: true
+                    datos:
+                      sesion: 94ea3dc1-847a-4d4f-9222-d8bba0c6427c
+                      grupo: e38345e1-8b26-45ae-9ee0-07cf7ee535ad
+                      nombre: Distribuciones continuas
+                      numero: 3
+                      codigo: SES-03
+                      numeroSemana: 3
+                      codigoGrupo: '1'
+                      nombreGrupo: Estadística III
+                      fechaHoraInicio: '2026-07-16T01:00:00Z'
+                      fechaHoraFin: '2026-07-16T03:00:00Z'
+                      estadoTemporal: CONFIRMADA
+                      procedenciaTemporal: UTC_V2
+                indeterminada:
+                  value:
+                    exitoso: true
+                    datos:
+                      sesion: 94ea3dc1-847a-4d4f-9222-d8bba0c6427c
+                      grupo: e38345e1-8b26-45ae-9ee0-07cf7ee535ad
+                      nombre: Distribuciones continuas
+                      numero: 3
+                      codigo: SES-03
+                      numeroSemana: 3
+                      codigoGrupo: '1'
+                      nombreGrupo: Estadística III
+                      fechaHoraInicio: null
+                      fechaHoraFin: null
+                      estadoTemporal: INDETERMINADA
+                      procedenciaTemporal: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+    patch:
+      tags: [Sesiones]
+      summary: Reemplazar nombre e instantes de una sesión (v2)
+      operationId: actualizarSesionV2
+      description: |
+        Reemplazo completo de nombre, fechaHoraInicio y fechaHoraFin (sin merge campo a campo). Mismo
+        perfil UTC-D02 que POST; la DB escribe horas y procedenciaTemporal = UTC_V2 en el mismo UPDATE.
+        No existe PUT v2 (UTC-D09): un PUT responde 405. El actor se toma del JWT.
+      x-roles: [DOCENTE]
+      x-idempotency: NOT_DEFINED
+      x-contract-version: v2
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/SesionIdPath'
+        - $ref: '#/components/parameters/CorrelationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ActualizarSesionV2Request'
+            example:
+              nombre: Distribuciones continuas — revisión
+              fechaHoraInicio: '2026-07-16T03:00:00+02:00'
+              fechaHoraFin: '2026-07-16T05:30:00+02:00'
+      responses:
+        '200':
+          description: Sesión actualizada con procedencia UTC_V2.
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiVoidResponse'
+              example:
+                exitoso: true
+                datos: null
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
+  /api/v2/sesiones/grupo/{grupoId}:
+    get:
+      tags: [Sesiones]
+      summary: Consultar las sesiones de un grupo con estado temporal (v2)
+      operationId: consultarSesionesPorGrupoV2
+      description: |
+        Todas las sesiones del grupo (no se ocultan históricos), en el mismo orden que v1. Cada fila
+        decide su estado temporal: CONFIRMADA con instantes Z o INDETERMINADA con horas null. Exige
+        DOCENTE titular del grupo.
+      x-roles: [DOCENTE]
+      x-idempotency: YES
+      x-contract-version: v2
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/GrupoIdPath'
+        - $ref: '#/components/parameters/CorrelationId'
+      responses:
+        '200':
+          description: Sesiones v2 del grupo.
+          headers:
+            X-Correlation-Id:
+              $ref: '#/components/headers/CorrelationId'
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SesionV2ListResponse'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '500':
+          $ref: '#/components/responses/InternalError'
 components:
   securitySchemes:
     bearerAuth:
@@ -1191,3 +1405,116 @@ components:
           type: array
           items:
             $ref: '#/components/schemas/ApiFieldError'
+    UtcInstant:
+      type: string
+      format: date-time
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,7})?(Z|[+-]\d{2}:\d{2})$'
+      description: |
+        Perfil UTC-D02: RFC 3339 con segundos obligatorios, 0 a 7 decimales (DATETIME2(7), nunca se
+        redondea), T y Z mayúsculas y offset Z o ±HH:mm; sin espacios. Además del patrón léxico se valida
+        el calendario, el rango del offset y que el instante UTC resultante quepa en DATETIME2. Un valor
+        sin offset, con +HH, con ±HH:mm:ss o con 8-9 decimales es FIELD_INVALID_FORMAT.
+      x-wire-format: RFC3339_UTC_D02
+      x-persistence-semantics: UTC
+      example: '2026-07-15T20:00:00-05:00'
+    UtcInstantResponse:
+      type: [string, 'null']
+      format: date-time
+      pattern: '^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d{1,7})?Z$'
+      description: |
+        Instante UTC con sufijo Z leído del DATETIME2 confirmado; null cuando estadoTemporal es
+        INDETERMINADA. El cliente decide la zona de visualización (IANA), nunca el servidor.
+      x-wire-format: RFC3339_UTC_Z
+      example: '2026-07-16T01:00:00Z'
+    CrearSesionV2Request:
+      type: object
+      additionalProperties: false
+      required: [grupo, nombre, fechaHoraInicio, fechaHoraFin]
+      properties:
+        grupo:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 50
+        fechaHoraInicio:
+          $ref: '#/components/schemas/UtcInstant'
+        fechaHoraFin:
+          $ref: '#/components/schemas/UtcInstant'
+    ActualizarSesionV2Request:
+      type: object
+      additionalProperties: false
+      required: [nombre, fechaHoraInicio, fechaHoraFin]
+      properties:
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 50
+        fechaHoraInicio:
+          $ref: '#/components/schemas/UtcInstant'
+        fechaHoraFin:
+          $ref: '#/components/schemas/UtcInstant'
+    SesionV2:
+      type: object
+      additionalProperties: false
+      required: [sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin, estadoTemporal, procedenciaTemporal]
+      properties:
+        sesion:
+          type: string
+          format: uuid
+        grupo:
+          type: string
+          format: uuid
+        nombre:
+          type: string
+          minLength: 1
+          maxLength: 50
+        numero:
+          type: integer
+          format: int32
+        codigo:
+          type: string
+        numeroSemana:
+          type: integer
+          format: int32
+        codigoGrupo:
+          type: string
+        nombreGrupo:
+          type: string
+        fechaHoraInicio:
+          $ref: '#/components/schemas/UtcInstantResponse'
+        fechaHoraFin:
+          $ref: '#/components/schemas/UtcInstantResponse'
+        estadoTemporal:
+          type: string
+          enum: [CONFIRMADA, INDETERMINADA]
+        procedenciaTemporal:
+          type: [string, 'null']
+          enum: [UTC_V2, UTC_GENERADOR, UTC_OWNER, null]
+          description: Origen confirmado de las horas; null en sesiones INDETERMINADAS.
+    SesionV2DataResponse:
+      type: object
+      additionalProperties: false
+      required: [exitoso, datos]
+      properties:
+        exitoso:
+          type: boolean
+          const: true
+        datos:
+          $ref: '#/components/schemas/SesionV2'
+    SesionV2ListResponse:
+      type: object
+      additionalProperties: false
+      required: [exitoso, datos, total]
+      properties:
+        exitoso:
+          type: boolean
+          const: true
+        datos:
+          type: array
+          items:
+            $ref: '#/components/schemas/SesionV2'
+        total:
+          type: integer
+          minimum: 0

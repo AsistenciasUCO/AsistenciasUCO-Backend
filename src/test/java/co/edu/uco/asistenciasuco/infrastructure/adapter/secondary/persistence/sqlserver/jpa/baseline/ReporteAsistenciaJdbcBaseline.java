@@ -46,7 +46,7 @@ public final class ReporteAsistenciaJdbcBaseline implements ReporteAsistenciaQue
             LEFT JOIN dbo.uv_detalle_asistencia da
                     ON da.idAsistencia = a.id
             WHERE s.idGrupo = :idGrupo
-            ORDER BY s.numero, s.fechaHoraInicio, ei.nombreCompleto
+            ORDER BY s.numero, s.fechaHoraInicio, ei.nombreCompleto, ei.id, eg.id
             """;
 
     private final NamedParameterJdbcOperations jdbcOperations;
@@ -66,8 +66,8 @@ public final class ReporteAsistenciaJdbcBaseline implements ReporteAsistenciaQue
                             JdbcBaselineValueMapper.toString(rs.getObject("nombreGrupo")),
                             rs.getObject("numeroSesion") == null ? null : rs.getInt("numeroSesion"),
                             JdbcBaselineValueMapper.toString(rs.getObject("nombreSesion")),
-                            JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
-                            JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin")),
+                            rs.getObject("fechaHoraInicio", java.time.LocalDateTime.class),
+                            rs.getObject("fechaHoraFin", java.time.LocalDateTime.class),
                             JdbcBaselineValueMapper.toString(rs.getObject("documentoEstudiante")),
                             JdbcBaselineValueMapper.toString(rs.getObject("nombreEstudiante")),
                             JdbcBaselineValueMapper.toString(rs.getObject("correoEstudiante")),

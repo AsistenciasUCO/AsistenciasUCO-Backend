@@ -149,3 +149,53 @@ No se autoriza `UPDATE`, `AT TIME ZONE` masivo ni reinterpretación de v1. La pr
 - PR #20: `git revert b512bb4 0bd1119`.
 - RED: borrar la rama `jose-valencia/maint-003b-utc-v2-red` (no tiene PR).
 - DB: ninguna escritura en la fuente; el clon y su backup siguen como evidencia.
+
+---
+
+## ACTA MAINT-003C — 2026-10-09, revisión independiente (Claude Code)
+
+**BACKEND_READY_FOR_FRONTEND = NO** — `FRONTEND_BLOCKED_BY_BACKEND_CONTRACT` / `UTC_D06_OWNER_DECISION_PENDING`.
+**Merge autorizado:** NO. **UTC v2:** no implementado ni activado (sin decisión aprobada del owner DB/funcional).
+
+### Identidad de entrega
+
+| Pieza | Branch / SHA | Estado verificado |
+|---|---|---|
+| PR #18 paginación | `jose-valencia/maint-001-jpa-pagination-safety` / `7e2827d1aff87b5371c349fdc9cd73b72d14f3a9` | OPEN; 9/9 check-runs `success`; Sonar QG `OK` (new coverage 90.3 %) |
+| PR #19 caché | `jose-valencia/maint-002-parameter-cache-key` / `3985b0acbfd357c800bba8e6ec54b7ef8aa0c56a` | OPEN, draft; 9/9 `success`; Sonar `OK` |
+| PR #20 codec + guarda | `jose-valencia/maint-003-backend-utc-pagination-readiness` / `b512bb409c970654edb13355a72278fd3c93da42` | OPEN, draft; 9/9 `success`; Sonar `OK` |
+| RED v2 (MAINT-003B) | `jose-valencia/maint-003b-utc-v2-red` / `e85feff3` | sin PR |
+| RED D02 (MAINT-003C) | `jose-valencia/maint-003c-utc-v2-red-hardening` / `19b5a957c6368ca024f788cd0c0aee249aca96e1` | sin PR; 20 RED esperados |
+| Propuesta owner (MAINT-003C) | `jose-valencia/maint-003c-utc-d06-owner-proposal` (este documento) | sin PR; solo docs |
+| Owner DB | `johnjduque/gestion-asistencia-db` `f2871a9` | sin commits desde 2026-10-01; **sin decisión** |
+
+### Resultado de la revisión
+
+1. **PR #18:** checks del último commit verdes; clasificación de alcance de `MAINT-001/PLAN.md` coherente con el diff real (solo validador HTTP y adapter JPA en producción; sin DB/SP/vistas/POM/frontend). Omisiones P3: skill de persistencia, `OPENAPI_STANDARD.md`, `.env.example` no enumerados; MAINT-01B es un cambio HTTP acotado ya publicado en OpenAPI.
+2. **UTC-D06:** dirección A+C+E correcta; 4 brechas P1 (valor para clasificación del owner, escrituras directas, atomicidad marca/horas, freeze DB-GP-001C). Propuesta definitiva: [UTC_D06_OWNER_DB_PROPOSAL](UTC_D06_OWNER_DB_PROPOSAL.md) + [borrador SQL no ejecutable](UTC_D06_SQL_DRAFT.md).
+3. **UTC-D02:** el codec acepta offsets fuera de `Z|±HH:mm`, hora sin segundos y 9 decimales; su `IllegalArgumentException` acabaría en 500; el rango sobre instantes no estaba especificado. Propuesta: [UTC_D02_ERROR_CONTRACT_PROPOSAL](UTC_D02_ERROR_CONTRACT_PROPOSAL.md).
+4. **Compatibilidad:** v1 intacto bajo la propuesta; dos superficies v1 adicionales con horas de sesión (`/api/v1/estudiante/materias/{id}/sesiones`, Excel de asistencia) quedan fuera de v2 y documentadas.
+
+### Evidencia SQL (solo lectura, `gestionasistenciadb`, SQL Server 2022 `16.0.4265.3`)
+
+`datetime2(7)` en `Sesion` y `DetalleAsistencia`; sin triggers/CHECK/CDC/temporal; 3 sesiones, 9 detalles; 3 rutas SP + 1 semilla escriben `Sesion`; 7 SP y 4 vistas la leen con listas explícitas; `TIEMPO/ALMACENAMIENTO_INSTANTES=UTC`, `ZONA_HORARIA_IANA=America/Bogota`, `ZONA_HORARIA_SQLSERVER=SA Pacific Standard Time`. Ninguna escritura, DDL ni conversión.
+
+### Decisión del owner
+
+| Rol | Decisión | Estado |
+|---|---|---|
+| Owner DB | marca de procedencia A/A2, work item post-freeze | **PENDIENTE** |
+| Owner funcional | clasificación C por ID y entorno | **PENDIENTE** |
+| Contratos | D01–D09, perfil/errores D02, forma E1 | **PENDIENTE** |
+
+Sin estas firmas no se implementa ni se activa UTC v2. Por tanto siguen `NOT_RUN` por diseño: POST/GET/PATCH v2 con SQL Server, casos Bogotá/Londres/Berlín verano-invierno-DST, JWT real/ownership v2, OpenAPI v2, y los gates JaCoCo/Sonar/CodeQL/Trivy de un micro-PR v2 inexistente.
+
+### Motivos vigentes del NO
+
+- UTC-D06 y D02 sin firma; v2 inexistente (guarda PR #20 lo garantiza).
+- PR #18, #19 y #20 abiertos; merge no autorizado.
+- Validación manual del usuario pendiente.
+
+### Rollback de MAINT-003C
+
+Borrar las ramas `jose-valencia/maint-003c-utc-d06-owner-proposal` y `jose-valencia/maint-003c-utc-v2-red-hardening` (sin PR, sin efecto runtime). DB: sin escrituras.

@@ -31,6 +31,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.SesionController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.ActualizarSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.CrearSesionRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2.SesionV2ConsultaController;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.v2.SesionV2Controller;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.controller.RealtimeEventsController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -106,6 +108,11 @@ class OpenApiGoldenPathConformanceTest {
         addMapping(controllerMappings, SesionController.class, "crearSesion", CrearSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesion", UUID.class, ActualizarSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesionLegacy", UUID.class, ActualizarSesionRequest.class);
+        // MAINT-003F: contrato 1.1.0 agrega UTC v2 de sesiones (UTC-D01: POST, PATCH, GET id, GET grupo; sin PUT).
+        addMapping(controllerMappings, SesionV2Controller.class, "crearSesion", Map.class);
+        addMapping(controllerMappings, SesionV2Controller.class, "actualizarSesion", UUID.class, Map.class);
+        addMapping(controllerMappings, SesionV2ConsultaController.class, "consultarSesion", UUID.class);
+        addMapping(controllerMappings, SesionV2ConsultaController.class, "consultarSesionesPorGrupo", UUID.class);
         // MAINT-001 contract-first: directorio paginado publicado fuera del set Golden Path.
         addMapping(controllerMappings, EstudianteController.class, "consultarEstudiantes",
                 UUID.class, Integer.class, String.class, String.class, UUID.class, UUID.class, UUID.class,
@@ -117,8 +124,8 @@ class OpenApiGoldenPathConformanceTest {
                         new OperationKey(path, HttpMethod.valueOf(method.name())))));
 
         assertEquals(controllerMappings, specificationMappings);
-        assertEquals(10, specificationMappings.size());
-        assertEquals(Map.of(HttpMethod.GET, 6L, HttpMethod.POST, 2L, HttpMethod.PUT, 1L, HttpMethod.PATCH, 1L),
+        assertEquals(14, specificationMappings.size());
+        assertEquals(Map.of(HttpMethod.GET, 8L, HttpMethod.POST, 3L, HttpMethod.PUT, 1L, HttpMethod.PATCH, 2L),
                 specificationMappings.stream().collect(java.util.stream.Collectors.groupingBy(
                         OperationKey::method, java.util.stream.Collectors.counting())));
     }

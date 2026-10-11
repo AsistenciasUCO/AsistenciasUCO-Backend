@@ -7,5 +7,6 @@ public enum ValidationErrorType {
     OUT_OF_RANGE,
     INVALID_TYPE,
     INVALID_UUID,
-    INVALID_VALUE
+    INVALID_VALUE,
+    UNKNOWN_FIELD
 }

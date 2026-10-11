@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository.dto;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
+
 import java.util.UUID;
 import java.time.LocalDateTime;
 
@@ -13,6 +15,7 @@ public final class CrearSesionRepositoryDTO {
     private LocalDateTime fechaHoraInicio;
     private LocalDateTime fechaHoraFin;
     private UUID usuarioEjecutor;
+    private ContratoHorarioSesion contratoTemporal = ContratoHorarioSesion.LOCAL_SIN_ZONA_V1;
 
     public CrearSesionRepositoryDTO() {
         super();
@@ -25,11 +28,31 @@ public final class CrearSesionRepositoryDTO {
             final LocalDateTime fechaHoraFin,
             final UUID usuarioEjecutor
     ) {
+        this(grupo, nombre, fechaHoraInicio, fechaHoraFin, usuarioEjecutor, ContratoHorarioSesion.LOCAL_SIN_ZONA_V1);
+    }
+
+    public CrearSesionRepositoryDTO(
+            final UUID grupo,
+            final String nombre,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final UUID usuarioEjecutor,
+            final ContratoHorarioSesion contratoTemporal
+    ) {
         setGrupo(grupo);
         setNombre(nombre);
         setFechaHoraInicio(fechaHoraInicio);
         setFechaHoraFin(fechaHoraFin);
         setUsuarioEjecutor(usuarioEjecutor);
+        setContratoTemporal(contratoTemporal);
+    }
+
+    public ContratoHorarioSesion getContratoTemporal() {
+        return contratoTemporal;
+    }
+
+    public void setContratoTemporal(final ContratoHorarioSesion contratoTemporal) {
+        this.contratoTemporal = contratoTemporal == null ? ContratoHorarioSesion.LOCAL_SIN_ZONA_V1 : contratoTemporal;
     }
 
     public UUID getGrupo() {

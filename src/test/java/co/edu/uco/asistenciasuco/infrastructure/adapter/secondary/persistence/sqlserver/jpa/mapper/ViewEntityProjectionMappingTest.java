@@ -8,8 +8,6 @@ import org.junit.jupiter.api.Test;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.LocalTime;
-import java.time.Instant;
-import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -226,7 +224,7 @@ class ViewEntityProjectionMappingTest {
         final SesionRepositoryProjection sesion = CoreViewJpaProjectionMapper.toSesion(HydratedViewRow.of(
                 UvSesionEntity.class, cols("id", A, "idGrupo", B, "nombre", "Parcial", "numero", 3,
                         "codigo", "S-03", "numeroSemana", 8, "codigoGrupo", 508, "nombreGrupo", "G1",
-                        "fechaHoraInicio", Date.from(Instant.parse("2026-10-08T13:00:00Z")),
+                        "fechaHoraInicio", LocalDateTime.of(2026, 10, 8, 13, 0),
                         "fechaHoraFin", null)));
         assertEquals(A, sesion.getSesion());
         assertEquals(B, sesion.getGrupo());

@@ -49,6 +49,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(
             final HttpSecurity http,
             final JwtDecoder jwtDecoder,
@@ -70,7 +71,9 @@ public class SecurityConfig {
             // REVISAR ESTA DECISIÓN antes de introducir autenticación por cookie, BFF con cookie
             // HttpOnly o sesión de navegador: CSRF deberá volver a habilitarse para ese flujo.
             // Fuera de /api/v1/** la protección CSRF de Spring Security sigue activa.
-            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**"))
+            // /api/v2/sesiones/** (MAINT-003F) es la misma API REST stateless Bearer-only: aplica
+            // exactamente la misma justificación y se excluye con el mismo alcance acotado.
+            .csrf(csrf -> csrf.ignoringRequestMatchers("/api/v1/**", "/api/v2/sesiones/**"))
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(
                     new AzureEventGridAuthFilter(azureWebhookToken),
@@ -120,6 +123,10 @@ public class SecurityConfig {
                 // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
                 // Application via InstitutionalScopePort (ver ConsultarSesionesPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/grupo/*").hasRole("DOCENTE")
+                // Contrato UTC v2 de sesiones (UTC-D05/D08): escrituras y lecturas solo DOCENTE; la
+                // titularidad sobre grupo/sesion se valida en Application (InstitutionalScopePort) y,
+                // en escrituras, tambien en la DB (usp_*_sesion_v2).
+                .requestMatchers("/api/v2/sesiones/**").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole("ESTUDIANTE")
                 // Subida de soportes de revision: unicamente el estudiante propietario sube en su

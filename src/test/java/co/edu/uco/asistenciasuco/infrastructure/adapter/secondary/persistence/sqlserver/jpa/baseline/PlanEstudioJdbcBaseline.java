@@ -19,7 +19,7 @@ import java.util.UUID;
  * Adaptador SQL Server del plan de estudio.
  *
  * <p>COMMAND delega en {@link PlanEstudioJpaRepository} (LB-008 JPA-03; el provider público
- * {@code usp_registrar_o_actualizar_plan_estudio} existe en la DB final, {@code CODE_MIGRATION_STATUS = JPA}). La QUERY es oráculo JDBC de paridad (solo {@code src/test}).</p>
+ * {@code usp_registrar_o_actualizar_plan_estudio} lo entrega el work item DB CC-003G-01, {@code CODE_MIGRATION_STATUS = JPA}). La QUERY es oráculo JDBC de paridad (solo {@code src/test}).</p>
  */
 public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, PlanEstudioCommandPort {
 
@@ -38,9 +38,10 @@ public final class PlanEstudioJdbcBaseline implements PlanEstudioQueryPort, Plan
     public void registrarOActualizarPlanEstudio(
             final UUID idPlanEstudio,
             final UUID idPrograma,
-            final Integer inp
+            final Integer inp,
+            final UUID idUsuarioEjecutor
     ) {
-        commands.registrarOActualizarPlanEstudio(idPlanEstudio, idPrograma, inp);
+        commands.registrarOActualizarPlanEstudio(idPlanEstudio, idPrograma, inp, idUsuarioEjecutor);
     }
 
     @Override

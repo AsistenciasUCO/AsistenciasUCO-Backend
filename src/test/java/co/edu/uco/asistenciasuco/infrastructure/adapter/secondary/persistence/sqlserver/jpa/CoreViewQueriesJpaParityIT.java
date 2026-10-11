@@ -228,13 +228,21 @@ class CoreViewQueriesJpaParityIT {
                 INNER JOIN dbo.uv_usuario u ON e.idUsuario = u.id
                 ORDER BY u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id
                 """, (rs, row) -> studentJdbc(rs));
-        final var page = estudiantes.consultarEstudiantes(new ConsultarEstudiantesRepositoryDTO(
-                null, null, null, null, null, null, null, null, null, 0, 100));
-        assertEquals(before.size(), page.totalItems());
-        // The query requests size=100: compare only the first page, not all rows
-        // in the baseline view when a fixture contains 101+ students.
-        assertEquals(before.stream().limit(100).toList(),
-                page.items().stream().map(CoreViewQueriesJpaParityIT::studentJpa).toList());
+        // Recorre todas las paginas (tamano 100): el oraculo JDBC completo debe coincidir fila a fila y en orden con
+        // la concatenacion de paginas, con cualquier volumen de datos (seed minimo o fixtures de 5000 estudiantes).
+        final List<List<Object>> paged = new java.util.ArrayList<>();
+        long totalItems = 0;
+        for (int pagina = 0; pagina == 0 || paged.size() < totalItems; pagina++) {
+            final var page = estudiantes.consultarEstudiantes(new ConsultarEstudiantesRepositoryDTO(
+                    null, null, null, null, null, null, null, null, null, pagina, 100));
+            totalItems = page.totalItems();
+            if (page.items().isEmpty()) {
+                break;
+            }
+            page.items().stream().map(CoreViewQueriesJpaParityIT::studentJpa).forEach(paged::add);
+        }
+        assertEquals(before.size(), totalItems);
+        assertEquals(before, paged);
         assumeFalse(before.isEmpty(), "No hay estudiantes para comparar detalle.");
 
         final UUID studentId = (UUID) before.getFirst().getFirst();
@@ -278,11 +286,13 @@ class CoreViewQueriesJpaParityIT {
                 .map(value -> row(value.getId(), value.getTipoIdentificacion(), value.getNombre())).toList());
     }
 
+    // DATETIME2(7) is a timezone-free SQL value; fetch LocalDateTime directly, not Timestamp->Instant.
+    // This oracle intentionally tests the DB clock fields rather than reproducing the old +5h JPA bug.
     private static List<Object> sessionJdbc(final ResultSet rs) throws SQLException {
         return row(uuid(rs, "id"), uuid(rs, "idGrupo"), string(rs, "nombre"), integer(rs, "numero"),
                 string(rs, "codigo"), integer(rs, "numeroSemana"), string(rs, "codigoGrupo"),
-                string(rs, "nombreGrupo"), JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraInicio")),
-                JdbcBaselineValueMapper.toLocalDateTimeUtc(rs.getObject("fechaHoraFin")));
+                string(rs, "nombreGrupo"), rs.getObject("fechaHoraInicio", java.time.LocalDateTime.class),
+                rs.getObject("fechaHoraFin", java.time.LocalDateTime.class));
     }
 
     private static List<Object> sessionJpa(final SesionRepositoryProjection value) {

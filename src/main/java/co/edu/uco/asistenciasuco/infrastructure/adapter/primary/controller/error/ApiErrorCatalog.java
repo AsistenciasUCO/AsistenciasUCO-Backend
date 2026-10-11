@@ -47,6 +47,15 @@ final class ApiErrorCatalog {
         return from(CommonErrorCode.INTERNAL_ERROR);
     }
 
+    /** Metodo HTTP no soportado por una ruta existente (p. ej. PUT en /api/v2/sesiones/{id}, UTC-D09). */
+    static ApiErrorDescriptor methodNotAllowed() {
+        return new ApiErrorDescriptor(
+                "METHOD_NOT_ALLOWED",
+                "El metodo HTTP no esta soportado para este recurso.",
+                HttpStatus.METHOD_NOT_ALLOWED
+        );
+    }
+
     static ApiErrorDescriptor from(final ErrorDefinition errorDefinition) {
         return new ApiErrorDescriptor(errorDefinition.code(), errorDefinition.defaultMessage(), statusFor(errorDefinition.kind()));
     }

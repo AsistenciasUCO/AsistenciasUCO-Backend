@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CerrarSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearSesionRepositoryDTO;
@@ -15,6 +16,8 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -45,6 +48,36 @@ public class SesionJpaRepository implements SesionRepositoryPort {
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    // UTC-D06: mismos parametros nombrados que v1; el SP v2 marca procedenciaTemporal = UTC_V2 en la
+    // misma sentencia que escribe las horas. Ningun parametro permite elegir la procedencia.
+    static final String SQL_CREAR_SESION_V2 = """
+            EXEC dbo.usp_crear_sesion_v2
+                 @idGrupo = :idGrupo,
+                 @nombre = :nombre,
+                 @fechaHoraInicio = :fechaHoraInicio,
+                 @fechaHoraFin = :fechaHoraFin,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
+    static final String SQL_ACTUALIZAR_SESION_V2 = """
+            EXEC dbo.usp_actualizar_sesion_v2
+                 @idSesion = :idSesion,
+                 @nombre = :nombre,
+                 @fechaHoraInicio = :fechaHoraInicio,
+                 @fechaHoraFin = :fechaHoraFin,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+
+    /**
+     * Literal ISO 8601 con 7 decimales que SQL Server convierte a DATETIME2(7) de forma exacta e
+     * independiente del idioma y del timezone de la JVM (un Timestamp JDBC se construye en la zona
+     * por defecto del proceso y puede caer en un salto DST local).
+     */
+    private static final DateTimeFormatter DATETIME2_UTC_LITERAL =
+            DateTimeFormatter.ofPattern("uuuu-MM-dd'T'HH:mm:ss.SSSSSSS");
+
     static final String SQL_CERRAR_SESION = """
             EXEC dbo.usp_cerrar_sesion
                  @idSesion = :idSesion,
@@ -70,6 +103,8 @@ public class SesionJpaRepository implements SesionRepositoryPort {
 
     static final String OP_CREAR_SESION = "crearSesion";
     static final String OP_ACTUALIZAR_SESION = "actualizarSesion";
+    static final String OP_CREAR_SESION_V2 = "crearSesionV2";
+    static final String OP_ACTUALIZAR_SESION_V2 = "actualizarSesionV2";
     static final String OP_CERRAR_SESION = "cerrarSesion";
     static final String OP_GENERAR_SESIONES_GRUPO = "generarSesionesGrupo";
 
@@ -88,15 +123,22 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         require(dto, "El dominio para crear sesion es obligatorio.");
         final UUID correlationId = CorrelationIdContext.require();
 
+        final boolean utcConfirmado = dto.getContratoTemporal() == ContratoHorarioSesion.UTC_CONFIRMADO_V2;
+
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idGrupo", dto.getGrupo());
         parametros.put("nombre", dto.getNombre());
-        parametros.put("fechaHoraInicio", dto.getFechaHoraInicio());
-        parametros.put("fechaHoraFin", dto.getFechaHoraFin());
+        parametros.put("fechaHoraInicio", temporal(dto.getFechaHoraInicio(), utcConfirmado));
+        parametros.put("fechaHoraFin", temporal(dto.getFechaHoraFin(), utcConfirmado));
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.getUsuarioEjecutor());
 
-        procedureExecutor.execute(OP_CREAR_SESION, SQL_CREAR_SESION, parametros, correlationId);
+        procedureExecutor.execute(
+                utcConfirmado ? OP_CREAR_SESION_V2 : OP_CREAR_SESION,
+                utcConfirmado ? SQL_CREAR_SESION_V2 : SQL_CREAR_SESION,
+                parametros,
+                correlationId
+        );
     }
 
     @Override
@@ -104,15 +146,22 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         require(dto, "El dominio para actualizar sesion es obligatorio.");
         final UUID correlationId = CorrelationIdContext.require();
 
+        final boolean utcConfirmado = dto.contratoTemporal() == ContratoHorarioSesion.UTC_CONFIRMADO_V2;
+
         final Map<String, Object> parametros = new LinkedHashMap<>();
         parametros.put("idSesion", dto.sesion());
         parametros.put("nombre", dto.nombre());
-        parametros.put("fechaHoraInicio", dto.fechaHoraInicio());
-        parametros.put("fechaHoraFin", dto.fechaHoraFin());
+        parametros.put("fechaHoraInicio", temporal(dto.fechaHoraInicio(), utcConfirmado));
+        parametros.put("fechaHoraFin", temporal(dto.fechaHoraFin(), utcConfirmado));
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 
-        procedureExecutor.execute(OP_ACTUALIZAR_SESION, SQL_ACTUALIZAR_SESION, parametros, correlationId);
+        procedureExecutor.execute(
+                utcConfirmado ? OP_ACTUALIZAR_SESION_V2 : OP_ACTUALIZAR_SESION,
+                utcConfirmado ? SQL_ACTUALIZAR_SESION_V2 : SQL_ACTUALIZAR_SESION,
+                parametros,
+                correlationId
+        );
     }
 
     @Override
@@ -180,5 +229,13 @@ public class SesionJpaRepository implements SesionRepositoryPort {
 
     private static void require(final Object value, final String message) {
         if (ObjectHelper.isNull(value)) throw new CrosscuttingException(message);
+    }
+
+    /** v1 conserva su binding AS-IS; v2 envia el instante UTC como literal DATETIME2(7) exacto. */
+    private static Object temporal(final LocalDateTime value, final boolean utcConfirmado) {
+        if (!utcConfirmado || value == null) {
+            return value;
+        }
+        return DATETIME2_UTC_LITERAL.format(value);
     }
 }

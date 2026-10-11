@@ -1,6 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection;
 
-import java.util.Date;
+import java.time.LocalDateTime;
 import java.util.UUID;
 
 /**
@@ -8,7 +8,7 @@ import java.util.UUID;
  * son NULL cuando el LEFT JOIN a {@code uv_detalle_asistencia} no encuentra fila.
  */
 public record ReporteAsistenciaQueryRow(Integer codigoGrupo, String nombreGrupo, Integer numero, String nombre,
-                                        Date fechaHoraInicio, Date fechaHoraFin, Integer numeroIdentificacion,
+                                        LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, Integer numeroIdentificacion,
                                         String nombreCompleto, String correo, Boolean asistio,
                                         String nombreRazonCausa) {
 }

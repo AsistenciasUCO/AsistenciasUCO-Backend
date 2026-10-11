@@ -50,6 +50,10 @@ Codificarlas exige el endpoint y el mecanismo de autenticación de los IT HTTP; 
 | UTC-IT-07 | JWT real ESTUDIANTE/COORDINADOR; DOCENTE no titular | sin fila nueva | 403 / 403 / 403 ownership |
 | UTC-IT-08 | v1 tras escrituras v2 | GET v1 sigue devolviendo ISO local sin offset | 200 sin cambio de forma |
 | UTC-IT-09 | marca de procedencia (si D06 = A) | v2 escribe marca confirmada; v1 PATCH posterior la deja indeterminada | — |
+| UTC-IT-10 | POST v2 `10:00-05:00`/`16:00+02:00` (reloj de pared posterior, instante anterior) | ninguna fila nueva | 400 `ERR_RANGO_FECHAS_SESION_INVALIDO` |
+| UTC-IT-11 | GET v2 de fila con marca `NULL` y de fila `UTC_CONFIRMADO_V2` | valores SQL sin cambio | `Z` solo en la confirmada; la `NULL` sin `Z` (forma E1) |
+
+Añadidos en MAINT-003C ([revisión](MAINT-003C_INDEPENDENT_REVIEW.md)); RED unitarios/HTTP del perfil y errores D02 en `jose-valencia/maint-003c-utc-v2-red-hardening`.
 
 Cleanup: solo filas creadas por el IT en el clon, por `id` capturado.
 

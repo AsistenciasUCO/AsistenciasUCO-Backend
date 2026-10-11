@@ -14,7 +14,7 @@ public final class CoreViewJpaProjectionMapper {
     public static SesionRepositoryProjection toSesion(final UvSesionEntity row) {
         return new SesionRepositoryProjection(row.id(), row.idGrupo(), row.nombre(), row.numero(), row.codigo(),
                 row.numeroSemana(), textOrNull(row.codigoGrupo()), row.nombreGrupo(),
-                toUtcLocalDateTime(row.fechaHoraInicio()), toUtcLocalDateTime(row.fechaHoraFin()));
+                row.fechaHoraInicio(), row.fechaHoraFin());
     }
 
     public static GrupoRepositoryProjection toGrupo(final UvGrupoEntity row) {
@@ -76,8 +76,9 @@ public final class CoreViewJpaProjectionMapper {
     }
 
     /**
-     * Conversion UTC certificada en JPA-04 para {@code uv_sesion}. Reutilizada por las queries JPA-05
-     * (sesion de materia y reporte): no crear una segunda interpretacion temporal.
+     * Conversion historica de otros consumidores java.util.Date. NO usar para uv_sesion:
+     * DATETIME2(7) no contiene timezone, y convertir Date->Instant->UTC aplica un
+     * desplazamiento de la zona JVM. La sesion se mapea como LocalDateTimeJdbcType.
      */
     public static LocalDateTime toUtcLocalDateTime(final Date value) {
         return value == null ? null : value.toInstant().atZone(ZoneOffset.UTC).toLocalDateTime();
