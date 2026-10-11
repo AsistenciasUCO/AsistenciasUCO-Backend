@@ -14,14 +14,15 @@ Fecha: 2026-10-11
 
 - `origin/develop` usado para reconciliar: `108937cdb2cd0ca1a35b7349fbd0696721b39499`
 - Merge normal de reconciliación: `0114939d877f8a6a91b7118af98bf4f7c29c1796`
-- Código funcional certificado: `b4c6596a496b4a77ca74b24f6b0e5912506ae445`
-- El commit documental posterior debe ser el SHA que GitHub evalúe para el cierre de CI.
+- Código certificado: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`)
+- Arnés E2E: `5ab8e8f` (`test(e2e): report connection failures safely`)
+- El commit documental posterior será el SHA que GitHub evalúe para el cierre de CI.
 
 ## Resultado local
 
-- `clean verify`: 1.520/1.520, 0 fallos, 0 errores, 0 skips.
+- `clean verify`: 1.534/1.534, 0 fallos, 0 errores, 0 skips.
 - `-Pintegration clean verify`: 198/198, 0 fallos, 0 errores, 0 skips.
-- JaCoCo: 91,38 % líneas y 79,16 % ramas.
+- JaCoCo: 92,78 % líneas y 80,96 % ramas.
 - ArchUnit y contratos OpenAPI: verdes localmente.
 - E2E JWT real: 28/28 en cada JVM UTC, America/Bogota y Europe/Berlin; 84/84 total.
 - SQL: solo `sql_server_asistencias` / `gestionasistenciadb`; residuo final `E2E-sesiones = 0`.
@@ -30,7 +31,7 @@ Fecha: 2026-10-11
 
 Se combinaron manualmente OpenAPI y su hash, `HttpUtcInstantCodec`, la paridad JPA de vistas, el conformance test y la validación histórica. `SesionUtcActivationGuardTest` se fusionó automáticamente. Se conservaron paginación PR #18, caché PR #19, correcciones Sonar PR #20, documentación PR #21 y UTC v2. No se eliminaron pruebas ni se aplicaron resoluciones masivas `ours`/`theirs`.
 
-El arreglo final `JacksonTemporalConfiguration` vive en Infrastructure y fija el wire ISO de `LocalDateTime` para MVC; no cambia Domain/Application, el esquema DB ni la compatibilidad de sesiones v1.
+El arreglo final `JacksonTemporalConfiguration` vive en Infrastructure y fija el wire ISO de `LocalDateTime` para MVC; no cambia Domain/Application, el esquema DB ni la compatibilidad de sesiones v1. `8ac519ae` recupera la cobertura nueva de Sonar con pruebas de comportamiento y mantiene la decisión CSRF stateless auditada; `5ab8e8f` hace explícito el error real del arnés cuando no existe respuesta HTTP.
 
 ## DB y riesgos restantes
 

@@ -13,7 +13,7 @@ Sigue prohibido: frontend, Redis, cambios en MinIO, cambio de proveedor de ident
 
 ## Evidencia de partida
 - `git fetch origin --prune` ejecutado; `origin/develop` estaba en `108937cdb2cd0ca1a35b7349fbd0696721b39499`.
-- La reconciliación se publicó localmente mediante merge normal en `0114939d877f8a6a91b7118af98bf4f7c29c1796`; la corrección final de wire v1 quedó en `b4c6596a496b4a77ca74b24f6b0e5912506ae445`. No se usó `reset`, `ours`, `theirs`, force-push ni se eliminaron ramas.
+- La reconciliación se publicó localmente mediante merge normal en `0114939d877f8a6a91b7118af98bf4f7c29c1796`; la corrección final de wire v1 quedó en `b4c6596a496b4a77ca74b24f6b0e5912506ae445`, y la recuperación de cobertura nueva quedó en `8ac519ae`. El arnés E2E quedó con diagnóstico seguro en `5ab8e8f`. No se usó `reset`, `ours`, `theirs`, force-push ni se eliminaron ramas.
 - El merge conserva paginación del PR #18, caché del #19, correcciones Sonar del #20 y documentación del #21, además de UTC v2 y MAINT-003K.
 - En SQL Server `datetime2(7)` no contiene offset. El mapper de consulta nunca debe aplicar `Date.toInstant()` ni `ZoneId.systemDefault()`; el registro v1 carece de procedencia, lo cual es distinto de que la consulta deba alterar sus campos.
 - PR objetivo: [#22](https://github.com/alejovh12/AsistenciasUCO/pull/22), destino `develop`; no se hará merge desde esta tarea.
@@ -40,9 +40,9 @@ En JVM Bogotá, `java.util.Date` + `toInstant().atZone(UTC)` convertía 14:00 SQ
 
 | Estado | Valor | Evidencia |
 |---|---|---|
-| `BACKEND_LOCAL_GREEN` | **PASS** sobre el código funcional `b4c6596a496b4a77ca74b24f6b0e5912506ae445` y su merge `0114939d877f8a6a91b7118af98bf4f7c29c1796` | [VALIDATION.md](VALIDATION.md) §2–§9 |
+| `BACKEND_LOCAL_GREEN` | **PASS** sobre el código certificado `8ac519ae` y el arnés E2E `5ab8e8f`, sobre el merge `0114939d877f8a6a91b7118af98bf4f7c29c1796` | [VALIDATION.md](VALIDATION.md) §2–§9 |
 | `DEV_DB_CONSOLIDATED` | **PASS (local)** | repo DB: `docs/work-items/MAINT-003K-DB-DEV-CONSOLIDATION/VALIDATION.md` |
 | `DB_PR_READY` | certificación técnica observada en `sql_server_asistencias/gestionasistenciadb`; merge del PR #36 sigue fuera de este PR | [DB_DEV_ADDENDUM.md](DB_DEV_ADDENDUM.md) y [VALIDATION.md](VALIDATION.md) §8 |
 | `BACKEND_CI_GREEN` | **PENDING** | debe verificarse en PR #22 sobre el SHA publicado; no se presume por la ejecución local |
 
-Gates 1–8 y 10 ejecutados con resultados reales. Gate 9 queda pendiente hasta que GitHub publique el resultado del último SHA del PR #22; SonarCloud, CodeQL, Dependency Review y Trivy no se declaran PASS por ejecución local. Defectos corregidos sin borrar pruebas ni relajar cobertura: [VALIDATION.md](VALIDATION.md) §6.
+Gates 1–8 y 10 ejecutados con resultados reales. Gate 9 queda pendiente hasta que GitHub publique el resultado del último SHA del PR #22; SonarCloud, CodeQL, Dependency Review y Trivy no se declaran PASS por ejecución local. La recuperación Sonar se hizo con cobertura de comportamiento y una supresión auditada de S4502, sin bajar umbrales ni borrar pruebas: [VALIDATION.md](VALIDATION.md) §6.

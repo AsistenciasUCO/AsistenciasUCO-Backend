@@ -4,13 +4,14 @@ Fecha de ejecución: 2026-10-11. Host Windows, Java 25 (`C:\Program Files\Java\j
 Rama: `jose-valencia/maint-003k-backend-only-release-gate`.
 Base reconciliada: `origin/develop` en `108937cdb2cd0ca1a35b7349fbd0696721b39499`.
 Merge normal: `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
-Código funcional certificado: `b4c6596a496b4a77ca74b24f6b0e5912506ae445`.
+Código certificado: `8ac519ae` (`test(v2): restore Sonar new-code coverage gate`).
+Arnés E2E certificado: `5ab8e8f` (`test(e2e): report connection failures safely`).
 
 ## 1. Estados independientes
 
 | Estado | Resultado | Evidencia |
 |---|---|---|
-| `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5 |
+| `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5 sobre `8ac519ae`/`5ab8e8f` |
 | `DEV_DB_CONSOLIDATED` | **PASS local** | `sql_server_asistencias` / `gestionasistenciadb`; detalle en `DB_DEV_ADDENDUM.md` y work item SQL |
 | `DB_PR_READY` | **Certificación técnica observada; merge pendiente** | Contrato PR #36 comprobado en la DB local; no se mezcló ni se usó como autoridad de merge de PR #22 |
 | `BACKEND_CI_GREEN` | **PENDING** | Requiere comprobar los checks de GitHub sobre el SHA final publicado |
@@ -48,14 +49,16 @@ El primer intento de `clean verify` sin elevación quedó en **FAIL de entorno**
 
 | Fase | Resultado real |
 |---|---|
-| Surefire | **1.520** tests, 0 failures, 0 errors, 0 skipped |
+| Surefire | **1.534** tests, 0 failures, 0 errors, 0 skipped |
 | Failsafe `-Pintegration` | **198** ITs, 0 failures, 0 errors, 0 skipped |
-| JaCoCo final | **91,38 % líneas**, **79,16 % ramas**; gates 80/70 cumplidos |
+| JaCoCo final | **92,78 % líneas**, **80,96 % ramas**; gates 80/70 cumplidos |
 | ArchUnit | `CleanArchitectureRulesTest` 20/20; `JpaRepositoryArchitectureRulesTest` 3/3; suite arquitectónica verde |
 | OpenAPI | Golden path 9/9; directorio de estudiantes 6/6; validación 2/2; contrato sesiones v2 4/4; hash consistente |
 | SQL/SP/JPA | Contratos públicos, procedimientos, paridad JDBC/JPA, paginación y consultas académicas verdes |
 
 El cambio adicional de wire v1 queda en Infrastructure: `JacksonTemporalConfiguration` selecciona el conversor MVC Jackson 3 y serializa `LocalDateTime` con ISO local, preservando el contrato legacy sin cambiar Domain/Application ni el contrato SQL.
+
+La recuperación de Sonar se certificó primero localmente en `8ac519ae`: los dos dominios v2 se expresaron como records conservando sus getters públicos, se cubrieron las ramas/DTOs/repositorios/interactors/controladores v2 sin relajar los umbrales y se documentó la decisión de seguridad de CSRF stateless con `@SuppressWarnings("java:S4502")`. El arnés quedó endurecido en `5ab8e8f` para reportar la causa real cuando una conexión no alcanza a producir respuesta HTTP.
 
 ## 4. Regresión UTC, seguridad y HTTP real
 
@@ -69,7 +72,7 @@ El arnés `scripts/e2e/utc-real-jwt-e2e.ps1` ejecutó 28 comprobaciones por zona
 
 La matriz cubrió sesiones v1 y v2, POST/GET/PATCH, `datetime2(7)` con precisión de 100 ns, equivalencia de instantes Bogotá/Berlín, flag ON/OFF, 401/403, ownership, actor únicamente desde JWT, entradas inválidas, compatibilidad v1, PUT 405, reportes y consultas académicas.
 
-La respuesta v1 se comprobó directamente como ISO (`2026-08-17T13:00:00`); el harness usa `ConvertFrom-Json -DateKind String` para no convertir la fecha a `DateTime` local y reimprimirla con la cultura del host.
+La respuesta v1 se comprobó directamente como ISO (`2026-08-17T13:00:00`); el harness usa `ConvertFrom-Json -DateKind String` para no convertir la fecha a `DateTime` local y reimprimirla con la cultura del host. La repetición final esperó el puerto HTTP en estado `LISTEN` antes de cada zona para evitar una carrera de arranque.
 
 La consulta final de residuos ejecutó sobre SQL Server:
 
@@ -92,5 +95,5 @@ El PR #36 de la DB mantiene estado independiente: su merge a `develop` sigue pen
 - No se amplió funcionalidad exclusiva de Keycloak; se conservaron JWT, roles institucionales, ownership y RBAC actuales.
 - No hay secretos en código, documentación, logs ni evidencia.
 - `AzureCloudIntegrationIT` permanece `NOT_RUN` porque requiere Azure real; no es una regresión del alcance local.
-- SonarCloud, Backend Quality Gate, CodeQL, Dependency Review, Trivy y el estado de ArchUnit en GitHub quedan **PENDING** hasta comprobar el SHA final del PR #22. Las pruebas locales no sustituyen esos checks.
+- En el commit documental previo `c597a237`, SonarCloud reportó objetivamente `new_coverage=52,3 %` y `new_security_rating=ERROR` por `S4502`; `8ac519ae` añadió la cobertura y la decisión auditada sin bajar gates. SonarCloud, Backend Quality Gate, CodeQL, Dependency Review, Trivy y el estado de ArchUnit en GitHub quedan **PENDING** hasta comprobar el SHA final publicado. Las pruebas locales no sustituyen esos checks.
 - El cierre final de MAINT-003K queda condicionado a que GitHub reporte verde sobre el último commit publicado; no se declara `BACKEND_CI_GREEN` antes de esa evidencia.

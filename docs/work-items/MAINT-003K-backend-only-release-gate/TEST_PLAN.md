@@ -1,6 +1,6 @@
 # MAINT-003K — Tests y oráculos de salida
 
-**Estado:** EJECUTADO el 2026-10-11 contra el contenedor existente `sql_server_asistencias` / `gestionasistenciadb`, Java 25, código funcional `b4c6596a496b4a77ca74b24f6b0e5912506ae445` sobre el merge reconciliado `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
+**Estado:** EJECUTADO el 2026-10-11 contra el contenedor existente `sql_server_asistencias` / `gestionasistenciadb`, Java 25, código certificado `8ac519ae` y arnés E2E `5ab8e8f`, sobre el merge reconciliado `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
 Evidencia y cifras: [VALIDATION.md](VALIDATION.md). JVM probadas: `UTC`, `America/Bogota`, `Europe/Berlin`.
 
 | Caso | Configuración | Oráculo | Resultado |
@@ -25,8 +25,8 @@ Evidencia y cifras: [VALIDATION.md](VALIDATION.md). JVM probadas: `UTC`, `Americ
 | GATE-02 | v2 habilitado contra DB sin contrato D06 (backup pre-D06 restaurado) | el arranque aborta (`IllegalStateException … UTC-D06-POST-FREEZE`) | PASS |
 | COMP-01 | OpenAPI canónico: 10 operaciones v1 + 4 v2, incluida la consulta paginada de estudiantes | rutas/métodos/esquemas | PASS (`OpenApiGoldenPathConformanceTest` 9/9, `OpenApiEstudiantesDirectoryConformanceTest` 6/6, `…ValidationTest` 2/2, `…SesionesV2ContractRedTest` 4/4) |
 | COMP-02 | PUT v2 | 405 | PASS |
-| REG-01 | Surefire + Failsafe SQL/Keycloak/MinIO existentes | 0 fallos, 0 errores, 0 skips | PASS: 1520/1520 unit + 198/198 IT |
-| REG-02 | JaCoCo | líneas ≥80 %, ramas ≥70 % | PASS: 91,38 % / 79,16 % |
+| REG-01 | Surefire + Failsafe SQL/Keycloak/MinIO existentes | 0 fallos, 0 errores, 0 skips | PASS: 1534/1534 unit + 198/198 IT |
+| REG-02 | JaCoCo | líneas ≥80 %, ramas ≥70 % | PASS: 92,78 % / 80,96 % |
 | REG-03 | ArchUnit + guards | sin violaciones | PASS (`CleanArchitectureRulesTest` 20, `JpaRepositoryArchitectureRulesTest` 3) |
 | REG-04 | CI HEAD | checks exigidos | **PENDING** hasta comprobar el último SHA publicado en PR #22 |
 | VOL-01 | ITs de listado de estudiantes con 5003 estudiantes sintéticos | recorren todas las páginas; oráculo SQL == concatenación de páginas | PASS tras volver los ITs independientes del volumen |
