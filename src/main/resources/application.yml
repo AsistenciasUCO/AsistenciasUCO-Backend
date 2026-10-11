@@ -18,6 +18,11 @@ spring:
   main:
     web-application-type: servlet
     keep-alive: true
+  http:
+    converters:
+      # Boot 4 puede detectar Jackson 2 por dependencias transitivas del proveedor de identidad.
+      # El valor "jackson" selecciona el mapper Jackson 3 configurado en Infrastructure.
+      preferred-json-mapper: jackson
   threads:
     virtual:
       enabled: true

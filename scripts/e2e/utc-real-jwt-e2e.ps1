@@ -67,7 +67,9 @@ function Invoke-Http([string]$Method, [string]$Path, [string]$Token, $Body = $nu
         if ($null -ne $_.ErrorDetails) { $text = $_.ErrorDetails.Message }
     }
     $json = $null
-    if ($text) { try { $json = $text | ConvertFrom-Json } catch { $json = $null } }
+    # El contrato HTTP conserva las fechas como strings ISO; evitar que PowerShell las
+    # convierta a DateTime local y las vuelva a imprimir con la cultura del host.
+    if ($text) { try { $json = $text | ConvertFrom-Json -DateKind String } catch { $json = $null } }
     return [pscustomobject]@{ Status = $status; Json = $json; Text = $text }
 }
 
