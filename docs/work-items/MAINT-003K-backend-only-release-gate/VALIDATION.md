@@ -1,78 +1,96 @@
-# MAINT-003K — Evidencia de validación (ejecutada)
+# MAINT-003K — Evidencia de validación
 
-Fecha: 2026-10-10. Máquina de desarrollo Windows, Java 25 (`JAVA_HOME=C:\Program Files\Java\jdk-25`), Maven wrapper 3.9.15, SQL Server 2022 Developer en
-`sql_server_asistencias:1433` (`gestionasistenciadb`, la conexión real de `.env`), Keycloak 26.7.1 local.
-**Código backend certificado: `b60a6a1`** (rama `jose-valencia/maint-003k-backend-only-release-gate`); los commits posteriores solo modifican documentación.
-**DB desplegada desde** `johnjduque/gestion-asistencia-db` rama `feat/maint-003k-db-dev-consolidation` (código SQL: `9f3889f`; `336472c`/docs solo fixtures de test y documentación).
+Fecha de ejecución: 2026-10-11. Host Windows, Java 25 (`C:\Program Files\Java\jdk-25`), Maven Wrapper 3.9.15.
+Rama: `jose-valencia/maint-003k-backend-only-release-gate`.
+Base reconciliada: `origin/develop` en `108937cdb2cd0ca1a35b7349fbd0696721b39499`.
+Merge normal: `0114939d877f8a6a91b7118af98bf4f7c29c1796`.
+Código funcional certificado: `b4c6596a496b4a77ca74b24f6b0e5912506ae445`.
 
 ## 1. Estados independientes
 
-| Estado | Valor |
+| Estado | Resultado | Evidencia |
+|---|---|---|
+| `BACKEND_LOCAL_GREEN` | **PASS** | Maven, ArchUnit, OpenAPI, JaCoCo, SQL Server y E2E real §§2–5 |
+| `DEV_DB_CONSOLIDATED` | **PASS local** | `sql_server_asistencias` / `gestionasistenciadb`; detalle en `DB_DEV_ADDENDUM.md` y work item SQL |
+| `DB_PR_READY` | **Certificación técnica observada; merge pendiente** | Contrato PR #36 comprobado en la DB local; no se mezcló ni se usó como autoridad de merge de PR #22 |
+| `BACKEND_CI_GREEN` | **PENDING** | Requiere comprobar los checks de GitHub sobre el SHA final publicado |
+
+No se creó ningún contenedor ni base temporal durante esta certificación. Se utilizó exclusivamente el contenedor existente `sql_server_asistencias` y la base `gestionasistenciadb`. No se hizo merge a `develop`, no se borraron ramas, no se modificó frontend ni se desplegó a producción.
+
+## 2. Reconciliación de `develop`
+
+`git fetch origin --prune` se ejecutó antes del merge. El worktree estaba limpio y la rama apuntaba inicialmente a `6814e87`; `origin/develop` apuntaba a `108937c`.
+Se integró mediante `git merge origin/develop`, sin `reset`, `ours`, `theirs` ni force-push.
+
+| Conflicto / zona | Resolución aplicada |
 |---|---|
-| `BACKEND_LOCAL_GREEN` | **PASS** |
-| `DEV_DB_CONSOLIDATED` | **PASS (local)** — ver VALIDATION.md del repo DB |
-| `DB_PR_READY` | rama publicada, comparable y «Able to merge»; **PR Draft por abrir** (sin sesión de GitHub en la máquina) |
-| `BACKEND_CI_GREEN` | **NOT_RUN** — sin PR no corren los workflows; no se presume |
+| `openapi-golden-path.yaml` | Se conservaron las 10 operaciones v1, incluida la consulta paginada de estudiantes, y las 4 operaciones v2 UTC. |
+| `openapi-golden-path.sha256` | Se regeneró sobre el YAML reconciliado: `3107f69049d50ad6de7b0b0ce6c5ab093769f2c8c4b2a11966f7fb69fed08a18`. |
+| `OpenApiGoldenPathConformanceTest.java` | Se combinaron las aserciones v2 y las de estudiantes paginados; no se eliminaron pruebas. |
+| `CoreViewQueriesJpaParityIT.java` | Se mantuvo el recorrido de todas las páginas y la igualdad JDBC/JPA, incluyendo el volumen de 5.000 estudiantes. |
+| `HttpUtcInstantCodec.java` | Se conservó la implementación estricta de `develop`: offset válido, precisión `datetime2(7)`, rangos y rechazo de `-00:00`. |
+| `SesionUtcActivationGuardTest.java` | Se fusionó automáticamente sin perder la guardia del contrato UTC-D06. |
+| `VALIDATION.md` histórico | Se preservó la evidencia anterior y se añadió esta certificación final; el detalle se separa por SHA. |
+| `HttpUtcInstantCodecStrictProfileRedTest` | El test RED histórico esperaba aceptar `-00:00`, contrario al contrato actual; se conservó el test y se actualizó su expectativa a rechazo explícito. No se desactivó ni eliminó. |
 
-## 2. Maven `clean verify` (Java 25, JaCoCo ON) y perfil de integración
+El merge `0114939` mantiene las correcciones de paginación del PR #18, caché del #19, correcciones Sonar del #20, documentación del #21 y el trabajo UTC v2 existente.
 
-Comando final: `./mvnw -B -ntp -Pintegration clean verify` → `BUILD SUCCESS` (9 min 12 s, exit 0).
+## 3. Maven, arquitectura y contratos
 
-| Fase | Resultado |
+Comandos exactos ejecutados con Java 25 y `-B -ntp`:
+
+```text
+.\mvnw.cmd -B -ntp clean verify
+.\mvnw.cmd -B -ntp -Pintegration clean verify
+```
+
+El primer intento de `clean verify` sin elevación quedó en **FAIL de entorno** por permisos de loopback de Windows/JDK25 para los servidores fake de Keycloak/ClamAV; no se contó como PASS. La misma orden se repitió con el entorno de ejecución autorizado y terminó en `BUILD SUCCESS`.
+
+| Fase | Resultado real |
 |---|---|
-| Surefire (unit/componente/ArchUnit/OpenAPI) | **1502** tests, 0 failures, 0 errors, 0 skipped (275 clases) |
-| Failsafe (ITs contra la DB principal) | **196** tests, 0 failures, 0 errors, **0 skipped** (31 clases; `AzureCloudIntegrationIT` queda fuera por perfil, `NOT_RUN`) |
-| JaCoCo (`jacoco:check`) | líneas **91,31 %** (8221 cubiertas / 782 no), ramas **78,83 %** (1903 / 511) — gates 80/70 cumplidos |
-| ArchUnit | `CleanArchitectureRulesTest` 20/20, `JpaRepositoryArchitectureRulesTest` 3/3 |
-| OpenAPI | `OpenApiGoldenPathConformanceTest` 9/9, `OpenApiGoldenPathValidationTest` 2/2, `OpenApiSesionesV2ContractRedTest` 4/4; contrato y checksum sin cambios (9 operaciones v1 + 4 v2) |
-| ITs de SQL/SP | `SqlStoredProcedureContractIT`, `GoldenPathSqlStoredProcedureContractIT`, `UsuarioPasswordHashSqlServerIT`, `UsuarioPlanEstudioProvidersSqlServerIT`, paridad JPA, asistencia, auditoría — todos verdes |
+| Surefire | **1.520** tests, 0 failures, 0 errors, 0 skipped |
+| Failsafe `-Pintegration` | **198** ITs, 0 failures, 0 errors, 0 skipped |
+| JaCoCo final | **91,38 % líneas**, **79,16 % ramas**; gates 80/70 cumplidos |
+| ArchUnit | `CleanArchitectureRulesTest` 20/20; `JpaRepositoryArchitectureRulesTest` 3/3; suite arquitectónica verde |
+| OpenAPI | Golden path 9/9; directorio de estudiantes 6/6; validación 2/2; contrato sesiones v2 4/4; hash consistente |
+| SQL/SP/JPA | Contratos públicos, procedimientos, paridad JDBC/JPA, paginación y consultas académicas verdes |
 
-Historial de ejecuciones hasta el verde (no se oculta ningún rojo): (1) `clean verify` inicial: error de compilación de tests; (2) segunda: 1502 con 2 errores; (3) IT completo: 5 rojos (3 failures + 2 errors); (4) IT completo: 2 rojos; (5) final: todo verde.
+El cambio adicional de wire v1 queda en Infrastructure: `JacksonTemporalConfiguration` selecciona el conversor MVC Jackson 3 y serializa `LocalDateTime` con ISO local, preservando el contrato legacy sin cambiar Domain/Application ni el contrato SQL.
 
-## 3. Regresión de zona horaria (JVM UTC / America/Bogota / Europe/Berlin) con SQL real
+## 4. Regresión UTC, seguridad y HTTP real
 
-Nueve clases IT (`AcademicQueryJpaParityIT`, `AuthorizationReportJpaParityIT`, `CoreViewQueriesJpaParityIT`, `EstudianteProgramaJpaParityIT`, `EstudianteAcademicFilterJpaParityIT`,
-`SesionGrupoCommandsSpParityIT`, `AsistenciaQueryJpaParityIT`, `EstudianteRepositorySqlServerIT`, `GrupoRepositorySqlServerIT`) con `JAVA_TOOL_OPTIONS=-Duser.timezone=<zona>`:
-45 tests por zona; en las tres zonas el único rojo fue el orden del reporte (corregido, §5.4); tras la corrección `AuthorizationReportJpaParityIT` 4/4 en UTC, Bogotá y Berlín
-y el resto 41/41 en las tres. La lectura v1 por sesión/grupo coincide con el `SELECT` de la misma fila en 100 ns (oráculo JDBC `LocalDateTime`), y en HTTP real (§4).
+El arnés `scripts/e2e/utc-real-jwt-e2e.ps1` ejecutó 28 comprobaciones por zona, contra el backend empaquetado con `app.sesiones.v2.enabled=true` y el JWT real del Keycloak local:
 
-## 4. HTTP real con JWT de Keycloak (28 comprobaciones × 3 JVM = 84/84)
+| JVM | Resultado |
+|---|---|
+| `UTC` | `E2E_SUMMARY tz=UTC total=28 pass=28 fail=0` |
+| `America/Bogota` | `E2E_SUMMARY tz=America/Bogota total=28 pass=28 fail=0` |
+| `Europe/Berlin` | `E2E_SUMMARY tz=Europe/Berlin total=28 pass=28 fail=0` |
 
-Backend `java -jar` con `app.sesiones.v2.enabled=true`, puerto 18181, `-Duser.timezone` ∈ {UTC, America/Bogota, Europe/Berlin}; script `scripts/e2e/utc-real-jwt-e2e.ps1`
-(usuario temporal DOCENTE en Keycloak mapeado al docente titular del grupo fixture; eliminado al terminar — verificado; sesiones `E2E-%` borradas de SQL).
+La matriz cubrió sesiones v1 y v2, POST/GET/PATCH, `datetime2(7)` con precisión de 100 ns, equivalencia de instantes Bogotá/Berlín, flag ON/OFF, 401/403, ownership, actor únicamente desde JWT, entradas inválidas, compatibilidad v1, PUT 405, reportes y consultas académicas.
 
-- Seguridad: sin bearer 401 (POST/GET v2, GET v1); ESTUDIANTE 403; DOCENTE ajeno 403 (POST, GET grupo, GET id, PATCH, v1); actor en el body → 400 `FIELD_UNKNOWN`; actor solo del JWT.
-- v1: lecturas = reloj SQL literal (grupo seed y grupo fixture) y v1 POST `08:00–10:00` se lee idéntico en las 3 JVM.
-- v2: GET fixture `2026-09-14T13:00:00.1234567Z`/`15:00:00.7654321Z` CONFIRMADA/`UTC_V2`; POST `-05:00` → SQL `2042-07-16 01:00:00.1234567` marca `UTC_V2`; GET por id y por grupo;
-  PATCH con offset Berlín `+02:00` mismo instante → GET idéntico sin doble conversión; fila v1 → INDETERMINADA con horas y procedencia `null`; PUT → 405; parser estricto (naive, 8 decimales, offset sin minutos → 400).
-- Regresión de lecturas v1: `docente/horarios`, `grupos/{id}/estudiantes`, `grupos/{id}/asistencias` → 200.
-- Login SQL de mínimo privilegio: lo certifica el gate SQL (`UTC_D06_RUNTIME_PERMISSIONS`, `CC003G01_RUNTIME_*`, login real no-`sa`) ejecutado contra la DB principal (220/219/0/1).
+La respuesta v1 se comprobó directamente como ISO (`2026-08-17T13:00:00`); el harness usa `ConvertFrom-Json -DateKind String` para no convertir la fecha a `DateTime` local y reimprimirla con la cultura del host.
 
-Flag: **GATE-01** OFF (defecto) → con JWT: POST/GET v2 404, v1 200; sin JWT: 401 (el filtro de seguridad responde antes que MVC; no se abre ningún endpoint v2). El OpenAPI dice «404 con v2 deshabilitado»;
-el 401 sin credenciales es el comportamiento de capa de seguridad — **no se modificó el contrato** (propuesta documental pendiente de decisión contractual). **GATE-02** ON contra DB sin D06 → el arranque aborta con
-`app.sesiones.v2.enabled=true pero la base de datos no expone el contrato UTC-D06-POST-FREEZE …`. Con la DB principal: «Contrato DB UTC-D06-POST-FREEZE verificado; /api/v2/sesiones habilitado».
+La consulta final de residuos ejecutó sobre SQL Server:
 
-## 5. Defectos encontrados y corregidos (sin borrar pruebas ni bajar cobertura)
+```text
+SELECT 'E2E-sesiones', COUNT(*) FROM dbo.Sesion WHERE nombre LIKE 'E2E-%'
+E2E-sesiones,0
+```
 
-1. **Tests obsoletos de MAINT-003I que no compilaban/ejecutaban** (`CoreViewJpaProjectionBehaviorTest`, `ViewEntityProjectionMappingTest`, `JpaQueryAdapterContractTest`): hidrataban `java.util.Date` en `UvSesionEntity` (ya `LocalDateTime`). Ahora afirman el reloj literal.
-2. **Regresión de runtime de MAINT-003I (grave):** `GET sesiones de materia del estudiante` y `reporte de asistencia por grupo` fallaban con `SemanticException: Missing constructor for type SesionMateriaQueryRow/ReporteAsistenciaQueryRow` porque los records seguían tipados `java.util.Date`. Records y mappers pasan a `LocalDateTime` literal (sin `toUtcLocalDateTime`).
-3. **Oráculos de test con el desplazamiento de +5 h** (`ReporteAsistenciaJdbcBaseline`, `SesionMateriaEstudianteJdbcBaseline`): leían `Timestamp→Instant→UTC`; ahora `rs.getObject(col, LocalDateTime.class)` (como ya hace `CoreViewQueriesJpaParityIT`).
-4. **Orden no determinista del reporte** con estudiantes homónimos: `order by … , ei.id, eg.id` en HQL y en el baseline.
-5. **ITs con supuesto de volumen** (`EstudianteAcademicFilterJpaParityIT` ≤500, `CoreViewQueriesJpaParityIT` ≤100 estudiantes): ahora recorren todas las páginas; con 5003 estudiantes siguen comparando oráculo == páginas.
-6. **DB** (repo DB): `uv_estudiante_programa` duplicaba filas para estudiantes multigrupo (hallado por `EstudianteProgramaJpaParityIT`); seed 14 con fechas ambiguas.
-7. **Higiene del entorno de prueba:** un backend huérfano de una sesión previa ocupaba el puerto 18080 (y 10 conexiones al contenedor temporal): una primera corrida del E2E contra ese puerto habría validado el artefacto equivocado. Se detectó (404 inesperado), se usó el puerto 18181 con PID propio, y el huérfano se detuvo al retirar el contenedor temporal.
+No se dejaron sesiones E2E. Los ITs de archivos usan el bucket de desarrollo existente como parte de su comportamiento previo; no se alteró configuración de MinIO.
 
-Deuda menor: `CoreViewJpaProjectionMapper.toUtcLocalDateTime(Date)` ya no se usa en producción (queda cubierto por `CoreViewJpaQueryErrorSemanticsTest`); candidato a retirar junto a su test en un cambio aparte.
+## 5. Contrato DB / PR #36
 
-## 6. Residuos `Date/Timestamp` en lectores de Sesión
-`grep` en `src/main`: solo permanece el helper citado; no hay otros lectores de `uv_sesion` con `Date/Timestamp`. Los demás lectores de horas (`Horario`) son hora académica local `LocalTime`, no UTC.
+La certificación técnica se realizó contra la base local que expone el contrato UTC-D06 y CC-003G-01, incluyendo procedimientos públicos, permisos runtime, vistas y paridad JPA/JDBC. Esa evidencia demuestra compatibilidad técnica del backend con la DB disponible.
 
-## 7. Seguridad / alcance
-No se cambió Keycloak ni su configuración; sin secretos en código, logs ni documentos (las credenciales E2E se leen de `infra/keycloak/.env`, ignorado por Git). Frontend, Redis y MinIO sin cambios (los ITs de MinIO/ClamAV del Failsafe usan la configuración existente).
-El IT `ArchivoUploadDownloadFlowIT`/`MinioFileStorageAdapterIT` puede escribir objetos de prueba en el bucket de desarrollo existente (comportamiento previo).
+El PR #36 de la DB mantiene estado independiente: su merge a `develop` sigue pendiente y no se declara como realizado por esta tarea. El contrato SQL pertenece al owner de DB; PR #22 no modifica esquema, procedimientos ni permisos.
 
-## 8. NOT_RUN / limitaciones
-- CI remoto (backend-ci, security, CodeQL, Trivy), SonarCloud: **NOT_RUN** (no hay PR de esta rama; no se presumen verdes). Sonar/CodeQL/Trivy locales no instalados.
-- `AzureCloudIntegrationIT`: NOT_RUN (requiere Azure real).
-- Rollback de la DB: restauración probada desde `.bak` verificado (repo DB, VALIDATION §2). Rollback backend: `git revert` de `aaf703a`, `55ddd4e`, `b60a6a1` y docs.
-- No se hizo merge, no se borraron ramas, no se desplegó a producción.
+## 6. Correcciones funcionales y limitaciones
+
+- Se resolvió el problema de serialización MVC de `LocalDateTime` que hacía que el arnés PowerShell mostrara fechas localizadas, manteniendo ISO en el wire real.
+- No se amplió funcionalidad exclusiva de Keycloak; se conservaron JWT, roles institucionales, ownership y RBAC actuales.
+- No hay secretos en código, documentación, logs ni evidencia.
+- `AzureCloudIntegrationIT` permanece `NOT_RUN` porque requiere Azure real; no es una regresión del alcance local.
+- SonarCloud, Backend Quality Gate, CodeQL, Dependency Review, Trivy y el estado de ArchUnit en GitHub quedan **PENDING** hasta comprobar el SHA final del PR #22. Las pruebas locales no sustituyen esos checks.
+- El cierre final de MAINT-003K queda condicionado a que GitHub reporte verde sobre el último commit publicado; no se declara `BACKEND_CI_GREEN` antes de esa evidencia.
