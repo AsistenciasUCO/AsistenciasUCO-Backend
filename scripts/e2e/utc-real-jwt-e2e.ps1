@@ -60,8 +60,11 @@ function Invoke-Http([string]$Method, [string]$Path, [string]$Token, $Body = $nu
         $r = Invoke-WebRequest @args
         $status = [int]$r.StatusCode; $text = $r.Content
     } catch {
-        $resp = $_.Exception.Response
-        if ($null -eq $resp) { throw }
+        $responseProperty = $_.Exception.PSObject.Properties['Response']
+        $resp = if ($null -ne $responseProperty) { $responseProperty.Value } else { $null }
+        if ($null -eq $resp) {
+            throw "HTTP $Method $Path failed without an HTTP response: $($_.Exception.Message)"
+        }
         $status = [int]$resp.StatusCode
         $text = $null
         if ($null -ne $_.ErrorDetails) { $text = $_.ErrorDetails.Message }
