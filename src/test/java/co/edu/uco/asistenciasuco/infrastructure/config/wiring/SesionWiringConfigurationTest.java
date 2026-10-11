@@ -8,11 +8,16 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.pri
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.impl.ConsultarSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.primaryports.interactor.ConsultarSesionesPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupo.usecase.impl.ConsultarSesionesPorGrupoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.primaryports.interactor.ConsultarSesionV2Interactor;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.usecase.impl.ConsultarSesionV2UseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.primaryports.interactor.ConsultarSesionesPorGrupoV2Interactor;
+import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionesporgrupov2.usecase.impl.ConsultarSesionesPorGrupoV2UseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.primaryports.interactor.CrearSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.crearsesion.usecase.impl.CrearSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.interactor.GenerarSesionesGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.usecase.impl.GenerarSesionesGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.Test;
 
@@ -23,6 +28,7 @@ class SesionWiringConfigurationTest {
 
     private final SesionWiringConfiguration config = new SesionWiringConfiguration();
     private final SesionRepositoryPort sesionRepositoryPort = mock(SesionRepositoryPort.class);
+    private final SesionProcedenciaQueryPort sesionProcedenciaQueryPort = mock(SesionProcedenciaQueryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
 
     @Test
@@ -52,5 +58,15 @@ class SesionWiringConfigurationTest {
         assertInstanceOf(GenerarSesionesGrupoUseCaseImpl.class, generarSesionesGrupoUseCase);
         assertInstanceOf(GenerarSesionesGrupoInteractor.class,
                 config.generarSesionesGrupoInputPort(generarSesionesGrupoUseCase));
+
+        final var consultarSesionV2UseCase = config.consultarSesionV2UseCase(sesionProcedenciaQueryPort, scopePort);
+        assertInstanceOf(ConsultarSesionV2UseCaseImpl.class, consultarSesionV2UseCase);
+        assertInstanceOf(ConsultarSesionV2Interactor.class, config.consultarSesionV2InputPort(consultarSesionV2UseCase));
+
+        final var consultarSesionesPorGrupoV2UseCase =
+                config.consultarSesionesPorGrupoV2UseCase(sesionProcedenciaQueryPort, scopePort);
+        assertInstanceOf(ConsultarSesionesPorGrupoV2UseCaseImpl.class, consultarSesionesPorGrupoV2UseCase);
+        assertInstanceOf(ConsultarSesionesPorGrupoV2Interactor.class,
+                config.consultarSesionesPorGrupoV2InputPort(consultarSesionesPorGrupoV2UseCase));
     }
 }

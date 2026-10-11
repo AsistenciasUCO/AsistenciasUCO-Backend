@@ -10,20 +10,15 @@ import java.util.UUID;
 /**
  * Dominio de la consulta v2 de una sesion.
  */
-public final class ConsultarSesionV2Domain {
+public record ConsultarSesionV2Domain(UUID sesion, UUID usuarioEjecutor) {
 
-    private final UUID sesion;
-    private final UUID usuarioEjecutor;
-
-    public ConsultarSesionV2Domain(final UUID sesion, final UUID usuarioEjecutor) {
+    public ConsultarSesionV2Domain {
         if (ObjectHelper.isNull(sesion)) {
             throw new ValidationException(SesionErrorCode.ERR_SESION_REQUERIDA);
         }
         if (ObjectHelper.isNull(usuarioEjecutor)) {
             throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
-        this.sesion = sesion;
-        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     public UUID getSesion() {

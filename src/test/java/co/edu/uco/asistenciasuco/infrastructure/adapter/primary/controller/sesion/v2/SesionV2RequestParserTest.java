@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -49,5 +50,39 @@ class SesionV2RequestParserTest {
                 .anyMatch(issue -> issue.field().equals("usuarioEjecutor")));
         assertTrue(exception.getValidationResult().issues().stream()
                 .noneMatch(issue -> issue.message().contains(hostile)));
+    }
+
+    @Test
+    void parsea_actualizacion_y_rechaza_request_nulo() {
+        final SesionV2RequestParser.ActualizarSesionV2 parsed = SesionV2RequestParser.parseActualizar(Map.of(
+                "nombre", "Sesion editada",
+                "fechaHoraInicio", "2042-07-15T16:00:00.1234567+02:00",
+                "fechaHoraFin", "2042-07-15T17:30:00.7654321+02:00"
+        ));
+        assertEquals("Sesion editada", parsed.nombre());
+        assertEquals(LocalDateTime.parse("2042-07-15T14:00:00.123456700"), parsed.inicioUtc());
+        assertThrows(RequestValidationException.class, () -> SesionV2RequestParser.parseCrear(null));
+        assertThrows(RequestValidationException.class, () -> SesionV2RequestParser.parseActualizar(null));
+    }
+
+    @Test
+    void agrega_errores_para_tipos_longitudes_uuid_y_instantes_invalidos() {
+        final Map<String, Object> invalid = new HashMap<>();
+        invalid.put("grupo", "00000000-0000-0000-0000-000000000000");
+        invalid.put("nombre", " ");
+        invalid.put("fechaHoraInicio", 123);
+        invalid.put("fechaHoraFin", "2042-07-15T17:30:00.12345678Z");
+        assertThrows(RequestValidationException.class, () -> SesionV2RequestParser.parseCrear(invalid));
+
+        invalid.put("grupo", 123);
+        invalid.put("nombre", "x".repeat(51));
+        assertThrows(RequestValidationException.class, () -> SesionV2RequestParser.parseCrear(invalid));
+
+        final Map<String, Object> missing = new HashMap<>();
+        missing.put("grupo", null);
+        missing.put("nombre", null);
+        missing.put("fechaHoraInicio", null);
+        missing.put("fechaHoraFin", null);
+        assertThrows(RequestValidationException.class, () -> SesionV2RequestParser.parseCrear(missing));
     }
 }

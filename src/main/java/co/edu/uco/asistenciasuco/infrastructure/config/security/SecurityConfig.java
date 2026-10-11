@@ -49,6 +49,7 @@ public class SecurityConfig {
     }
 
     @Bean
+    @SuppressWarnings("java:S4502")
     public SecurityFilterChain securityFilterChain(
             final HttpSecurity http,
             final JwtDecoder jwtDecoder,

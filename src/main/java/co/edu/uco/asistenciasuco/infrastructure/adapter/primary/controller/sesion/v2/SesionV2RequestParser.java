@@ -138,7 +138,7 @@ final class SesionV2RequestParser {
         }
         try {
             return HttpUtcInstantCodec.toUtcDatabaseDateTime(texto);
-        } catch (IllegalArgumentException exception) {
+        } catch (IllegalArgumentException _) {
             builder.add(campo, ValidationErrorType.INVALID_FORMAT, MENSAJE_INSTANTE);
             return null;
         }

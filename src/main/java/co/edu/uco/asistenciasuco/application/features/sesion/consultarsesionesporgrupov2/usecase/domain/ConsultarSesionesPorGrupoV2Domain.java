@@ -10,20 +10,15 @@ import java.util.UUID;
 /**
  * Dominio del listado v2 de sesiones de un grupo.
  */
-public final class ConsultarSesionesPorGrupoV2Domain {
+public record ConsultarSesionesPorGrupoV2Domain(UUID grupo, UUID usuarioEjecutor) {
 
-    private final UUID grupo;
-    private final UUID usuarioEjecutor;
-
-    public ConsultarSesionesPorGrupoV2Domain(final UUID grupo, final UUID usuarioEjecutor) {
+    public ConsultarSesionesPorGrupoV2Domain {
         if (ObjectHelper.isNull(grupo)) {
             throw new ValidationException(GrupoErrorCode.ERR_GRUPO_REQUERIDO);
         }
         if (ObjectHelper.isNull(usuarioEjecutor)) {
             throw new ValidationException(UsuarioErrorCode.ERR_USUARIO_REQUERIDO);
         }
-        this.grupo = grupo;
-        this.usuarioEjecutor = usuarioEjecutor;
     }
 
     public UUID getGrupo() {
