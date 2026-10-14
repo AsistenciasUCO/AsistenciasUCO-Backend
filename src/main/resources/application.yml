@@ -97,7 +97,7 @@ app:
     identity:
       provider: ${APP_ADAPTERS_IDENTITY_PROVIDER:keycloak}
     security:
-      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:keycloak}
+      provider: ${APP_ADAPTERS_SECURITY_PROVIDER:security-baseline}
     vault:
       provider: ${APP_ADAPTERS_VAULT_PROVIDER:azure_keyvault}
     parameter-catalog:
@@ -135,6 +135,18 @@ app:
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
+    # Runtime security: Security Baseline (PDP/PEP + Keycloak local)
+    security-baseline:
+      issuer-uri: ${SECURITY_BASELINE_ISSUER_URI:http://keycloak.localhost:19090/realms/security-baseline}
+      api-client-id: ${SECURITY_BASELINE_API_CLIENT_ID:security-baseline-bff}
+      expected-audience: ${SECURITY_BASELINE_EXPECTED_AUDIENCE:security-baseline-pdp}
+      user-id-claim: ${SECURITY_BASELINE_USER_ID_CLAIM:sub}
+      pep-url: ${SECURITY_BASELINE_PEP_URL:http://localhost:18081}
+      application-name: ${SECURITY_BASELINE_APPLICATION_NAME:asistencias-backend}
+      environment: ${SECURITY_BASELINE_ENVIRONMENT:local}
+      registration-token: ${PEP_REGISTRATION_TOKEN:yyE1ucZdQAEIoH0BLz20oDw0_2c1vDRRmURXlQLr9Qo}
+      pep-enforcement-enabled: ${SECURITY_BASELINE_PEP_ENFORCEMENT_ENABLED:true}
+      allow-insecure-http: ${SECURITY_BASELINE_ALLOW_INSECURE_HTTP:true}
     local-storage:
       upload-directory: ${APP_STORAGE_UPLOAD_DIRECTORY:uploads/soportes}
 

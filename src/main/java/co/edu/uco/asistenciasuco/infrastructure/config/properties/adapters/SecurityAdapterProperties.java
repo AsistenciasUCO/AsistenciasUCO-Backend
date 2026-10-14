@@ -12,6 +12,7 @@ public record SecurityAdapterProperties(Provider provider) {
     }
 
     public enum Provider {
-        KEYCLOAK
+        KEYCLOAK,
+        SECURITY_BASELINE
     }
 }
