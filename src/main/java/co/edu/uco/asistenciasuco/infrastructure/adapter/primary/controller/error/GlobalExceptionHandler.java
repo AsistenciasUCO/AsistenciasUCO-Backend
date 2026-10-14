@@ -13,6 +13,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
@@ -123,6 +124,7 @@ public final class GlobalExceptionHandler {
             return response;
         }
         return ResponseEntity.status(response.getStatusCode())
+                .headers(response.getHeaders())
                 .allow(exception.getSupportedHttpMethods().toArray(new HttpMethod[0]))
                 .body(response.getBody());
     }
@@ -175,6 +177,12 @@ public final class GlobalExceptionHandler {
         return buildResponse(descriptor, request, List.of());
     }
 
+    /**
+     * El contrato de error es siempre {@code ApiErrorResponse} en JSON. El Content-Type se fija
+     * explicitamente para que Spring no negocie contra el {@code Accept} del cliente: un
+     * EventSource envia solo {@code text/event-stream} y, sin esto, el error del canal SSE
+     * terminaria en {@code HttpMediaTypeNotAcceptableException} (500 o 400 sin cuerpo).
+     */
     private ResponseEntity<ApiErrorResponse> buildResponse(
             final ApiErrorDescriptor descriptor,
             final HttpServletRequest request,
@@ -182,7 +190,7 @@ public final class GlobalExceptionHandler {
     ) {
         AuditRequestAttributes.storeErrorCode(request, descriptor.code());
         final String resolvedMessage = resolveErrorMessage(descriptor);
-        return ResponseEntity.status(descriptor.status()).body(new ApiErrorResponse(
+        return ResponseEntity.status(descriptor.status()).contentType(MediaType.APPLICATION_JSON).body(new ApiErrorResponse(
                 OffsetDateTime.now(),
                 descriptor.status().value(),
                 descriptor.status().getReasonPhrase(),
