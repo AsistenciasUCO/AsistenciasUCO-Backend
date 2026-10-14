@@ -3,6 +3,7 @@
 ## Entregables
 
 - Rama experimental: `jose-valencia/experiment-security-baseline-mvc`.
+- Commit publicado: `a74b2886c7be175235943ca2ddd58660e6c2eb45`.
 - Worktree: `.w/sec-mvc`.
 - Laboratorio local: `.workspace/security-baseline-local`.
 - Contrato y límites: documentos de este directorio.
@@ -17,3 +18,5 @@
 ## Próximo desbloqueo
 
 Un responsable de identidad/seguridad debe aportar la regla versionada `sub`/`idUsuario`, los manuales PDF o confirmar que no son la fuente aplicable, y un procedimiento de credenciales fuera del repositorio. Después se puede ejecutar el laboratorio y la matriz manual sin cambiar el contrato por inferencia.
+
+El PR no pudo ser creado por el conector GitHub (`403 Resource not accessible by integration`). Apertura manual: `https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/new/jose-valencia/experiment-security-baseline-mvc`.
