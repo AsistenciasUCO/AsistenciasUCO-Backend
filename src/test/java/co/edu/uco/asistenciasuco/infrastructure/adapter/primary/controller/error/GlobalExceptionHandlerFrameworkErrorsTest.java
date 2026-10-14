@@ -2,14 +2,18 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.erro
 
 import org.junit.jupiter.api.Test;
 import org.springframework.core.MethodParameter;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockHttpServletRequest;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -93,5 +97,26 @@ class GlobalExceptionHandlerFrameworkErrorsTest {
         assertEquals(HttpStatus.BAD_REQUEST, sinTipo.getStatusCode());
         assertTrue(sinTipo.getBody().details().isEmpty());
         assertNull(sinTipo.getBody().correlationId());
+    }
+
+    @Test
+    void metodo_no_soportado_responde_405_json_conservando_el_encabezado_allow() {
+        final ResponseEntity<ApiErrorResponse> response = handler.handleMethodNotSupported(
+                new HttpRequestMethodNotSupportedException("DELETE", List.of("GET", "POST")), request());
+
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, response.getStatusCode());
+        assertEquals(Set.of(HttpMethod.GET, HttpMethod.POST), response.getHeaders().getAllow());
+        assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
+        assertEquals(405, response.getBody().status());
+    }
+
+    @Test
+    void metodo_no_soportado_sin_metodos_soportados_responde_405_json_sin_allow() {
+        final ResponseEntity<ApiErrorResponse> response = handler.handleMethodNotSupported(
+                new HttpRequestMethodNotSupportedException("DELETE"), request());
+
+        assertEquals(HttpStatus.METHOD_NOT_ALLOWED, response.getStatusCode());
+        assertTrue(response.getHeaders().getAllow().isEmpty());
+        assertEquals(MediaType.APPLICATION_JSON, response.getHeaders().getContentType());
     }
 }
