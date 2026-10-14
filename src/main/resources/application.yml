@@ -147,6 +147,16 @@ app:
       api-client-id: ${KEYCLOAK_API_CLIENT_ID:asistencias-api}
       expected-audience: ${KEYCLOAK_EXPECTED_AUDIENCE:asistencias-api}
       user-id-claim: ${KEYCLOAK_USER_ID_CLAIM:idUsuario}
+    # SEC-BASELINE-001: enforcement PEP servlet experimental. OFF por defecto; los valores
+    # sensibles deben venir del entorno/secret manager y nunca de este archivo.
+    security-baseline-pep:
+      enabled: ${SECURITY_BASELINE_PEP_ENABLED:false}
+      pep-url: ${SECURITY_BASELINE_PEP_URL:}
+      application-name: ${SECURITY_BASELINE_PEP_APPLICATION_NAME:asistencias-uco}
+      environment: ${SECURITY_BASELINE_PEP_ENVIRONMENT:local}
+      application-credential: ${SECURITY_BASELINE_PEP_APPLICATION_CREDENTIAL:}
+      connect-timeout: ${SECURITY_BASELINE_PEP_CONNECT_TIMEOUT:2s}
+      request-timeout: ${SECURITY_BASELINE_PEP_REQUEST_TIMEOUT:5s}
     # LB-004B.2: MinIO privado (bucket provisionado por docker-compose/minio-init). Credenciales
     # SOLO por variables de entorno, sin valor por defecto funcional (fail-fast si faltan).
     minio:

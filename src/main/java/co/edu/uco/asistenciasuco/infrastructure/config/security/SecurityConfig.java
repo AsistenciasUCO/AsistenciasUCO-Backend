@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -55,7 +56,8 @@ public class SecurityConfig {
             final JwtDecoder jwtDecoder,
             final InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter,
             final AuthenticationEntryPoint authenticationEntryPoint,
-            final AccessDeniedHandler accessDeniedHandler
+            final AccessDeniedHandler accessDeniedHandler,
+            final ObjectProvider<SecurityBaselinePepFilter> securityBaselinePepFilter
     ) throws Exception {
         http
             .cors(Customizer.withDefaults())
@@ -176,6 +178,12 @@ public class SecurityConfig {
                     .jwtAuthenticationConverter(institutionalJwtAuthenticationConverter)
                 )
             );
+
+        securityBaselinePepFilter.ifAvailable(filter ->
+                http.addFilterAfter(
+                        filter,
+                        org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+                ));
 
         return http.build();
     }

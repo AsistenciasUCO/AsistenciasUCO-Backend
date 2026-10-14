@@ -18,7 +18,7 @@ import java.util.List;
 @Component
 public final class SecurityErrorResponseWriter {
 
-    void write(
+    public void write(
             final HttpServletRequest request,
             final HttpServletResponse response,
             final HttpStatus status,
