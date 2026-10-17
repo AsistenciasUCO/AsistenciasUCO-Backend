@@ -41,6 +41,24 @@ public class SecurityConfig {
     @Value("${app.security.azure-events.webhook-token:}")
     private String azureWebhookToken;
 
+    @Value("${security.pep.enforcement.enabled:false}")
+    private boolean pepEnforcementEnabled;
+
+    @Value("${security.pep.enforcement.pep-url:http://localhost:18081}")
+    private String pepUrl;
+
+    @Value("${security.pep.enforcement.application-name:asistencias-backend}")
+    private String pepApplicationName;
+
+    @Value("${security.pep.enforcement.environment:local}")
+    private String pepEnvironment;
+
+    @Value("${security.pep.enforcement.application-credential:}")
+    private String pepApplicationCredential;
+
+    @Value("${security.pep.enforcement.public-paths:/actuator/health,/swagger-ui/**,/v3/api-docs/**}")
+    private String pepPublicPaths;
+
     @Bean
     public InstitutionalJwtAuthenticationConverter institutionalJwtAuthenticationConverter(
             final JwtClaimsExtractor jwtClaimsExtractor
@@ -77,6 +95,17 @@ public class SecurityConfig {
             .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
             .addFilterBefore(
                     new AzureEventGridAuthFilter(azureWebhookToken),
+                    org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
+            )
+            .addFilterAfter(
+                    new SecurityPepEnforcementFilter(
+                            pepEnforcementEnabled,
+                            pepUrl,
+                            pepApplicationName,
+                            pepEnvironment,
+                            pepApplicationCredential,
+                            pepPublicPaths
+                    ),
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
             )
             .exceptionHandling(exceptionHandling -> exceptionHandling

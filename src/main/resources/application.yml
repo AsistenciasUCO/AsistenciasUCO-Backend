@@ -169,3 +169,19 @@ app:
     azure-events:
       # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
       webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}
+
+# ──────────────────────────────────────────────────────────────
+# Security Baseline: PEP integration properties (starter v0.1.3)
+# ──────────────────────────────────────────────────────────────
+security:
+  enabled: ${SECURITY_ENABLED:true}
+  pep:
+    enforcement:
+      enabled: ${SECURITY_PEP_ENFORCEMENT_ENABLED:false}
+      pep-url: ${PEP_URL:http://localhost:18081}
+      application-name: ${SECURITY_PEP_APPLICATION_NAME:asistencias-uco}
+      environment: ${SECURITY_PEP_ENVIRONMENT:local}
+      application-credential: ${PEP_REGISTRATION_TOKEN:}
+      allow-insecure-http: ${SECURITY_PEP_ALLOW_INSECURE_HTTP:true}
+      public-paths: ${SECURITY_PEP_PUBLIC_PATHS:/actuator/health,/swagger-ui/**,/v3/api-docs/**}
+
