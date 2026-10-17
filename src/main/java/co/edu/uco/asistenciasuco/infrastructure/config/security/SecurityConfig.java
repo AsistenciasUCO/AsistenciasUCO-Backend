@@ -96,8 +96,10 @@ public class SecurityConfig {
             .addFilterBefore(
                     new AzureEventGridAuthFilter(azureWebhookToken),
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
-            )
-            .addFilterAfter(
+            );
+
+        if (pepEnforcementEnabled) {
+            http.addFilterAfter(
                     new SecurityPepEnforcementFilter(
                             pepEnforcementEnabled,
                             pepUrl,
@@ -107,7 +109,10 @@ public class SecurityConfig {
                             pepPublicPaths
                     ),
                     org.springframework.security.oauth2.server.resource.web.authentication.BearerTokenAuthenticationFilter.class
-            )
+            );
+        }
+
+        http
             .exceptionHandling(exceptionHandling -> exceptionHandling
                 .authenticationEntryPoint(authenticationEntryPoint)
                 .accessDeniedHandler(accessDeniedHandler)
@@ -135,13 +140,9 @@ public class SecurityConfig {
                 // en docs/security/runtime-security-provider-architecture.md).
                 .requestMatchers("/api/v1/docentes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/estudiante/**").hasRole("ESTUDIANTE")
-                // Directorio general/institucional de estudiantes (distinto del portal propio
-                // en /estudiante/**): expone datos de CUALQUIER estudiante filtrando por
-                // grupo/programa/facultad. El docente ya tiene su vertical específica y
-                // acotada por grupo en GET /api/v1/grupos/{grupoId}/estudiantes; por eso este
-                // directorio general NO se abre a DOCENTE (ver política documentada en
-                // docs/security/runtime-security-provider-architecture.md).
-                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                // Directorio general/institucional de estudiantes: permite a DOCENTE consultar y validar
+                // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
+                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole("DOCENTE")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole("DOCENTE")
@@ -184,7 +185,7 @@ public class SecurityConfig {
                 // grupo O COORDINADOR del programa, ver usp_registrar_estudiante_en_grupo, SEC_002).
                 // ADMINISTRADOR no tiene bypass en la DB para esta operacion; por eso no se incluye
                 // aqui, a diferencia de crear/actualizar grupo.
-                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes")
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes", "/api/v1/grupos/{grupoId}/estudiantes")
                     .hasAnyRole("DOCENTE", "COORDINADOR")
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")

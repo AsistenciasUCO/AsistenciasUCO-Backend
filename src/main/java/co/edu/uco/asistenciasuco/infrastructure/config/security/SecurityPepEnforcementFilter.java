@@ -56,10 +56,12 @@ public class SecurityPepEnforcementFilter extends OncePerRequestFilter {
                         .filter(p -> !p.isBlank())
                         .toList()
                 : List.of();
-        this.httpClient = HttpClient.newBuilder()
-                .version(HttpClient.Version.HTTP_1_1)
-                .connectTimeout(Duration.ofSeconds(3))
-                .build();
+        this.httpClient = enabled
+                ? HttpClient.newBuilder()
+                        .version(HttpClient.Version.HTTP_1_1)
+                        .connectTimeout(Duration.ofSeconds(3))
+                        .build()
+                : null;
     }
 
     @Override
