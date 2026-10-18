@@ -9,9 +9,9 @@ Fecha de corte: 2026-10-18 (America/Bogota).
 | Backend | `C:\Users\josev\AsistenciasUCO\AsistenciasUCO` | `AsistenciasUCO/AsistenciasUCO-Backend` | `personal=alejovh12/AsistenciasUCO` | `codex/p0-sec-001-coordinator-ownership` / `d0f170b8` | `develop` / `253c3c95` | `72312d7c → 253c3c95` | `UP_TO_DATE`; feature ahead 2/behind 5, preservada |
 | Frontend | `C:\Users\josev\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend` | `AsistenciasUCO/AsistenciasUCO-Frontend` | `legacy-frontend=shesho22/AsistenciasUCO-Frontend` | `jose-valencia/maint-004-frontend-utc-v2-integration` / `b4368d1` | `develop` / `bd2120f5` | `b0c2225 → bd2120f5` | feature preservada; develop fast-forward |
 | DB | `C:\Users\josev\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db` | `AsistenciasUCO/AsistenciasUCO-DB` | `legacy-db=johnjduque/gestion-asistencia-db` | `develop` / `32b70ebe` | `develop` / `32b70ebe` | `f2871a9 → 32b70ebe` | fast-forward; worktrees/stashes preservados |
-| Infra | no localizado | no configurado | no aplica | no aplica | `main` esperado, no checkout | no aplica | `MISSING_REPOSITORY` |
+| Infra | `C:\Users\josev\AsistenciasUCO\AsistenciasUCO-Infra` | `AsistenciasUCO/AsistenciasUCO-Infra` | no aplica | `main` | `develop` / `6ae52da6` | `main a544c49` y `develop 6ae52da6` verificados | `UP_TO_DATE`; develop elegida como integración |
 
-El backend conserva `refs/backup/p0b-pre-canonical-20261018` y `stash@{0}`. El PR personal #25 permanece abierto/draft en `alejovh12/AsistenciasUCO`; no fue cerrado, retargeteado ni mergeado.
+El backend conserva `refs/backup/p0b-pre-canonical-20261018` y `stash@{0}`. El PR personal #25 permanece abierto/draft en `alejovh12/AsistenciasUCO`; no fue cerrado, retargeteado ni mergeado. El checkout oficial de Infra se creó en una ruta nueva y no sobrescribió ninguna rama ni archivo existente.
 
 ## B. Script de sincronización
 
@@ -60,12 +60,13 @@ La rama oficial ya contiene un único filtro PEP en `infrastructure.config.secur
 | Git sync fixtures | `PASS` | arnés 8/8, exit 0; incluye repetición idempotente; ver `VALIDATION.md` |
 | Backend ownership target | `PASS` | Tests dirigidos 15/15 y `clean verify` 1557/1557 en la rama oficial nueva |
 | Backend `clean verify` | `PASS` | Java 25, exit 0; JaCoCo LINE 90 %, BRANCH 78 % |
-| Frontend build/tests | `NOT_RUN` | copia externa sincronizada, sin ejecutar Node/ChromeHeadless en P0-B |
-| DB checks/SP/SQL Server | `NOT_RUN` | no se ejecuta esquema ni fixtures externos |
-| Infra Compose | `BLOCKED_BY_MISSING_EVIDENCE` | checkout oficial no localizado |
-| PR oficial | `OPEN/DRAFT` | [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1); no merge |
-| CI/Sonar oficial | `NOT_RUN` | requiere ejecución remota del PR |
+| Frontend build/tests | `PASS` | `npm run verify`; ChromeHeadless 155 341/341, realtime LINE 95.38 %, BRANCH 83.95 %, production build PASS |
+| DB checks/SP/SQL Server | `NOT_RUN` | 1433 cerrado y Docker inaccesible; no se ejecutaron datos ni migraciones |
+| Infra branches/sync | `PASS` | `main`/`develop` verificadas; `develop` es integración; sync real de cuatro repos exit 0 |
+| PR oficial backend | `OPEN/DRAFT` | [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1); no merge |
+| PR oficial frontend | `OPEN/READY_FOR_REVIEW` | [AsistenciasUCO/AsistenciasUCO-Frontend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Frontend/pull/1); no merge |
+| CI/Sonar/security backend | `BLOCKED_BY_EXTERNAL_CONFIGURATION` | Maven, CodeQL, Trivy y ArchUnit PASS; Sonar autorización FAIL; Dependency Review graph FAIL |
 
 ## F. Publicación
 
-La rama de trabajo `codex/p0-b-canonical-sync-ownership` está publicada en la organización. El PR borrador [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) apunta a `develop`; no se hizo merge. El PR personal #25 sigue intacto como referencia histórica y no se reutilizó para el PR oficial.
+La rama de trabajo `codex/p0-b-canonical-sync-ownership` está publicada en la organización. El PR [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) apunta a `develop`; no se hizo merge. El PR frontend [AsistenciasUCO/AsistenciasUCO-Frontend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Frontend/pull/1) también apunta a `develop`. El PR personal #25 sigue intacto como referencia histórica y no se reutilizó para publicaciones nuevas.

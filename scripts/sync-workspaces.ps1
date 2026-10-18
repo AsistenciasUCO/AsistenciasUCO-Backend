@@ -163,7 +163,7 @@ $defaultRepositories = @(
     (Get-RepositoryConfig -Name 'backend' -Path $BackendPath -ExpectedOrigin 'https://github.com/AsistenciasUCO/AsistenciasUCO-Backend.git' -IntegrationBranch 'develop'),
     (Get-RepositoryConfig -Name 'frontend' -Path $FrontendPath -ExpectedOrigin 'https://github.com/AsistenciasUCO/AsistenciasUCO-Frontend.git' -IntegrationBranch 'develop'),
     (Get-RepositoryConfig -Name 'db' -Path $DbPath -ExpectedOrigin 'https://github.com/AsistenciasUCO/AsistenciasUCO-DB.git' -IntegrationBranch 'develop'),
-    (Get-RepositoryConfig -Name 'infra' -Path $InfraPath -ExpectedOrigin 'https://github.com/AsistenciasUCO/AsistenciasUCO-Infra.git' -IntegrationBranch 'main')
+    (Get-RepositoryConfig -Name 'infra' -Path $InfraPath -ExpectedOrigin 'https://github.com/AsistenciasUCO/AsistenciasUCO-Infra.git' -IntegrationBranch 'develop')
 )
 
 $hasPathOverride = @(@($BackendPath, $FrontendPath, $DbPath, $InfraPath) | Where-Object { -not [string]::IsNullOrWhiteSpace($_) })

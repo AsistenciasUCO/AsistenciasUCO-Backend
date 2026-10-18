@@ -22,7 +22,7 @@
       "name": "infra",
       "path": "C:\\Workspaces\\AsistenciasUCO-Infra",
       "expectedOrigin": "https://github.com/AsistenciasUCO/AsistenciasUCO-Infra.git",
-      "integrationBranch": "main"
+      "integrationBranch": "develop"
     }
   ]
 }

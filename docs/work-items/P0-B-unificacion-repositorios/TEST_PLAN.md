@@ -24,6 +24,13 @@ El sincronizador es tooling PowerShell y no modifica el comportamiento del backe
 ## Gates separados
 
 - Backend: tests de ownership, ArchUnit, cobertura y `verify` en la rama nueva.
-- Frontend: build/test/cobertura real solo con Node/ChromeHeadless disponibles; no sustituir por lectura de `VALIDATION.md`.
+- Frontend: `npm run verify`, incluyendo build, Karma/ChromeHeadless, cobertura global y el gate específico de realtime; no sustituir por lectura de `VALIDATION.md`.
 - DB: checks SQL y stored procedures solo contra ambiente controlado; no ejecutar migraciones desde este work item.
-- Infra: Compose/healthchecks solo si aparece checkout oficial.
+- Infra: comprobar `main`/`develop` y la rama de integración sin modificar el checkout activo.
+
+## Evidencia adicional ejecutada
+
+- Sincronizador real: `-Status` y `-Apply` sobre Backend, Frontend, DB e Infra; `-Apply` exit 0, con dirty worktrees preservados y sin escritura destructiva.
+- Ownership de aplicación: `GestionarAsignaturaUseCaseImplTest` + `AsignaturaJpaCommandPatternTest`, 15/15.
+- Frontend: `npm run verify`, 341/341 tests, cobertura realtime LINE 95.38% y BRANCH 83.95%, build de producción PASS.
+- SQL Server: `NOT_RUN` por precondición de ambiente no satisfecha; el bloqueo no se convierte en PASS por inspección estática.
