@@ -35,7 +35,7 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
-    @Value("${app.security.cors.allowed-origins:http://localhost:4200}")
+    @Value("${app.security.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://localhost:5174,http://localhost:5173,http://localhost:5175}")
     private String allowedOrigins;
 
     @Value("${app.security.azure-events.webhook-token:}")
@@ -202,9 +202,8 @@ public class SecurityConfig {
                 HttpHeaders.ACCEPT
         ));
         configuration.setExposedHeaders(List.of("X-Correlation-Id"));
-        // La API es Bearer-only: Authorization es un header explícito y no requiere credenciales
-        // de navegador (cookies, auth HTTP, certificados TLS de cliente).
-        configuration.setAllowCredentials(false);
+        // Security Baseline UCO (PDP/BFF): permite cookies de sesión del navegador (credentials: "include")
+        configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 
         final UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();

@@ -165,7 +165,23 @@ app:
   # directamente via @Value.
   security:
     cors:
-      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200}
+      allowed-origins: ${APP_SECURITY_CORS_ALLOWED_ORIGINS:http://localhost:4200,http://127.0.0.1:4200,http://localhost:5174,http://localhost:5173,http://localhost:5175}
     azure-events:
       # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
       webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}
+
+# ──────────────────────────────────────────────────────────────
+# Security Baseline UCO (PEP Enforcement) - Manual de Integración
+# ──────────────────────────────────────────────────────────────
+security:
+  enabled: ${SECURITY_ENABLED:true}
+  pep:
+    enforcement:
+      enabled: ${SECURITY_PEP_ENFORCEMENT_ENABLED:false}
+      pep-url: ${SECURITY_PEP_ENFORCEMENT_PEP_URL:http://localhost:18081}
+      application-name: ${SECURITY_PEP_ENFORCEMENT_APPLICATION_NAME:asistencias-uco}
+      environment: ${SECURITY_PEP_ENFORCEMENT_ENVIRONMENT:local}
+      application-credential: ${PEP_REGISTRATION_TOKEN:}
+      allow-insecure-http: ${SECURITY_PEP_ENFORCEMENT_ALLOW_INSECURE_HTTP:true}
+      public-paths: ${SECURITY_PEP_ENFORCEMENT_PUBLIC_PATHS:/actuator/health}
+

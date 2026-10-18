@@ -53,7 +53,14 @@ public class KeycloakSecurityAdapterConfiguration {
 
     @Bean
     public JwtDecoder jwtDecoder(final KeycloakSecurityProviderProperties properties) {
-        final NimbusJwtDecoder jwtDecoder = JwtDecoders.fromIssuerLocation(properties.issuerUri());
+        final String jwkSetUri;
+        if (properties.issuerUri().contains("keycloak.localhost")) {
+            jwkSetUri = properties.issuerUri().replace("keycloak.localhost", "localhost")
+                    + "/protocol/openid-connect/certs";
+        } else {
+            jwkSetUri = properties.issuerUri().replaceAll("/+$", "") + "/protocol/openid-connect/certs";
+        }
+        final NimbusJwtDecoder jwtDecoder = NimbusJwtDecoder.withJwkSetUri(jwkSetUri).build();
 
         final OAuth2TokenValidator<Jwt> timestampValidator = new JwtTimestampValidator();
         final OAuth2TokenValidator<Jwt> issuerValidator =

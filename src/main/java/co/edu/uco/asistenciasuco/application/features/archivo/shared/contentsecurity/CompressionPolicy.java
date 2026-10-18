@@ -71,7 +71,8 @@ public final class CompressionPolicy {
      * expansion mayor (o un flujo truncado) falla cerrado antes de reservar memoria adicional.
      */
     private static byte[] inflate(final byte[] compressedContent) {
-        try (Inflater inflater = new Inflater()) {
+        final Inflater inflater = new Inflater();
+        try {
             inflater.setInput(compressedContent);
             final ByteArrayOutputStream buffer = new ByteArrayOutputStream(
                     (int) Math.min(ContentSecurityValidator.MAX_FILE_SIZE_BYTES, compressedContent.length * 2L));
@@ -90,6 +91,8 @@ public final class CompressionPolicy {
             return buffer.toByteArray();
         } catch (final DataFormatException exception) {
             throw new InternalApplicationException("No fue posible restaurar el contenido original del archivo.", exception);
+        } finally {
+            inflater.end();
         }
     }
 }
