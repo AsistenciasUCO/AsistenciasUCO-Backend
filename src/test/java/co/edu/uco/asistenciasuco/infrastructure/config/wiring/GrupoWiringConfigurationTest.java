@@ -38,7 +38,8 @@ class GrupoWiringConfigurationTest {
         final var registrarEstudianteUseCase = config.registrarEstudianteUseCase(
                 grupoRepositoryPort, mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class));
         assertInstanceOf(RegistrarEstudianteUseCaseImpl.class, registrarEstudianteUseCase);
-        assertInstanceOf(RegistrarEstudianteInteractor.class, config.registrarEstudianteInputPort(registrarEstudianteUseCase));
+        assertInstanceOf(RegistrarEstudianteInteractor.class, config.registrarEstudianteInputPort(
+                registrarEstudianteUseCase, mock(UsuarioRepositoryPort.class), mock(co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort.class)));
 
         final var consultarGruposUseCase = config.consultarGruposUseCase(grupoRepositoryPort);
         assertInstanceOf(ConsultarGruposUseCaseImpl.class, consultarGruposUseCase);

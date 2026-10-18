@@ -21,6 +21,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudiantee
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.RegistrarEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl.RegistrarEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
@@ -65,9 +66,13 @@ public class GrupoWiringConfiguration {
 
     @Bean
     public RegistrarEstudianteInputPort registrarEstudianteInputPort(
-            final RegistrarEstudianteUseCase registrarEstudianteUseCase
+            final RegistrarEstudianteUseCase registrarEstudianteUseCase,
+            final UsuarioRepositoryPort usuarioRepositoryPort,
+            final EstudianteRepositoryPort estudianteRepositoryPort
     ) {
-        return new RegistrarEstudianteInteractor(registrarEstudianteUseCase);
+        return new RegistrarEstudianteInteractor(
+                registrarEstudianteUseCase, usuarioRepositoryPort, estudianteRepositoryPort
+        );
     }
 
     @Bean

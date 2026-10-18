@@ -178,10 +178,11 @@ security:
   pep:
     enforcement:
       enabled: ${SECURITY_PEP_ENFORCEMENT_ENABLED:false}
-      pep-url: ${SECURITY_PEP_ENFORCEMENT_PEP_URL:http://localhost:18081}
-      application-name: ${SECURITY_PEP_ENFORCEMENT_APPLICATION_NAME:asistencias-uco}
-      environment: ${SECURITY_PEP_ENFORCEMENT_ENVIRONMENT:local}
+      pep-url: ${PEP_URL:${SECURITY_PEP_ENFORCEMENT_PEP_URL:http://localhost:18081}}
+      application-name: ${SECURITY_PEP_APPLICATION_NAME:${SECURITY_PEP_ENFORCEMENT_APPLICATION_NAME:asistencias-uco}}
+      environment: ${SECURITY_PEP_ENVIRONMENT:${SECURITY_PEP_ENFORCEMENT_ENVIRONMENT:local}}
       application-credential: ${PEP_REGISTRATION_TOKEN:}
-      allow-insecure-http: ${SECURITY_PEP_ENFORCEMENT_ALLOW_INSECURE_HTTP:true}
-      public-paths: ${SECURITY_PEP_ENFORCEMENT_PUBLIC_PATHS:/actuator/health}
+      allow-insecure-http: ${SECURITY_PEP_ALLOW_INSECURE_HTTP:${SECURITY_PEP_ENFORCEMENT_ALLOW_INSECURE_HTTP:true}}
+      public-paths: ${SECURITY_PEP_PUBLIC_PATHS:${SECURITY_PEP_ENFORCEMENT_PUBLIC_PATHS:/actuator/health,/swagger-ui/**,/v3/api-docs/**}}
+
 
