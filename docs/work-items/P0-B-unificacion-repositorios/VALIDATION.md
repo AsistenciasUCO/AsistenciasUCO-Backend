@@ -84,6 +84,6 @@ La matriz por commit, estándares y hallazgos está en `AUDIT_REPORT.md`. La rev
 
 ## Próximo paso autorizado
 
-La rama `codex/p0-b-canonical-sync-ownership` quedó publicada en `origin` con HEAD `78bc6ff0`. Se abrió el PR borrador [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) hacia `develop`, sin merge. El commit de ownership es `da15a588` y el commit de tooling/evidencia es `78bc6ff0`.
+La rama `codex/p0-b-canonical-sync-ownership` quedó publicada en `origin` con HEAD `561802a`. Se abrió el PR borrador [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) hacia `develop`, sin merge. El commit de ownership es `da15a588` y el commit de tooling/evidencia es `78bc6ff0`.
 
 Antes del cierre funcional se requiere localizar/autorizar Infra y ejecutar las validaciones externas aplicables.
