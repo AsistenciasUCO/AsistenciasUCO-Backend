@@ -103,3 +103,14 @@ En esta auditoría no se modificó ni se reejecutó la copia externa. Por las re
 6. Ejecutar los smoke/E2E y la validación manual de contratos solo con servicios y datos controlados.
 
 No se creó PR ni commit de publicación en esta etapa: el backend comparte un worktree con cambios locales del usuario y el P0 transversal aún tiene bloqueos de evidencia. No se hizo merge, force-push ni operación destructiva.
+
+## Publicación de la mitigación
+
+La mitigación Application sí quedó aislada y publicada para revisión:
+
+- rama: `codex/p0-sec-001-coordinator-ownership`;
+- commit: `cad539f5b7bd139aba4619508f8eb8278e585569`;
+- PR draft: `https://github.com/alejovh12/AsistenciasUCO/pull/25`;
+- estado observado: abierto, sin merge; checks remotos aún sin estados reportados al corte.
+
+La frase anterior sobre no crear PR se refiere al P0 transversal completo; el PR #25 contiene únicamente la mitigación acotada y la evidencia asociada.
