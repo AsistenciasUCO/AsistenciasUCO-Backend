@@ -87,13 +87,15 @@ Durante el cierre se corrigieron dos defectos reales del componente de sesiones 
 
 ## CI, Sonar y seguridad del PR backend
 
-En el head `ca9e72f4` del PR backend #1, la evidencia remota fue:
+En el head de código `ca9e72f4` del PR backend #1, la evidencia remota fue:
 
 - Backend CI `39176860222`: Maven/JaCoCo PASS; SonarQube Cloud FAIL por autorización del proyecto/configuración externa.
 - Backend Security `39176860225`: CodeQL PASS; Dependency Review FAIL porque el Dependency Graph del repositorio no está habilitado.
 - Backend Deep Security Scan `39176860286`: Trivy de repositorio, Trivy de imagen y ArchUnit PASS.
 
 No se deshabilitó ningún check ni se registró ningún secreto. Los dos fallos son configuración/permiso del repositorio externo, no fallos de código identificados.
+
+El head actual `26ef188f` solo añade documentación/configuración del sincronizador y la propuesta para DB; la consulta de ejecuciones PR-triggered para ese SHA devolvió `workflow_runs: []` al corte. Por tanto, los resultados anteriores se conservan como evidencia del head de código y no se presentan como una ejecución nueva del commit documental.
 
 ## SQL Server y stored procedures
 
