@@ -63,8 +63,9 @@ La rama oficial ya contiene un único filtro PEP en `infrastructure.config.secur
 | Frontend build/tests | `NOT_RUN` | copia externa sincronizada, sin ejecutar Node/ChromeHeadless en P0-B |
 | DB checks/SP/SQL Server | `NOT_RUN` | no se ejecuta esquema ni fixtures externos |
 | Infra Compose | `BLOCKED_BY_MISSING_EVIDENCE` | checkout oficial no localizado |
-| PR/CI/Sonar oficial | `NOT_RUN` | branch oficial aún no publicado |
+| PR oficial | `OPEN/DRAFT` | [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1); no merge |
+| CI/Sonar oficial | `NOT_RUN` | requiere ejecución remota del PR |
 
 ## F. Publicación
 
-La rama local de trabajo es `codex/p0-b-canonical-sync-ownership`, basada en `origin/develop`. Debe publicarse como rama de la organización y abrir PR hacia `AsistenciasUCO/AsistenciasUCO-Backend:develop` solo después de ejecutar el gate backend de esta rama. El PR personal #25 sigue intacto como referencia histórica; no se usa para abrir el PR oficial.
+La rama de trabajo `codex/p0-b-canonical-sync-ownership` está publicada en la organización con HEAD `78bc6ff0`. El PR borrador [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) apunta a `develop`; no se hizo merge. El PR personal #25 sigue intacto como referencia histórica y no se reutilizó para el PR oficial.

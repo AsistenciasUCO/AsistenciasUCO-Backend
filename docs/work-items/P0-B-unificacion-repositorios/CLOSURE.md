@@ -14,7 +14,7 @@ El cambio de remotos, el respaldo de trabajo local, el fast-forward seguro de Ba
 - Contratos HTTP/SQL: `NO APLICA` para cambios; no se modificó OpenAPI ni SQL.
 - Gate backend en nuevo HEAD: `PASS`; 1557 tests, JaCoCo LINE 90 % / BRANCH 78 %.
 - SQL Server, Frontend/E2E e Infra: `NOT_RUN` o `BLOCKED`.
-- PR oficial/CI/Sonar: `NOT_RUN`; la rama aún debe publicarse; no hubo merge.
+- PR oficial: `OPEN/DRAFT`, [#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1); CI/Sonar aún `NOT_RUN`; no hubo merge.
 
 ## Dictamen final
 
