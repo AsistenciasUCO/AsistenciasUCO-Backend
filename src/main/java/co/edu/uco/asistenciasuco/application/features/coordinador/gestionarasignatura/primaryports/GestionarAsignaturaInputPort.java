@@ -9,5 +9,5 @@ public interface GestionarAsignaturaInputPort {
 
     void actualizar(GuardarAsignaturaDTO dto);
 
-    void toggleEstado(UUID asignaturaId);
+    void toggleEstado(UUID asignaturaId, UUID usuarioEjecutor);
 }
