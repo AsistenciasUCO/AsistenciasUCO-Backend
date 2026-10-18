@@ -68,4 +68,4 @@ La rama oficial ya contiene un único filtro PEP en `infrastructure.config.secur
 
 ## F. Publicación
 
-La rama de trabajo `codex/p0-b-canonical-sync-ownership` está publicada en la organización con HEAD `561802a`. El PR borrador [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) apunta a `develop`; no se hizo merge. El PR personal #25 sigue intacto como referencia histórica y no se reutilizó para el PR oficial.
+La rama de trabajo `codex/p0-b-canonical-sync-ownership` está publicada en la organización. El PR borrador [AsistenciasUCO/AsistenciasUCO-Backend#1](https://github.com/AsistenciasUCO/AsistenciasUCO-Backend/pull/1) apunta a `develop`; no se hizo merge. El PR personal #25 sigue intacto como referencia histórica y no se reutilizó para el PR oficial.
