@@ -95,7 +95,7 @@ En el head de código `ca9e72f4` del PR backend #1, la evidencia remota fue:
 
 No se deshabilitó ningún check ni se registró ningún secreto. Los dos fallos son configuración/permiso del repositorio externo, no fallos de código identificados.
 
-El head actual `26ef188f` solo añade documentación/configuración del sincronizador y la propuesta para DB; la consulta de ejecuciones PR-triggered para ese SHA devolvió `workflow_runs: []` al corte. Por tanto, los resultados anteriores se conservan como evidencia del head de código y no se presentan como una ejecución nueva del commit documental.
+El head actual `de25ffc7` solo añade documentación/configuración del sincronizador y la propuesta para DB; la consulta de ejecuciones PR-triggered para ese SHA devolvió `workflow_runs: []` al corte. Por tanto, los resultados anteriores se conservan como evidencia del head de código y no se presentan como una ejecución nueva del commit documental.
 
 ## SQL Server y stored procedures
 
