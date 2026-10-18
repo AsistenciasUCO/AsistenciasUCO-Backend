@@ -13,6 +13,8 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.dto.ParametroDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.dto.CrearFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.dto.EjecutarCierreMasivoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
@@ -42,6 +44,7 @@ public final class AdminPortalController {
     private final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort;
     private final ConsultarInstitucionesInputPort consultarInstitucionesInputPort;
     private final ConsultarFacultadesInputPort consultarFacultadesInputPort;
+    private final CrearFacultadInputPort crearFacultadInputPort;
     private final ConsultarAreasInputPort consultarAreasInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
@@ -52,6 +55,7 @@ public final class AdminPortalController {
             final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort,
             final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
             final ConsultarFacultadesInputPort consultarFacultadesInputPort,
+            final CrearFacultadInputPort crearFacultadInputPort,
             final ConsultarAreasInputPort consultarAreasInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
@@ -61,6 +65,7 @@ public final class AdminPortalController {
         this.ejecutarCierreMasivoInputPort = ejecutarCierreMasivoInputPort;
         this.consultarInstitucionesInputPort = consultarInstitucionesInputPort;
         this.consultarFacultadesInputPort = consultarFacultadesInputPort;
+        this.crearFacultadInputPort = crearFacultadInputPort;
         this.consultarAreasInputPort = consultarAreasInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
@@ -141,7 +146,36 @@ public final class AdminPortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     @PostMapping("/facultades")
-    public ResponseEntity<ApiDataResponse<Void>> crearFacultad() { throw unavailable("crear facultad"); }
+    public ResponseEntity<ApiDataResponse<FacultadDTO>> crearFacultad(@RequestBody final CrearFacultadRequest request) {
+        final UUID actorId = authenticatedUserResolver.requireAuthenticatedUserId();
+        final UUID facultadId = UUID.randomUUID();
+        final String nombre = request != null ? request.nombre() : null;
+        final UUID idInstitucion = request != null ? request.idInstitucion() : null;
+        final UUID idDecano = request != null ? request.idDecano() : null;
+
+        crearFacultadInputPort.execute(new CrearFacultadDTO(
+                facultadId,
+                nombre,
+                idInstitucion,
+                idDecano,
+                actorId
+        ));
+
+        final FacultadDTO dto = consultarFacultadesInputPort.execute().stream()
+                .filter(f -> f.id().equals(facultadId))
+                .findFirst()
+                .orElseGet(() -> new FacultadDTO(
+                        facultadId,
+                        nombre,
+                        idInstitucion,
+                        null,
+                        idDecano,
+                        null,
+                        true,
+                        "SI"
+                ));
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, dto));
+    }
     @PutMapping("/facultades/{id}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarFacultad(@PathVariable final UUID id) { throw unavailable("actualizar facultad"); }
     @PatchMapping("/facultades/{id}/estado")
@@ -166,6 +200,9 @@ public final class AdminPortalController {
     public record CrearDecanoRequest(UUID tipoIdentificacionId, Integer numeroIdentificacion, String primerNombre,
                                      String segundoNombre, String primerApellido, String segundoApellido, String correo,
                                      String password, UUID idFacultad) {
+    }
+
+    public record CrearFacultadRequest(String nombre, String codigo, UUID idInstitucion, UUID idDecano) {
     }
 
     public record CierreMasivoRequest(UUID idPeriodoAcademico) {
