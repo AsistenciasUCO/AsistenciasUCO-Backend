@@ -10,8 +10,7 @@ public final class SolicitarRevisionAsistenciaDTO {
     private UUID sesion;
     private String categoria;
     private String justificacion;
-    private String soporteNombre;
-    private String soporteUrl;
+    private UUID soporteArchivoId;
     private UUID usuario;
 
     public SolicitarRevisionAsistenciaDTO() {
@@ -22,15 +21,13 @@ public final class SolicitarRevisionAsistenciaDTO {
             final UUID sesion,
             final String categoria,
             final String justificacion,
-            final String soporteNombre,
-            final String soporteUrl,
+            final UUID soporteArchivoId,
             final UUID usuario
     ) {
         setSesion(sesion);
         setCategoria(categoria);
         setJustificacion(justificacion);
-        setSoporteNombre(soporteNombre);
-        setSoporteUrl(soporteUrl);
+        setSoporteArchivoId(soporteArchivoId);
         setUsuario(usuario);
     }
 
@@ -58,20 +55,13 @@ public final class SolicitarRevisionAsistenciaDTO {
         this.justificacion = justificacion;
     }
 
-    public String getSoporteNombre() {
-        return soporteNombre;
+    /** Identificador opaco (fileId) del soporte ya subido; opcional. Nunca una URL ni un nombre de archivo. */
+    public UUID getSoporteArchivoId() {
+        return soporteArchivoId;
     }
 
-    public void setSoporteNombre(final String soporteNombre) {
-        this.soporteNombre = soporteNombre;
-    }
-
-    public String getSoporteUrl() {
-        return soporteUrl;
-    }
-
-    public void setSoporteUrl(final String soporteUrl) {
-        this.soporteUrl = soporteUrl;
+    public void setSoporteArchivoId(final UUID soporteArchivoId) {
+        this.soporteArchivoId = soporteArchivoId;
     }
 
     public UUID getUsuario() {

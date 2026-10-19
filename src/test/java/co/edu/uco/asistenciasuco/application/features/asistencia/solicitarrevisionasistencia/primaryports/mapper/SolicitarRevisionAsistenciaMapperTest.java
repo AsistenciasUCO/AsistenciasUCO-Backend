@@ -21,13 +21,15 @@ class SolicitarRevisionAsistenciaMapperTest {
     void toDomain_con_dto_valido_mapea_campos() {
         final UUID sesion = UUID.randomUUID();
         final UUID usuario = UUID.randomUUID();
+        final UUID soporte = UUID.randomUUID();
         final SolicitarRevisionAsistenciaDTO dto = new SolicitarRevisionAsistenciaDTO(
-                sesion, "SALUD", "Justificacion valida", "soporte.pdf", "https://example.com", usuario);
+                sesion, "SALUD", "Justificacion valida", soporte, usuario);
 
         final SolicitarRevisionAsistenciaDomain domain = SolicitarRevisionAsistenciaMapper.toDomain(dto);
 
         assertEquals(sesion, domain.getSesion());
         assertEquals("SALUD", domain.getCategoria());
         assertEquals(usuario, domain.getUsuario());
+        assertEquals(soporte, domain.getSoporteArchivoId());
     }
 }

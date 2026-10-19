@@ -17,6 +17,8 @@ import java.util.Set;
 public final class ContentSecurityValidator {
 
     public static final long MAX_FILE_SIZE_BYTES = 5L * 1024 * 1024;
+    /** Longitud maxima del nombre persistido: coincide con ArchivoSoporte.nombreOriginal NVARCHAR(250). */
+    public static final int MAX_FILENAME_LENGTH = 250;
 
     private static final Set<String> ALLOWED_EXTENSIONS = Set.of("pdf", "png", "jpg", "jpeg");
 
@@ -75,7 +77,11 @@ public final class ContentSecurityValidator {
         if (!isSimpleFilename(candidate)) {
             throw new ValidationException("Nombre de archivo no valido.");
         }
-        return candidate.replaceAll("[^a-zA-Z0-9._-]", "_");
+        final String sanitized = candidate.replaceAll("[^a-zA-Z0-9._-]", "_");
+        if (sanitized.length() > MAX_FILENAME_LENGTH) {
+            throw new ValidationException("El nombre del archivo excede la longitud maxima permitida (250 caracteres).");
+        }
+        return sanitized;
     }
 
     private static boolean isSimpleFilename(final String filename) {

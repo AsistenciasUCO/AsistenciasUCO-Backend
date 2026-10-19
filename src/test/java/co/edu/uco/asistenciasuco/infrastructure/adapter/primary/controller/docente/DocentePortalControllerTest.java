@@ -6,6 +6,10 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicit
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.dto.AsignaturaDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.ConsultarHorariosDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ConsultarReclamosDocenteDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamoDocenteDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamosDocentePaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.dto.HorarioDocenteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.ResolverReclamoRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
@@ -39,16 +43,44 @@ class DocentePortalControllerTest {
     private final ConsultarAsignaturasDocenteInputPort asignaturas = mock(ConsultarAsignaturasDocenteInputPort.class);
     private final ResolverSolicitudRevisionAsistenciaInputPort resolverReclamo =
             mock(ResolverSolicitudRevisionAsistenciaInputPort.class);
+    private final ConsultarReclamosDocenteInputPort reclamos = mock(ConsultarReclamosDocenteInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final DocentePortalController controller =
-            new DocentePortalController(horarios, asignaturas, resolverReclamo, identity);
+            new DocentePortalController(horarios, asignaturas, resolverReclamo, reclamos, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
     @Test
-    void consultarReclamos_no_implementado_lanza_featureUnavailable() {
-        assertEquals("FEATURE_UNAVAILABLE",
-                assertThrows(FeatureUnavailableException.class, controller::consultarReclamos).getCode());
+    void consultarReclamos_delega_con_el_usuario_autenticado_y_devuelve_lista_con_total_y_soporte() throws Exception {
+        final UUID soporte = UUID.randomUUID();
+        final ReclamoDocenteDTO reclamo = new ReclamoDocenteDTO(RECLAMO, "REC-1", java.time.LocalDate.of(2026, 10, 19), "PENDIENTE",
+                "Justificacion", null, UUID.randomUUID(), "Ana Perez", UUID.randomUUID(), 3,
+                java.time.Instant.parse("2026-10-19T15:30:45.1234567Z"), "UTC_V2", UUID.randomUUID(), 1, "G1",
+                UUID.randomUUID(), "MAT1", "Matematicas",
+                new ReclamoDocenteDTO.SoporteAdjuntoDTO(soporte, "evidencia.pdf", "application/pdf", 1234L,
+                        java.time.Instant.parse("2026-10-19T15:00:00Z"), "/api/v1/archivos/" + soporte));
+        when(reclamos.execute(new ConsultarReclamosDocenteDTO(ACTOR, "P", 2, 5)))
+                .thenReturn(new ReclamosDocentePaginaDTO(List.of(reclamo), 11));
+
+        mvc.perform(get("/api/v1/docente/reclamos").param("estado", "P").param("pagina", "2").param("tamano", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.total").value(11))
+                .andExpect(jsonPath("$.datos[0].estadoSolicitud").value("PENDIENTE"))
+                .andExpect(jsonPath("$.datos[0].fechaSesionUtc").value("2026-10-19T15:30:45.123456700Z"))
+                .andExpect(jsonPath("$.datos[0].soporteAdjunto.fileId").value(soporte.toString()))
+                .andExpect(jsonPath("$.datos[0].soporteAdjunto.url").value("/api/v1/archivos/" + soporte));
+    }
+
+    @Test
+    void consultarReclamos_sin_parametros_usa_valores_nulos_y_deja_la_normalizacion_a_application() throws Exception {
+        when(reclamos.execute(new ConsultarReclamosDocenteDTO(ACTOR, null, null, null)))
+                .thenReturn(new ReclamosDocentePaginaDTO(List.of(), 0));
+
+        mvc.perform(get("/api/v1/docente/reclamos"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(0))
+                .andExpect(jsonPath("$.datos").isEmpty());
     }
 
     @Test

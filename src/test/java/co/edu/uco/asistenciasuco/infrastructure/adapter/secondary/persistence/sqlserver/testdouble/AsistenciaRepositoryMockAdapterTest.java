@@ -39,7 +39,7 @@ class AsistenciaRepositoryMockAdapterTest {
         adapter.registrarAsistenciaAutonoma(new RegistrarAsistenciaAutonomaRepositoryDTO(
                 UUID.randomUUID(), UUID.randomUUID(), "123456", UUID.randomUUID()));
         adapter.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", "soporte.pdf", "https://example.com",
+                UUID.randomUUID(), UUID.randomUUID(), "SALUD", "Justificacion", UUID.randomUUID(),
                 UUID.randomUUID()));
         adapter.resolverSolicitudRevisionAsistencia(new ResolverSolicitudRevisionAsistenciaRepositoryDTO(
                 UUID.randomUUID(), UUID.randomUUID(), "APROBAR", "Aceptada", UUID.randomUUID()));
