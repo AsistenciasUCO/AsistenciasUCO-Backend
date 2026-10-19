@@ -28,6 +28,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## Revisión y reanudación — octubre 2026
 - [Auditoría independiente PR #15](QUALITY-PR15-recovery/INDEPENDENT_REVIEW_2026-10-08.md): evidencia remota, riesgos y checklist humano de merge.
 - [Plan LB-004 después de PR #15](LB-004-stateless-serverless-readiness/RESUMPTION_CONTRACT_PLAN_2026-10-08.md): análisis contractual DB antes de backend/frontend. Sin implementación autorizada todavía.
+- [LB-004C MinIO + ClamAV](LB-004-stateless-serverless-readiness/LB-004C-EXECUTION_REPORT.md): reanudación autorizada 2026-10-18 de la storage foundation independiente de DB; handoffs [DB](LB-004-stateless-serverless-readiness/DB_BINDING_HANDOFF.md) y [frontend](LB-004-stateless-serverless-readiness/FRONTEND_FILES_HANDOFF.md).
 
 ## Correcciones de defectos — octubre 2026
 - [FIX-001](FIX-001-sse-error-content-negotiation/PLAN.md): errores de `/api/v1/realtime/stream` con `Accept: text/event-stream` respondían 500 (403 esperado) o 400 sin cuerpo; ahora el `ApiErrorResponse` se escribe siempre en JSON. Hallado en el E2E SEC-BASELINE-002.
