@@ -40,6 +40,15 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
                 HttpValidationMessages.INVALID_UUID
         );
         validateNumeroIdentificacion(request.getNumeroIdentificacion(), builder);
+
+        final boolean esMatriculaPorIdentificacion = request.getPrimerNombre() == null
+                && request.getPrimerApellido() == null
+                && request.getCorreo() == null;
+
+        if (esMatriculaPorIdentificacion) {
+            return builder.build();
+        }
+
         validateRequiredPersonName("primerApellido", request.getPrimerApellido(), builder);
         validateOptionalPersonName("segundoApellido", request.getSegundoApellido(), builder);
         validateRequiredPersonName("primerNombre", request.getPrimerNombre(), builder);

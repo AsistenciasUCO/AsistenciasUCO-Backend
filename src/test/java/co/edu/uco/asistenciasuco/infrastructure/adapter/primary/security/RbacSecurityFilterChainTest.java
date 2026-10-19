@@ -350,15 +350,14 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isForbidden());
     }
 
-    // --- /api/v1/estudiantes/** : directorio institucional general (distinto del portal
-    // propio en /estudiante/**), restringido en este mismo prompt correctivo ---
+    // --- /api/v1/estudiantes/** : directorio institucional de estudiantes:
+    // abierto a DOCENTE para validar la existencia del estudiante a matricular en su grupo
+    // (junto con COORDINADOR y ADMINISTRADOR). ---
 
     @Test
-    void estudiantes_directorio_docente_recibe_403() throws Exception {
-        // El docente tiene su vertical especifica y acotada por grupo
-        // (GET /api/v1/grupos/{grupoId}/estudiantes); el directorio general no se le abre.
+    void estudiantes_directorio_docente_es_permitido() throws Exception {
         mockMvc.perform(get("/api/v1/estudiantes").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
-                .andExpect(status().isForbidden());
+                .andExpect(status().isOk());
     }
 
     @Test

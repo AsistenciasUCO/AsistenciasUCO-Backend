@@ -53,6 +53,6 @@ public class CoordinadorWiringConfiguration {
     @Bean ConsultarEstudiantesProgramaInputPort consultarEstudiantesProgramaInputPort(final ConsultarEstudiantesProgramaUseCase useCase) { return new ConsultarEstudiantesProgramaInteractor(useCase); }
     @Bean GestionarPlanEstudioUseCase gestionarPlanEstudioUseCase(final PlanEstudioCommandPort commandPort, final InstitutionalScopePort scopePort) { return new GestionarPlanEstudioUseCaseImpl(commandPort, scopePort); }
     @Bean GestionarPlanEstudioInputPort gestionarPlanEstudioInputPort(final GestionarPlanEstudioUseCase useCase) { return new GestionarPlanEstudioInteractor(useCase); }
-    @Bean GestionarAsignaturaUseCase gestionarAsignaturaUseCase(final AsignaturaCommandPort commandPort) { return new GestionarAsignaturaUseCaseImpl(commandPort); }
+    @Bean GestionarAsignaturaUseCase gestionarAsignaturaUseCase(final AsignaturaCommandPort commandPort, final AsignaturaQueryPort queryPort, final PlanEstudioQueryPort planQueryPort, final InstitutionalScopePort scopePort) { return new GestionarAsignaturaUseCaseImpl(commandPort, queryPort, planQueryPort, scopePort); }
     @Bean GestionarAsignaturaInputPort gestionarAsignaturaInputPort(final GestionarAsignaturaUseCase useCase) { return new GestionarAsignaturaInteractor(useCase); }
 }

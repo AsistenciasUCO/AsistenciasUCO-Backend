@@ -7,6 +7,7 @@ import java.util.UUID;
  */
 public final class RegistrarEstudianteDTO {
 
+    private UUID estudianteId;
     private UUID tipoIdentificacionId;
     private Integer numeroIdentificacion;
     private String primerApellido;
@@ -34,6 +35,23 @@ public final class RegistrarEstudianteDTO {
             final UUID grupoId,
             final UUID usuarioEjecutor
     ) {
+        this(null, tipoIdentificacionId, numeroIdentificacion, primerApellido, segundoApellido, primerNombre, segundoNombre, correo, password, grupoId, usuarioEjecutor);
+    }
+
+    public RegistrarEstudianteDTO(
+            final UUID estudianteId,
+            final UUID tipoIdentificacionId,
+            final Integer numeroIdentificacion,
+            final String primerApellido,
+            final String segundoApellido,
+            final String primerNombre,
+            final String segundoNombre,
+            final String correo,
+            final String password,
+            final UUID grupoId,
+            final UUID usuarioEjecutor
+    ) {
+        setEstudianteId(estudianteId);
         setTipoIdentificacionId(tipoIdentificacionId);
         setNumeroIdentificacion(numeroIdentificacion);
         setPrimerApellido(primerApellido);
@@ -44,6 +62,14 @@ public final class RegistrarEstudianteDTO {
         setPassword(password);
         setGrupoId(grupoId);
         setUsuarioEjecutor(usuarioEjecutor);
+    }
+
+    public UUID getEstudianteId() {
+        return estudianteId;
+    }
+
+    public void setEstudianteId(final UUID estudianteId) {
+        this.estudianteId = estudianteId;
     }
 
     public UUID getTipoIdentificacionId() {
