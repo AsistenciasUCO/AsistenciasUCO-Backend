@@ -31,6 +31,45 @@ class FileProvidersConfigurationTest {
     }
 
     @Test
+    void minio_aplica_timeouts_acotados_por_defecto_y_respeta_los_explicitos() {
+        final MinioProviderProperties defaults = new MinioProviderProperties("http://m:9000", "a", "s", "b");
+        assertEquals(5000, defaults.connectTimeoutMillis());
+        assertEquals(30000, defaults.writeTimeoutMillis());
+        assertEquals(30000, defaults.readTimeoutMillis());
+
+        final MinioProviderProperties nonPositive = new MinioProviderProperties("http://m:9000", "a", "s", "b", 0, -1, 0);
+        assertEquals(5000, nonPositive.connectTimeoutMillis());
+        assertEquals(30000, nonPositive.writeTimeoutMillis());
+        assertEquals(30000, nonPositive.readTimeoutMillis());
+
+        final MinioProviderProperties explicit = new MinioProviderProperties("http://m:9000", "a", "s", "b", 250, 900, 1200);
+        assertEquals(250, explicit.connectTimeoutMillis());
+        assertEquals(900, explicit.writeTimeoutMillis());
+        assertEquals(1200, explicit.readTimeoutMillis());
+    }
+
+    @Test
+    void composition_root_vincula_timeouts_de_minio_desde_properties() {
+        new ApplicationContextRunner()
+                .withUserConfiguration(MinioStorageAdapterConfiguration.class)
+                .withPropertyValues(
+                        "app.providers.minio.endpoint=http://localhost:9000",
+                        "app.providers.minio.access-key=test-access",
+                        "app.providers.minio.secret-key=test-secret-value",
+                        "app.providers.minio.bucket=soportes",
+                        "app.providers.minio.connect-timeout-millis=111",
+                        "app.providers.minio.write-timeout-millis=222",
+                        "app.providers.minio.read-timeout-millis=333")
+                .run(context -> {
+                    assertThat(context).hasNotFailed();
+                    final MinioProviderProperties bound = context.getBean(MinioProviderProperties.class);
+                    assertEquals(111, bound.connectTimeoutMillis());
+                    assertEquals(222, bound.writeTimeoutMillis());
+                    assertEquals(333, bound.readTimeoutMillis());
+                });
+    }
+
+    @Test
     void clamav_exige_host_y_puerto_y_aplica_timeouts_por_defecto() {
         assertThrows(IllegalStateException.class, () -> new ClamAvProviderProperties(" ", 3310, 1, 1));
         assertThrows(IllegalStateException.class, () -> new ClamAvProviderProperties("clamav", 0, 1, 1));

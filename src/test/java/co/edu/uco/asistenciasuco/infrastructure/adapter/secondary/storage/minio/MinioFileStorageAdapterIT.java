@@ -1,6 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.storage.minio;
 
+import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
+import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.CompressionDecision;
+import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.CompressionPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.storage.FileStoragePort;
+import co.edu.uco.asistenciasuco.testsupport.files.FilesIntegrationEnvironment;
+import co.edu.uco.asistenciasuco.testsupport.files.SoporteFixtures;
 import io.minio.MinioClient;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Tag;
@@ -14,6 +19,7 @@ import java.util.UUID;
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -25,16 +31,12 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * provisto por {@code infra/files/compose.yaml} (servicio {@code minio}, bucket
  * {@code asistencias-soportes}). No mockea el SDK: dos clientes MinIO independientes se usan
  * deliberadamente para demostrar STATELESS-001/STORAGE-006 (dos "instancias" leen el mismo
- * objeto). Requiere el stack de {@code infra/files/compose.yaml} corriendo; sin el contenedor disponible
- * esta prueba FALLA con un error de conexion claro, nunca se omite silenciosamente.</p>
+ * objeto). Requiere el stack de {@code infra/files/compose.yaml} corriendo y las variables
+ * {@code MINIO_ENDPOINT}/{@code MINIO_ACCESS_KEY}/{@code MINIO_SECRET_KEY} (sin valores por defecto,
+ * ver {@link FilesIntegrationEnvironment}); sin ellas esta prueba FALLA, nunca se omite.</p>
  */
 @Tag("integration")
 class MinioFileStorageAdapterIT {
-
-    private static final String ENDPOINT = System.getenv().getOrDefault("MINIO_ENDPOINT", "http://localhost:9000");
-    private static final String ACCESS_KEY = System.getenv().getOrDefault("MINIO_ACCESS_KEY", "asistencias-minio-dev");
-    private static final String SECRET_KEY = System.getenv().getOrDefault("MINIO_SECRET_KEY", "asistencias-minio-dev-secret");
-    private static final String BUCKET = System.getenv().getOrDefault("MINIO_BUCKET", "asistencias-soportes");
 
     private final List<String> createdFileIds = new ArrayList<>();
 
@@ -128,6 +130,76 @@ class MinioFileStorageAdapterIT {
         assertArrayEquals(content, readByB.content());
     }
 
+    // INTEGRITY-001 / metadata tecnica completa: tamanos, compresion, checksum y uploadedAt
+    // sobreviven el round-trip real, incluido un objeto almacenado comprimido.
+    @Test
+    void metadata_tecnica_de_objeto_comprimido_sobrevive_el_round_trip_real() {
+        final FileStoragePort adapter = newAdapter();
+        final String fileId = newTrackedFileId();
+        final byte[] original = SoporteFixtures.compressiblePdf(64 * 1024);
+        final CompressionDecision decision = CompressionPolicy.evaluate(original);
+        assertTrue(decision.compressed(), "el fixture compresible debe superar el umbral de ahorro");
+        final Instant uploadedAt = Instant.parse("2026-10-18T15:30:45.123Z");
+        final FileStoragePort.StoredObjectMetadata metadata = new FileStoragePort.StoredObjectMetadata(
+                UUID.randomUUID().toString(), "soporte.pdf", "application/pdf",
+                original.length, decision.storedContent().length, true, decision.algorithm(),
+                ChecksumCalculator.sha256(original), uploadedAt);
+
+        adapter.store(new FileStoragePort.StoreObjectCommand(fileId, decision.storedContent(), metadata));
+        final FileStoragePort.StoredObject read = adapter.read(fileId);
+        final byte[] restored = CompressionPolicy.decompress(read.content(), read.metadata().compressionAlgorithm());
+
+        assertArrayEquals(decision.storedContent(), read.content());
+        assertEquals(original.length, read.metadata().originalSize());
+        assertEquals(decision.storedContent().length, read.metadata().storedSize());
+        assertTrue(read.metadata().compressed());
+        assertEquals(CompressionPolicy.ALGORITHM_DEFLATE, read.metadata().compressionAlgorithm());
+        assertEquals(uploadedAt, read.metadata().uploadedAt());
+        assertArrayEquals(original, restored);
+        assertEquals(metadata.checksumSha256(), ChecksumCalculator.sha256(restored));
+    }
+
+    @Test
+    void objeto_sin_comprimir_conserva_tamano_y_marca_de_no_compresion() {
+        final FileStoragePort adapter = newAdapter();
+        final String fileId = newTrackedFileId();
+        final byte[] content = SoporteFixtures.png(32 * 1024, 7L);
+
+        adapter.store(new FileStoragePort.StoreObjectCommand(fileId, content, metadataFor(content, "foto.png")));
+        final FileStoragePort.StoredObject read = adapter.read(fileId);
+
+        assertArrayEquals(content, read.content());
+        assertEquals(content.length, read.metadata().originalSize());
+        assertEquals(content.length, read.metadata().storedSize());
+        assertFalse(read.metadata().compressed());
+        assertNull(read.metadata().compressionAlgorithm());
+    }
+
+    // MINIO-AUTH: credenciales invalidas son un fallo tecnico, nunca "no existe" ni fuga del secreto.
+    @Test
+    void credenciales_invalidas_fallan_como_storage_no_disponible_sin_exponer_el_secreto() {
+        final String wrongSecret = "wrong-secret-" + UUID.randomUUID();
+        final FileStoragePort adapter = adapterWith(FilesIntegrationEnvironment.minioEndpoint(),
+                FilesIntegrationEnvironment.minioAccessKey(), wrongSecret);
+
+        final FileStoragePort.StorageUnavailableException exception = assertThrows(
+                FileStoragePort.StorageUnavailableException.class,
+                () -> adapter.read(UUID.randomUUID().toString()));
+
+        assertFalse(exception.getMessage().contains(wrongSecret));
+        assertFalse(exception.getMessage().contains(FilesIntegrationEnvironment.minioAccessKey()));
+    }
+
+    // MINIO-DOWN: endpoint sin servicio -> fallo tecnico controlado, nunca ObjectNotFound.
+    @Test
+    void endpoint_sin_servicio_falla_como_storage_no_disponible() {
+        final FileStoragePort adapter = adapterWith("http://127.0.0.1:1",
+                FilesIntegrationEnvironment.minioAccessKey(), FilesIntegrationEnvironment.minioSecretKey());
+
+        assertThrows(FileStoragePort.StorageUnavailableException.class, () -> adapter.read(UUID.randomUUID().toString()));
+        assertThrows(FileStoragePort.StorageUnavailableException.class, () -> adapter.exists(UUID.randomUUID().toString()));
+    }
+
     private String newTrackedFileId() {
         final String fileId = UUID.randomUUID().toString();
         createdFileIds.add(fileId);
@@ -143,17 +215,23 @@ class MinioFileStorageAdapterIT {
                 content.length,
                 false,
                 null,
-                co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator.sha256(content),
+                ChecksumCalculator.sha256(content),
                 Instant.now()
         );
     }
 
     private static FileStoragePort newAdapter() {
+        return adapterWith(FilesIntegrationEnvironment.minioEndpoint(),
+                FilesIntegrationEnvironment.minioAccessKey(), FilesIntegrationEnvironment.minioSecretKey());
+    }
+
+    private static FileStoragePort adapterWith(final String endpoint, final String accessKey, final String secretKey) {
         final MinioClient client = MinioClient.builder()
-                .endpoint(ENDPOINT)
-                .credentials(ACCESS_KEY, SECRET_KEY)
+                .endpoint(endpoint)
+                .credentials(accessKey, secretKey)
                 .build();
-        return new MinioFileStorageAdapter(client, BUCKET);
+        client.setTimeout(2000, 5000, 5000);
+        return new MinioFileStorageAdapter(client, FilesIntegrationEnvironment.minioBucket());
     }
 }
 

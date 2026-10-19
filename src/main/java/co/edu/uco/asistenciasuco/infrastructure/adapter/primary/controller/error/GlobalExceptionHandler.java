@@ -24,6 +24,7 @@ import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.multipart.MaxUploadSizeExceededException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.PrintWriter;
@@ -127,6 +128,16 @@ public final class GlobalExceptionHandler {
                 .headers(response.getHeaders())
                 .allow(exception.getSupportedHttpMethods().toArray(new HttpMethod[0]))
                 .body(response.getBody());
+    }
+
+    @ExceptionHandler(MaxUploadSizeExceededException.class)
+    public ResponseEntity<ApiErrorResponse> handleMaxUploadSizeExceeded(
+            final MaxUploadSizeExceededException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.uploadSizeExceeded();
+        logFrameworkBadRequest(descriptor, exception, request);
+        return buildResponse(descriptor, request);
     }
 
     @ExceptionHandler(NoResourceFoundException.class)
