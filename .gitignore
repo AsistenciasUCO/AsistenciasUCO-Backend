@@ -91,3 +91,6 @@ infra/keycloak/generated/
 .claude/agent-registry.json
 .claude/agent-memory-local/
 .claude/assistant-daemon-state.json
+
+# E2E local
+target-e2e-*
