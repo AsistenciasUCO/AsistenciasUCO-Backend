@@ -154,6 +154,10 @@ app:
       access-key: ${MINIO_ACCESS_KEY:}
       secret-key: ${MINIO_SECRET_KEY:}
       bucket: ${MINIO_BUCKET:asistencias-soportes}
+      # Acotan el bloqueo si MinIO acepta la conexion y no responde (el SDK espera 5 min por defecto).
+      connect-timeout-millis: ${MINIO_CONNECT_TIMEOUT_MILLIS:5000}
+      write-timeout-millis: ${MINIO_WRITE_TIMEOUT_MILLIS:30000}
+      read-timeout-millis: ${MINIO_READ_TIMEOUT_MILLIS:30000}
     # LB-004B.2: ClamAV local via protocolo clamd/INSTREAM.
     clamav:
       host: ${CLAMAV_HOST:localhost}
