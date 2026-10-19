@@ -1,4 +1,4 @@
-"""LB-004D — E2E HTTP real del soporte de revision: Keycloak + backend + SQL Server + MinIO + ClamAV.
+"""LB-004D â€” E2E HTTP real del soporte de revision: Keycloak + backend + SQL Server + MinIO + ClamAV.
 
 Flujo: el estudiante sube un soporte (ClamAV -> MinIO -> borrador DRAFT en SQL), radica con soporteArchivoId
 (DRAFT -> ATTACHED en la misma transaccion que crea la solicitud) y el docente TITULAR lista el reclamo y descarga el
@@ -42,7 +42,7 @@ def sql_rows(query):
         return None
     result = subprocess.run(
         ["docker", "exec", "-e", "SQLCMDPASSWORD", SQL_CONTAINER, "/opt/mssql-tools18/bin/sqlcmd", "-S", "localhost",
-         "-U", "sa", "-C", "-d", "gestionasistenciadb", "-b", "-h", "-1", "-W", "-s", "|", "-Q",
+         "-U", "sa", "-C", "-I", "-d", "gestionasistenciadb", "-b", "-h", "-1", "-W", "-s", "|", "-Q",
          "SET NOCOUNT ON; " + query],
         capture_output=True, text=True, timeout=60)
     if result.returncode != 0:
@@ -78,7 +78,7 @@ def api(method, url, token=None, payload=None):
 
 
 def radicar(root, token, session_id, justificacion, soporte=None):
-    payload = {"sesionId": session_id, "categoria": "Médico / Salud", "justificacion": justificacion}
+    payload = {"sesionId": session_id, "categoria": "MÃ©dico / Salud", "justificacion": justificacion}
     if soporte is not None:
         payload["soporteArchivoId"] = soporte
     return api("POST", root + "/api/v1/asistencias/revisiones", token, payload)
