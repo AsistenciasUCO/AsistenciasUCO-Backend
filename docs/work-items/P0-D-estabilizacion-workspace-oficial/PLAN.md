@@ -48,6 +48,12 @@ seguridad, un mock o un check omitido en certificación.
   con las cuatro rutas reales. Backend quedó `UP_TO_DATE_DIRTY` y con feature
   divergente; Frontend quedó `MISSING_LOCAL_INTEGRATION_BRANCH`; DB e Infra
   quedaron `UP_TO_DATE`. No hubo checkout, merge, reset, stash, push ni borrado.
+- Commits locales P0-D preparados sin publicar: Backend `d3b1210` en
+  `codex/p0-b-canonical-sync-ownership`; Frontend `ea85373` en
+  `codex/p0-d-frontend-develop-stabilization`; DB `588d602` en
+  `codex/p0-d-db-stabilization`; Infra `433c12e` en
+  `codex/p0-d-infra-validation`. Los cuatro worktrees quedaron limpios y sus
+  `origin` apuntan a la organización oficial.
 
 ## TARGET
 
