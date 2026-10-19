@@ -6,12 +6,13 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicit
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ConsultarReclamosDocenteDTO;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamoDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamosDocentePaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.ConsultarHorariosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.dto.AsignaturaDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.dto.HorarioDocenteDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.mapper.ReclamoDocenteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.ResolverReclamoRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.ReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -55,14 +56,17 @@ public final class DocentePortalController {
      * soporte se descarga por {@code GET /api/v1/archivos/{fileId}} con Bearer; nunca por un enlace del storage.
      */
     @GetMapping("/reclamos")
-    public ResponseEntity<ApiListResponse<ReclamoDocenteDTO>> consultarReclamos(
+    public ResponseEntity<ApiListResponse<ReclamoDocenteResponse>> consultarReclamos(
             @RequestParam(name = "estado", required = false) final String estado,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
         final ReclamosDocentePaginaDTO resultado = consultarReclamosDocenteInputPort.execute(
                 new ConsultarReclamosDocenteDTO(authenticatedUserResolver.requireAuthenticatedUserId(), estado, pagina, tamano));
-        return ResponseEntity.ok(new ApiListResponse<>(true, resultado.reclamos(), resultado.totalRegistros()));
+        return ResponseEntity.ok(new ApiListResponse<>(
+                true,
+                resultado.reclamos().stream().map(ReclamoDocenteHttpMapper::toResponse).toList(),
+                resultado.totalRegistros()));
     }
 
     @PatchMapping("/reclamos/{id}")

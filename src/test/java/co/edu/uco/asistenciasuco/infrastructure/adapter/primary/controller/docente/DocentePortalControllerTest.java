@@ -67,7 +67,8 @@ class DocentePortalControllerTest {
                 .andExpect(jsonPath("$.exitoso").value(true))
                 .andExpect(jsonPath("$.total").value(11))
                 .andExpect(jsonPath("$.datos[0].estadoSolicitud").value("PENDIENTE"))
-                .andExpect(jsonPath("$.datos[0].fechaSesionUtc").value("2026-10-19T15:30:45.123456700Z"))
+                .andExpect(jsonPath("$.datos[0].fechaSesionUtc").value("2026-10-19T15:30:45.1234567Z"))
+                .andExpect(jsonPath("$.datos[0].soporteAdjunto.fechaSubidaUtc").value("2026-10-19T15:00:00Z"))
                 .andExpect(jsonPath("$.datos[0].soporteAdjunto.fileId").value(soporte.toString()))
                 .andExpect(jsonPath("$.datos[0].soporteAdjunto.url").value("/api/v1/archivos/" + soporte));
     }
