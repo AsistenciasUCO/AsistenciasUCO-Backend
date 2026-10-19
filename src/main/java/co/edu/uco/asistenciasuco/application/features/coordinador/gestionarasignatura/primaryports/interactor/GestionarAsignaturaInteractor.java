@@ -17,5 +17,7 @@ public final class GestionarAsignaturaInteractor implements GestionarAsignaturaI
 
     @Override public void crear(final GuardarAsignaturaDTO dto) { useCase.crear(GestionarAsignaturaMapper.toDomain(dto)); }
     @Override public void actualizar(final GuardarAsignaturaDTO dto) { useCase.actualizar(GestionarAsignaturaMapper.toDomain(dto)); }
-    @Override public void toggleEstado(final UUID asignaturaId) { useCase.toggleEstado(asignaturaId); }
+    @Override public void toggleEstado(final UUID asignaturaId, final UUID usuarioEjecutor) {
+        useCase.toggleEstado(asignaturaId, usuarioEjecutor);
+    }
 }

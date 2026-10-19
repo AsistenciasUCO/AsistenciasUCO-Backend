@@ -9,5 +9,5 @@ public interface GestionarAsignaturaUseCase {
 
     void actualizar(AsignaturaDomain domain);
 
-    void toggleEstado(UUID asignaturaId);
+    void toggleEstado(UUID asignaturaId, UUID usuarioEjecutor);
 }

@@ -126,7 +126,8 @@ public final class CoordinadorPortalController {
             @PathVariable final UUID asigId,
             @RequestBody final GuardarAsignaturaRequest request
     ) {
-        gestionarAsignaturaInputPort.actualizar(toAsignaturaDTO(asigId, planId, request, null));
+        gestionarAsignaturaInputPort.actualizar(toAsignaturaDTO(
+                asigId, planId, request, authenticatedUserResolver.requireAuthenticatedUserId()));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
     @DeleteMapping("/planes-estudio/{planId}/asignaturas/{asigId}")
@@ -139,7 +140,7 @@ public final class CoordinadorPortalController {
     }
     @PatchMapping("/asignaturas/{id}/estado")
     public ResponseEntity<ApiDataResponse<Void>> toggleEstadoAsignatura(@PathVariable final UUID id) {
-        gestionarAsignaturaInputPort.toggleEstado(id);
+        gestionarAsignaturaInputPort.toggleEstado(id, authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
 
