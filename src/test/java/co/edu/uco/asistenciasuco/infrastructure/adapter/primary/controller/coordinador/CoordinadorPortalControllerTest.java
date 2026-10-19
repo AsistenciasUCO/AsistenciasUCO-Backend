@@ -117,10 +117,11 @@ class CoordinadorPortalControllerTest {
         assertEquals("Matemáticas", subjectCaptor.getValue().nombreArea());
         verify(manageSubjects).actualizar(subjectCaptor.capture());
         assertEquals(SUBJECT, subjectCaptor.getValue().idAsignatura());
+        assertEquals(ACTOR, subjectCaptor.getValue().usuarioEjecutor());
 
         mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT))
                 .andExpect(status().isOk());
-        verify(manageSubjects).toggleEstado(SUBJECT);
+        verify(manageSubjects).toggleEstado(SUBJECT, ACTOR);
     }
 
     @Test
@@ -128,7 +129,7 @@ class CoordinadorPortalControllerTest {
         mvc.perform(post("/api/v1/coordinador/planes-estudio").contentType("application/json"))
                 .andExpect(status().isBadRequest());
         doThrow(new FeatureUnavailableException("Sin capacidad pública"))
-                .when(manageSubjects).toggleEstado(SUBJECT);
+                .when(manageSubjects).toggleEstado(SUBJECT, ACTOR);
         mvc.perform(patch("/api/v1/coordinador/asignaturas/{id}/estado", SUBJECT))
                 .andExpect(status().isNotImplemented());
     }

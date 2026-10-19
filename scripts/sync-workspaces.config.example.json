@@ -1,0 +1,28 @@
+{
+  "repositories": [
+    {
+      "name": "backend",
+      "path": "C:\\Workspaces\\AsistenciasUCO-Backend",
+      "expectedOrigin": "https://github.com/AsistenciasUCO/AsistenciasUCO-Backend.git",
+      "integrationBranch": "develop"
+    },
+    {
+      "name": "frontend",
+      "path": "C:\\Workspaces\\AsistenciasUCO-Frontend",
+      "expectedOrigin": "https://github.com/AsistenciasUCO/AsistenciasUCO-Frontend.git",
+      "integrationBranch": "develop"
+    },
+    {
+      "name": "db",
+      "path": "C:\\Workspaces\\AsistenciasUCO-DB",
+      "expectedOrigin": "https://github.com/AsistenciasUCO/AsistenciasUCO-DB.git",
+      "integrationBranch": "develop"
+    },
+    {
+      "name": "infra",
+      "path": "C:\\Workspaces\\AsistenciasUCO-Infra",
+      "expectedOrigin": "https://github.com/AsistenciasUCO/AsistenciasUCO-Infra.git",
+      "integrationBranch": "develop"
+    }
+  ]
+}
