@@ -39,6 +39,18 @@ final class ApiErrorCatalog {
         return from(CommonErrorCode.VALIDATION_ERROR);
     }
 
+    /**
+     * Multipart rechazado por {@code spring.servlet.multipart.max-file-size}: mismo rechazo de
+     * cliente que aplica la validacion de contenido de soportes (LB-004 CONTENT-005).
+     */
+    static ApiErrorDescriptor uploadSizeExceeded() {
+        return new ApiErrorDescriptor(
+                CommonErrorCode.VALIDATION_ERROR.code(),
+                "El archivo excede el tamano maximo permitido (5 MiB).",
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
     static ApiErrorDescriptor resourceNotFound() {
         return from(CommonErrorCode.RESOURCE_NOT_FOUND);
     }
