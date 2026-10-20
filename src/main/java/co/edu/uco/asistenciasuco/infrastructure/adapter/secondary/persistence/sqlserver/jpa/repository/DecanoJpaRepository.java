@@ -4,8 +4,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoComma
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort.CrearDecanoCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DecanoProjection;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvDecanoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureResult;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
@@ -39,7 +37,8 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
             """;
 
     static final String HQL_LISTAR = """
-            select d
+            select d.id, d.idUsuario, d.numeroIdentificacion, d.nombreCompleto,
+                   d.idFacultad, d.nombreFacultad, d.estaActivoDecano
             from UvDecanoEntity d
             order by d.nombreCompleto, d.id
             """;
@@ -68,8 +67,16 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
         return JpaQueryExecutor.execute(
                 "consultarDecanos",
                 "No fue posible consultar los decanos desde base de datos.",
-                () -> entityManager.createQuery(HQL_LISTAR, UvDecanoEntity.class).getResultList().stream()
-                        .map(AcademicViewJpaProjectionMapper::toDecano)
+                () -> entityManager.createQuery(HQL_LISTAR, Object[].class).getResultList().stream()
+                        .map(row -> new DecanoProjection(
+                                (UUID) row[0],
+                                (UUID) row[1],
+                                row[2] == null ? null : String.valueOf(row[2]),
+                                (String) row[3],
+                                (UUID) row[4],
+                                (String) row[5],
+                                row[6] != null && ((Integer) row[6]) == 1
+                        ))
                         .toList()
         );
     }
