@@ -38,3 +38,6 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 
 ## P0-D — consolidación física — 2026-10-20
 - [Consolidación física](P0-D-consolidacion-fisica/PLAN.md): worktrees limpios retirados con Git, refs recuperadas y clones independientes trasladados a cuarentena reversible; el borrado definitivo sigue pendiente de aprobación.
+
+## P0-E — consolidación funcional local — 2026-10-20
+- [Consolidación funcional](P0-E-consolidacion-funcional/PLAN.md): checkouts oficiales y proveedores locales validados; la integración cross-repo permanece abierta por autoridad divergente y las tres SQL de paginación quedan preservadas sin integrar.
