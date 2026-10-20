@@ -78,3 +78,10 @@ El E2E de sesiones fue lectura real: `Arquitectura de Software` y sus dos sesion
 ## Estado de cierre
 
 No se crea `CLOSURE.md`: la validación experimental local pasa, pero la Definition of Done de integración oficial no se cumple mientras siga abierto `P0H-DB-001` y no exista evidencia IntelliJ/UI completa. El siguiente paso es el dictamen del owner DB y la auditoría/cierre independiente.
+
+## Preparación contractual
+
+- Backend: PR draft [#31](https://github.com/alejovh12/AsistenciasUCO/pull/31), base `master`, head `jose-valencia/p0-h-backend-functional-integration`, abierto y sin merge.
+- Frontend: rama publicada; enlace preparado [crear PR](https://github.com/AsistenciasUCO/AsistenciasUCO-Frontend/pull/new/jose-valencia/p0-h-frontend-functional-integration), base `develop`. El conector GitHub respondió `403 Resource not accessible by integration`, por lo que no se declara PR creado.
+- DB: rama publicada; enlace preparado [crear PR contractual](https://github.com/AsistenciasUCO/AsistenciasUCO-DB/pull/new/jose-valencia/p0-h-db-functional-integration), base `develop`. El conector GitHub respondió `403 Resource not accessible by integration`, por lo que no se declara PR creado.
+- No se hizo merge, no se hizo force-push y no se modificaron las ramas base.
