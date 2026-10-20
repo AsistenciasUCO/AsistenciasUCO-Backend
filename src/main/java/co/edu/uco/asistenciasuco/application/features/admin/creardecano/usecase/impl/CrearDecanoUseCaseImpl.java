@@ -50,8 +50,10 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
         if (domain.getTipoIdentificacionId() == null) {
             throw new ValidationException(TipoIdentificacionErrorCode.ERR_TIPO_IDENTIFICACION_REQUERIDA);
         }
-        final var facultad = facultadQueryPort.consultarFacultadPorId(domain.getIdFacultad())
-                .orElseThrow(() -> new ResourceNotFoundException("La facultad indicada para crear decano no existe."));
+        final var facultad = domain.getIdFacultad() == null
+                ? null
+                : facultadQueryPort.consultarFacultadPorId(domain.getIdFacultad())
+                        .orElseThrow(() -> new ResourceNotFoundException("La facultad indicada para crear decano no existe."));
         final Optional<UUID> idUsuarioPreexistente = resolverUsuarioPreexistente(domain);
         final String passwordParaPersistir = idUsuarioPreexistente.isPresent()
                 ? null
