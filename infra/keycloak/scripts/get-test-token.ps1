@@ -45,7 +45,7 @@ $frontendClientId = Get-KcEnvValue -EnvMap $envMap -Key 'KC_FRONTEND_CLIENT_ID' 
 $apiClientId      = Get-KcEnvValue -EnvMap $envMap -Key 'KC_API_CLIENT_ID' -Default 'asistencias-api'
 
 $knownPassword = $null
-foreach ($prefix in @('E2E_DOCENTE_', 'E2E_ADMIN_')) {
+foreach ($prefix in @('E2E_DOCENTE_', 'E2E_ADMIN_', 'E2E_PAGINACION_300_', 'E2E_PAGINACION_1000_', 'E2E_PAGINACION_5000_')) {
     if ((Get-KcEnvValue -EnvMap $envMap -Key "${prefix}USERNAME") -eq $Username) {
         $knownPassword = Get-KcEnvValue -EnvMap $envMap -Key "${prefix}PASSWORD"
     }
