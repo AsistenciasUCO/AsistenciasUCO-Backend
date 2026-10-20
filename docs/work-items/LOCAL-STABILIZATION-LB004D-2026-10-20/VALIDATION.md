@@ -8,7 +8,7 @@ Este archivo se completa con comandos, fecha/hora local, exit code, alcance, cob
 
 | Área | Estado | Evidencia | Limitación |
 |---|---|---|---|
-| Git / refs | `PASS` parcial | Fetch/read-only completado; worktrees auxiliares: backend mergeado con `origin/develop`, DB mergeado con `origin/develop`; PR heads originales preservados | Falta push/revisión remota de los commits auxiliares |
+| Git / refs | `PASS` parcial | Fetch/read-only completado; worktrees auxiliares: backend mergeado con `origin/develop`, DB mergeado con `origin/develop`; backend publicado en `7a2a5a9`, DB publicado en `bdb2935`; PR heads originales preservados | Workflows remotos disparados y aún `in_progress` |
 | Fixture DB CI | `PASS` local | Fixture idempotente namespaced; test dirigido: 17/17; quality gate: Expected 245, Executed 248, Passed 247, Failed 0, Skipped 1 permitido, CriticalMissing 0, SQLCMD 0, SQL errors 0, unauthorized skips 0; cleanup PASS | La ejecución fue sobre SQL Server Developer local; CI remoto pendiente |
 | Backend hygiene / verify | `PASS` | Java 25; `mvnw test` exit 0: 1651 tests, 0 failures/errors/skips; `mvnw verify` exit 0; JaCoCo LINE 91.05%, BRANCH 79.98%; `PYC_TRACKED=0` | Se observaron WARN/logs de tests, sin gate rojo |
 | Frontend build | `PASS` | `npm ci` exit 0; `npm run build -- --configuration=production` exit 0 | No implica PASS de Karma/E2E |
@@ -28,6 +28,7 @@ Este archivo se completa con comandos, fecha/hora local, exit code, alcance, cob
 - `npm run verify` en `fe-stab`: exit 1; fallo reproducido y no convertido en PASS.
 - `npm run build -- --configuration=production` en `fe-stab`: exit 0.
 - Docker health/readiness y probes ClamAV: resultados registrados arriba.
+- Workflows remotos observados tras el push: backend CI `39378510550`, Backend Security `39378510466`, Backend Deep Security Scan `39378510604`; DB Quality Gate `39378519111`, todos `in_progress` al momento de la consulta.
 
 No se guardaron credenciales, tokens ni logs crudos.
 
