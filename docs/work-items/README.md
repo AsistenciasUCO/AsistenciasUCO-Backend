@@ -31,3 +31,7 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 
 ## Correcciones de defectos — octubre 2026
 - [FIX-001](FIX-001-sse-error-content-negotiation/PLAN.md): errores de `/api/v1/realtime/stream` con `Accept: text/event-stream` respondían 500 (403 esperado) o 400 sin cuerpo; ahora el `ApiErrorResponse` se escribe siempre en JSON. Hallado en el E2E SEC-BASELINE-002.
+
+## P0-B2 — implementación y estabilización — 2026-10-20
+- [Higiene de logs](P0-B2-log-hygiene/PLAN.md): runner local corregido, rotación y retención aisladas; arranque real pendiente de servicios externos.
+- [Consolidación local](P0-B2-local-consolidation/PLAN.md): matriz de copias preservada; retiro de carpetas requiere autorización explícita.
