@@ -30,7 +30,7 @@ public final class CrearDecanoRepositoryMapper {
                 domain.getSegundoApellido(),
                 domain.getCorreo(),
                 domain.getIdFacultad(),
-                facultad.nombreFacultad(),
+                facultad != null ? facultad.nombreFacultad() : null,
                 passwordParaPersistir,
                 domain.getUsuarioEjecutor()
         );
