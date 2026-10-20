@@ -3,7 +3,7 @@
 ## Preservar ahora
 
 - Backend canónico: `C:\Users\josev\AsistenciasUCO\AsistenciasUCO`.
-- Frontend F1 candidato: `C:\Users\josev\AsistenciasUCO\AsistenciasUCO\frontend-lb004d-working`.
+- Frontend canónico tras P0-D: `C:\Users\josev\OneDrive\Documentos\Front_Asistecias\AsistenciasUCO-Frontend`.
 - DB canónica: `C:\Users\josev\OneDrive\Documentos\AsisteciaUco_db\git\gestion-asistencia-db`.
 - Infra canónica: `C:\Users\josev\AsistenciasUCO\AsistenciasUCO-Infra`.
 - `C:\Users\josev\AsistenciasUCO\db-backups` y los worktrees/stashes
@@ -18,9 +18,17 @@ algunas contienen cambios de fases distintas.
 
 ## Decisión
 
-`NO_DELETE_PENDING_EXPLICIT_AUTHORIZATION`.
+`P0-D-EXECUTED-REVERSIBLE-CLEANUP`.
 
-No se eliminó ninguna carpeta, backup, stash, rama ni remoto. El espacio
-reclamable no se declara hasta obtener un inventario con tamaños y una
-confirmación explícita de los objetivos exactos.
+El inventario y la limpieza reversible se ejecutaron en
+[P0-D](../P0-D-consolidacion-fisica/VALIDATION.md). Se retiraron worktrees
+limpios mediante Git sin `--force`; tres clones independientes se trasladaron
+a `C:\Users\josev\AsistenciasUCO-P0D-quarantine-2026-10-20` después de
+preservar sus refs. No se borraron definitivamente carpetas, backups, stashes,
+ramas, remotos, SQL ni datos persistentes.
+
+La ruta Frontend oficial documentada es la copia OneDrive y la DB oficial
+documentada es la copia OneDrive; los remotos fork/legacy se conservan como
+aliases observados y no se declara una decisión contractual nueva. El retiro
+definitivo continúa pendiente de aprobación de las rutas exactas.
 

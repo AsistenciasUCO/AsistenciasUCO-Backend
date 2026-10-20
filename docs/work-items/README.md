@@ -35,3 +35,6 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## P0-B2 — implementación y estabilización — 2026-10-20
 - [Higiene de logs](P0-B2-log-hygiene/PLAN.md): runner local corregido, rotación y retención aisladas; arranque real pendiente de servicios externos.
 - [Consolidación local](P0-B2-local-consolidation/PLAN.md): matriz de copias preservada; retiro de carpetas requiere autorización explícita.
+
+## P0-D — consolidación física — 2026-10-20
+- [Consolidación física](P0-D-consolidacion-fisica/PLAN.md): worktrees limpios retirados con Git, refs recuperadas y clones independientes trasladados a cuarentena reversible; el borrado definitivo sigue pendiente de aprobación.
