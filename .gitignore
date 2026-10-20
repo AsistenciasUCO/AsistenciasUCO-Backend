@@ -94,3 +94,7 @@ infra/keycloak/generated/
 
 # E2E local
 target-e2e-*
+
+# Python helper caches are generated artifacts, never source
+**/__pycache__/
+*.py[cod]
