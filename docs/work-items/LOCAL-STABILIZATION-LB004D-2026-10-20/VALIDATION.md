@@ -21,7 +21,7 @@ Este archivo se completa con comandos, fecha/hora local, exit code, alcance, cob
 ### 2026-10-20 — comandos ejecutados
 
 - `git fetch --all --prune` en los tres repositorios: refs remotas actualizadas; no hubo merge remoto ni force-push.
-- `.\mvnw.cmd test` y `.\mvnw.cmd verify` en `be-stab`, Java 25: exit 0.
+- `.\mvnw.cmd test`, `.\mvnw.cmd verify` y `.\mvnw.cmd clean verify -q` en `be-stab`, Java 25: exit 0.
 - Fixture + `test_lb004d_support_binding.sql` en `sql_server_asistencias`: exit 0; cleanup exit 0.
 - Fixture + `test_summary.ps1` en `sql_server_asistencias`: exit 0; contadores registrados arriba; cleanup exit 0.
 - `npm ci --no-audit --no-fund` en `fe-stab`: exit 0.
