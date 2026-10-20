@@ -10,15 +10,15 @@ por deriva de credenciales E2E y configuración MinIO local.
 
 ## Git y preservación
 
-- Backend actual: rama `codex/p0-sec-001-coordinator-ownership`, `HEAD bf33c79`.
-  Conserva `66cf9e0`, `0694ad4` y `bf33c79`; está 5 commits detrás y 5
-  delante de `upstream/develop`. No se publicó ni se preparó PR desde esta
-  rama mezclada.
+- Backend actual: rama `codex/p0-sec-001-coordinator-ownership`, `HEAD bf6de9e`.
+  El baseline P0-C era `bf33c79`; conserva `66cf9e0`, `0694ad4`, `bf33c79` y
+  el commit local P0-C. Está 5 commits detrás y 6 delante de
+  `upstream/develop`. No se publicó ni se preparó PR desde esta rama mezclada.
 - Frontend `frontend-lb004d-working`: rama
-  `jose-valencia/lb-004d-f1-support-binding`, `HEAD a33876b`; conserva
-  `fac2f640`. Está 6 commits delante de `origin/develop` y mantiene cambios
-  P0-C sin commit. No se mezcló por trabajo apilado y autoridad remota
-  separada.
+  `jose-valencia/lb-004d-f1-support-binding`, `HEAD 95a202a`. El baseline
+  P0-C era `a33876b`; conserva `fac2f640` y el commit local P0-C. Está 7
+  commits delante de `origin/develop`; los logs generados permanecen fuera del
+  commit. No se mezcló por trabajo apilado y autoridad remota separada.
 - No se sobrescribieron cambios locales previos. Copias y worktrees quedaron
   intactos.
 
