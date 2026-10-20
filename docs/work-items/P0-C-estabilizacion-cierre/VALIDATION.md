@@ -50,10 +50,10 @@ por deriva de credenciales E2E y configuración MinIO local.
   `validate-keycloak.ps1` terminó exit 0, con 0 fallos críticos y 6
   advertencias por roles legacy.
 - Backend arrancado con `scripts/run-local.ps1`, JDK 25: Tomcat 8080 y
-  `/actuator/health` HTTP 200. El proceso permanece disponible para smoke
-  manual; los logs activos se centralizan bajo `logs/`.
+  `/actuator/health` HTTP 200 durante el smoke. La comprobación final encontró
+  el proceso detenido; los logs quedan centralizados bajo `logs/`.
 - Angular arrancado en desarrollo: HTTP 4200, bundle generado y watch mode
-  activo.
+  activo durante la prueba. La comprobación final encontró el proceso detenido.
 - `logs/`: 2 archivos activos, 12.666 bytes medidos. Backups persistentes: 7
   archivos, 86.159.360 bytes. `DELETED=0`; no se borraron históricos,
   backups, datos ni worktrees.
