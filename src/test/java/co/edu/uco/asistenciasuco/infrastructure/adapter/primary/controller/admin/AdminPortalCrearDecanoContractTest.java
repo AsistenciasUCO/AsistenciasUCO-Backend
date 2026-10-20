@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.Test;
@@ -35,7 +36,7 @@ class AdminPortalCrearDecanoContractTest {
             mock(ConsultarDecanosInputPort.class), new CrearDecanoInteractor(useCase),
             mock(ConsultarParametrosInputPort.class), mock(EjecutarCierreMasivoInputPort.class),
             mock(ConsultarInstitucionesInputPort.class), mock(ConsultarFacultadesInputPort.class),
-            mock(ConsultarAreasInputPort.class), authenticatedUserResolver
+            mock(CrearFacultadInputPort.class), mock(ConsultarAreasInputPort.class), authenticatedUserResolver
     );
 
     @Test
@@ -63,6 +64,20 @@ class AdminPortalCrearDecanoContractTest {
 
         assertThrows(ValidationException.class, () -> controller.crearDecano(request));
         verifyNoInteractions(useCase);
+    }
+
+    @Test
+    void request_sin_id_facultad_llega_como_null_al_domain() {
+        final String jsonSinFacultad = "{\"tipoIdentificacionId\":\"" + TIPO_ID + "\",\"numeroIdentificacion\":123456789,\"primerNombre\":\"Ana\","
+                + "\"segundoNombre\":\"Maria\",\"primerApellido\":\"Perez\","
+                + "\"segundoApellido\":\"Gomez\",\"correo\":\"nuevo@uco.edu.co\","
+                + "\"password\":\"Clave123!\"}";
+
+        controller.crearDecano(json.readValue(jsonSinFacultad, AdminPortalController.CrearDecanoRequest.class));
+
+        final ArgumentCaptor<CrearDecanoDomain> domain = ArgumentCaptor.forClass(CrearDecanoDomain.class);
+        verify(useCase).execute(domain.capture());
+        org.junit.jupiter.api.Assertions.assertNull(domain.getValue().getIdFacultad());
     }
 
     private String requestJson(final String tipoId) {

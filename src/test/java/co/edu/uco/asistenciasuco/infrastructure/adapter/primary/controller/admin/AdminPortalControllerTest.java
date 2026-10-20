@@ -13,6 +13,8 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.dto.ParametroDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.dto.CrearFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.dto.EjecutarCierreMasivoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
@@ -41,6 +43,7 @@ class AdminPortalControllerTest {
     private static final UUID ACTOR = UUID.randomUUID();
     private static final UUID FACULTAD = UUID.randomUUID();
     private static final UUID PERIODO = UUID.randomUUID();
+    private static final UUID DECANO = UUID.randomUUID();
 
     private final ConsultarDecanosInputPort consultarDecanos = mock(ConsultarDecanosInputPort.class);
     private final CrearDecanoInputPort crearDecano = mock(CrearDecanoInputPort.class);
@@ -48,10 +51,11 @@ class AdminPortalControllerTest {
     private final EjecutarCierreMasivoInputPort ejecutarCierreMasivo = mock(EjecutarCierreMasivoInputPort.class);
     private final ConsultarInstitucionesInputPort consultarInstituciones = mock(ConsultarInstitucionesInputPort.class);
     private final ConsultarFacultadesInputPort consultarFacultades = mock(ConsultarFacultadesInputPort.class);
+    private final CrearFacultadInputPort crearFacultad = mock(CrearFacultadInputPort.class);
     private final ConsultarAreasInputPort consultarAreas = mock(ConsultarAreasInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
-            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, consultarAreas, identity);
+            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad, consultarAreas, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -136,6 +140,22 @@ class AdminPortalControllerTest {
     }
 
     @Test
+    void crearFacultad_mapea_cuerpo_y_delega_al_puerto() throws Exception {
+        final String body = "{\"nombre\":\"Facultad de Ingenieria\",\"codigo\":\"FAC-ING\",\"idDecano\":\"" + DECANO + "\"}";
+
+        mvc.perform(post("/api/v1/admin/facultades").contentType("application/json").content(body))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.nombreFacultad").value("Facultad de Ingenieria"));
+
+        final ArgumentCaptor<CrearFacultadDTO> captor = ArgumentCaptor.forClass(CrearFacultadDTO.class);
+        verify(crearFacultad).execute(captor.capture());
+        assertEquals("Facultad de Ingenieria", captor.getValue().nombre());
+        assertEquals(DECANO, captor.getValue().idDecano());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+    }
+
+    @Test
     void endpoints_no_implementados_lanzan_featureUnavailable() {
         final List<Executable> operations = List.of(
                 () -> controller.toggleDecano(FACULTAD),
@@ -146,7 +166,7 @@ class AdminPortalControllerTest {
                 () -> controller.actualizarParametro(FACULTAD), controller::consultarAuditoria,
                 controller::crearInstitucion, () -> controller.actualizarInstitucion(FACULTAD),
                 () -> controller.cambiarEstadoInstitucion(FACULTAD),
-                controller::crearFacultad, () -> controller.actualizarFacultad(FACULTAD),
+                () -> controller.actualizarFacultad(FACULTAD),
                 () -> controller.cambiarEstadoFacultad(FACULTAD),
                 controller::crearArea, () -> controller.actualizarArea(FACULTAD), () -> controller.cambiarEstadoArea(FACULTAD)
         );

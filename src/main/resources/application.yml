@@ -154,6 +154,10 @@ app:
       access-key: ${MINIO_ACCESS_KEY:}
       secret-key: ${MINIO_SECRET_KEY:}
       bucket: ${MINIO_BUCKET:asistencias-soportes}
+      # Acotan el bloqueo si MinIO acepta la conexion y no responde (el SDK espera 5 min por defecto).
+      connect-timeout-millis: ${MINIO_CONNECT_TIMEOUT_MILLIS:5000}
+      write-timeout-millis: ${MINIO_WRITE_TIMEOUT_MILLIS:30000}
+      read-timeout-millis: ${MINIO_READ_TIMEOUT_MILLIS:30000}
     # LB-004B.2: ClamAV local via protocolo clamd/INSTREAM.
     clamav:
       host: ${CLAMAV_HOST:localhost}
@@ -169,3 +173,19 @@ app:
     azure-events:
       # Sin valor por defecto funcional: vacio = webhook Event Grid rechaza todo (401, fail-closed).
       webhook-token: ${AZURE_EVENTGRID_WEBHOOK_TOKEN:}
+
+# ──────────────────────────────────────────────────────────────
+# Security Baseline: PEP integration properties (starter v0.1.3)
+# ──────────────────────────────────────────────────────────────
+security:
+  enabled: ${SECURITY_ENABLED:true}
+  pep:
+    enforcement:
+      enabled: ${SECURITY_PEP_ENFORCEMENT_ENABLED:false}
+      pep-url: ${PEP_URL:http://localhost:18081}
+      application-name: ${SECURITY_PEP_APPLICATION_NAME:asistencias-uco}
+      environment: ${SECURITY_PEP_ENVIRONMENT:local}
+      application-credential: ${PEP_REGISTRATION_TOKEN:}
+      allow-insecure-http: ${SECURITY_PEP_ALLOW_INSECURE_HTTP:true}
+      public-paths: ${SECURITY_PEP_PUBLIC_PATHS:/actuator/health,/swagger-ui/**,/v3/api-docs/**}
+

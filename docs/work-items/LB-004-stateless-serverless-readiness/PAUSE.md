@@ -39,3 +39,20 @@ Solo cuando ocurra una de estas:
 2. Decisión humana explícita registrada en el work item.
 
 Hasta entonces, LB-004 no puede implementarse ni validarse de extremo a extremo.
+
+## Reanudación autorizada — 2026-10-18 (LB-004C)
+
+`LB-008/CLOSURE.md` no existe todavía; la reanudación se ampara en la **condición 2**: decisión
+humana explícita del responsable del backend, recibida como instrucción de trabajo el 2026-10-18,
+que autoriza completar, probar y certificar la parte de MinIO + ClamAV **independiente de DB**.
+
+```text
+STATE: RESUMED (alcance acotado LB-004C — storage independiente de DB)
+AUTHORITY: decisión humana explícita 2026-10-18 (condición 2)
+SCOPE: MinIO/ClamAV runtime, FileStoragePort, seguridad de contenido, E2E HTTP real de archivos
+OUT_OF_SCOPE: contrato de persistencia DB, attach a revisión, descarga docente, frontend
+DB_CONTRACT: NOT_APPROVED — esta reanudación NO aprueba el contrato pendiente de persistencia
+REVIEW_BINDING: BLOCKED_BY_DB_CONTRACT (sin cambio)
+```
+
+Ejecución y evidencia: [LB-004C-EXECUTION_REPORT](LB-004C-EXECUTION_REPORT.md).

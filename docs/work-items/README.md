@@ -28,10 +28,10 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## Revisión y reanudación — octubre 2026
 - [Auditoría independiente PR #15](QUALITY-PR15-recovery/INDEPENDENT_REVIEW_2026-10-08.md): evidencia remota, riesgos y checklist humano de merge.
 - [Plan LB-004 después de PR #15](LB-004-stateless-serverless-readiness/RESUMPTION_CONTRACT_PLAN_2026-10-08.md): análisis contractual DB antes de backend/frontend. Sin implementación autorizada todavía.
+- [LB-004C MinIO + ClamAV](LB-004-stateless-serverless-readiness/LB-004C-EXECUTION_REPORT.md): reanudación autorizada 2026-10-18 de la storage foundation independiente de DB; handoffs [DB](LB-004-stateless-serverless-readiness/DB_BINDING_HANDOFF.md) y [frontend](LB-004-stateless-serverless-readiness/FRONTEND_FILES_HANDOFF.md).
 
 ## Correcciones de defectos — octubre 2026
 - [FIX-001](FIX-001-sse-error-content-negotiation/PLAN.md): errores de `/api/v1/realtime/stream` con `Accept: text/event-stream` respondían 500 (403 esperado) o 400 sin cuerpo; ahora el `ApiErrorResponse` se escribe siempre en JSON. Hallado en el E2E SEC-BASELINE-002.
-
 ## P0-B2 — implementación y estabilización — 2026-10-20
 - [Higiene de logs](P0-B2-log-hygiene/PLAN.md): runner local corregido, rotación y retención aisladas; arranque real pendiente de servicios externos.
 - [Consolidación local](P0-B2-local-consolidation/PLAN.md): matriz de copias preservada; retiro de carpetas requiere autorización explícita.
@@ -41,3 +41,5 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 
 ## P0-E — consolidación funcional local — 2026-10-20
 - [Consolidación funcional](P0-E-consolidacion-funcional/PLAN.md): checkouts oficiales y proveedores locales validados; la integración cross-repo permanece abierta por autoridad divergente y las tres SQL de paginación quedan preservadas sin integrar.
+
+- [P0-B](P0-B-unificacion-repositorios/PLAN.md): remotos canónicos de organización, sincronización Git segura y auditoría diferencial multirrepositorio; cierre funcional bloqueado por Infra/gates externos no ejecutados.

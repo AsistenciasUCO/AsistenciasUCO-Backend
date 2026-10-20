@@ -23,6 +23,7 @@ public final class RegistrarEstudianteHttpMapper {
         Objects.requireNonNull(request, "El request HTTP para registrar estudiante en grupo es obligatorio.");
         Objects.requireNonNull(usuarioEjecutor, "El usuario ejecutor autenticado es obligatorio para realizar el mapping.");
         return new RegistrarEstudianteDTO(
+                request.getEstudianteId(),
                 request.getTipoIdentificacionId(),
                 request.getNumeroIdentificacion(),
                 request.getPrimerApellido(),

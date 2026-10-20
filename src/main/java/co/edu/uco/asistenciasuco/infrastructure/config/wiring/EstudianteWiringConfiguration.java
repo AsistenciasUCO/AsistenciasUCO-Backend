@@ -20,6 +20,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesion
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.interactor.ConsultarSesionesMateriaEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.ConsultarSesionesMateriaEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.impl.ConsultarSesionesMateriaEstudianteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaSesionEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.MateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
@@ -88,8 +89,8 @@ public class EstudianteWiringConfiguration {
     }
 
     @Bean
-    ConsultarSesionesMateriaEstudianteUseCase consultarSesionesMateriaEstudianteUseCase(final InstitutionalScopePort scopePort, final SesionMateriaEstudianteQueryPort queryPort) {
-        return new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort);
+    ConsultarSesionesMateriaEstudianteUseCase consultarSesionesMateriaEstudianteUseCase(final InstitutionalScopePort scopePort, final SesionMateriaEstudianteQueryPort queryPort, final AsistenciaSesionEstudianteQueryPort asistenciaPort) {
+        return new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort);
     }
 
     @Bean

@@ -24,6 +24,10 @@ import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryp
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.impl.CrearDecanoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.interactor.CrearFacultadInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.usecase.CrearFacultadUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.usecase.impl.CrearFacultadUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.EjecutarCierreMasivoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.interactor.EjecutarCierreMasivoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.EjecutarCierreMasivoUseCase;
@@ -32,6 +36,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AreaQueryPo
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CierrePeriodoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.InstitucionQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ParametroQueryPort;
@@ -64,6 +69,8 @@ public class AdminWiringConfiguration {
     @Bean ConsultarInstitucionesInputPort consultarInstitucionesInputPort(final ConsultarInstitucionesUseCase useCase) { return new ConsultarInstitucionesInteractor(useCase); }
     @Bean ConsultarFacultadesUseCase consultarFacultadesUseCase(final FacultadQueryPort port) { return new ConsultarFacultadesUseCaseImpl(port); }
     @Bean ConsultarFacultadesInputPort consultarFacultadesInputPort(final ConsultarFacultadesUseCase useCase) { return new ConsultarFacultadesInteractor(useCase); }
+    @Bean CrearFacultadUseCase crearFacultadUseCase(final FacultadCommandPort port) { return new CrearFacultadUseCaseImpl(port); }
+    @Bean CrearFacultadInputPort crearFacultadInputPort(final CrearFacultadUseCase useCase) { return new CrearFacultadInteractor(useCase); }
     @Bean ConsultarAreasUseCase consultarAreasUseCase(final AreaQueryPort port) { return new ConsultarAreasUseCaseImpl(port); }
     @Bean ConsultarAreasInputPort consultarAreasInputPort(final ConsultarAreasUseCase useCase) { return new ConsultarAreasInteractor(useCase); }
     @Bean EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(final PeriodoAcademicoQueryPort periodoPort, final CierrePeriodoCommandPort cierrePort) { return new EjecutarCierreMasivoUseCaseImpl(periodoPort, cierrePort); }

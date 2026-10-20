@@ -286,7 +286,7 @@ class AsistenciaCommandsSpParityIT {
             final UUID ejecutor
     ) {
         final SolicitarRevisionAsistenciaRepositoryDTO dto = new SolicitarRevisionAsistenciaRepositoryDTO(
-                estudiante, sesion, "NOTA", "Justificacion de revision", "soporte.pdf", "https://soporte.test", ejecutor);
+                estudiante, sesion, "NOTA", "Justificacion de revision", null, ejecutor);
         return ejecutar(sesion, () -> {
             if (candidato) {
                 jpaCandidate.solicitarRevisionAsistencia(dto);
@@ -414,7 +414,7 @@ class AsistenciaCommandsSpParityIT {
     /** Radica con el baseline JDBC (solo preparacion de datos) y devuelve la solicitud creada en la sesion. */
     private UUID solicitudRadicadaPorBaseline(final UUID sesion, final UUID estudiante) {
         jdbcOracle.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                estudiante, sesion, "NOTA", "Preparacion de datos", "soporte.pdf", "https://soporte.test",
+                estudiante, sesion, "NOTA", "Preparacion de datos", null,
                 usuarioDe(estudiante)));
         return UUID.fromString(jdbcTemplate.queryForObject("""
                 SELECT s.id FROM dbo.SolicitudRevisionAsistencia s

@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.HydratedViewRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsignaturaQueryRow;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsistenciaSesionEstudianteQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.EstudianteGrupoQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.SesionMateriaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
@@ -162,6 +163,36 @@ class JpaQueryAdapterContractTest {
     }
 
     @Test
+    void decanos_con_y_sin_facultad_y_variantes_de_estado() {
+        final UUID decano2 = UUID.randomUUID();
+        final UUID decano3 = UUID.randomUUID();
+        query(DecanoJpaRepository.HQL_LISTAR, Object[].class, List.of(
+                new Object[]{ID, OTHER, 1037600111, "Ana Perez", ID, "Ingenieria", 1},
+                new Object[]{decano2, OTHER, null, "Luis Gomez", null, null, 0},
+                new Object[]{decano3, OTHER, 987654321, "Carlos Ruiz", null, null, null}
+        ));
+        final DecanoJpaRepository decanos = new DecanoJpaRepository(manager, new JpaProcedureExecutor(manager));
+
+        final var resultado = decanos.consultarDecanos();
+
+        assertEquals(3, resultado.size());
+        assertEquals("1037600111", resultado.get(0).numeroIdentificacion());
+        assertEquals(ID, resultado.get(0).idFacultad());
+        assertEquals("Ingenieria", resultado.get(0).nombreFacultad());
+        assertTrue(resultado.get(0).estaActivoDecano());
+
+        assertNull(resultado.get(1).numeroIdentificacion());
+        assertNull(resultado.get(1).idFacultad());
+        assertNull(resultado.get(1).nombreFacultad());
+        assertFalse(resultado.get(1).estaActivoDecano());
+
+        assertEquals("987654321", resultado.get(2).numeroIdentificacion());
+        assertNull(resultado.get(2).idFacultad());
+        assertNull(resultado.get(2).nombreFacultad());
+        assertFalse(resultado.get(2).estaActivoDecano());
+    }
+
+    @Test
     void sesiones_de_materia_filtran_por_estudiante_y_asignatura() {
         final SesionMateriaQueryRow row = new SesionMateriaQueryRow(ID, "Parcial", 1, "S-1", 2, OTHER, null, "G1",
                 LocalDateTime.of(2026, 10, 8, 13, 0), null);
@@ -175,6 +206,28 @@ class JpaQueryAdapterContractTest {
         verify(sesiones).setParameter("idAsignatura", OTHER);
         assertNull(result.getFirst().codigoGrupo());
         assertEquals(LocalDateTime.of(2026, 10, 8, 13, 0), result.getFirst().fechaHoraInicio());
+    }
+
+    @Test
+    void asistencia_de_sesiones_filtra_por_estudiante_resuelto_y_asignatura_y_conserva_nulos() {
+        final var sinDetalle = new AsistenciaSesionEstudianteQueryRow(ID, null, null, null, null, null, null);
+        final var conSolicitud = new AsistenciaSesionEstudianteQueryRow(OTHER, 3, Boolean.FALSE, "SJC", ID,
+                "pendiente", java.time.LocalDate.of(2026, 8, 28));
+        final TypedQuery<AsistenciaSesionEstudianteQueryRow> asistencia = query(
+                AsistenciaSesionEstudianteJpaRepository.HQL_POR_ESTUDIANTE_Y_ASIGNATURA,
+                AsistenciaSesionEstudianteQueryRow.class, List.of(sinDetalle, conSolicitud));
+
+        final var result = new AsistenciaSesionEstudianteJpaRepository(manager).consultarAsistenciaSesiones(ID, OTHER);
+
+        verify(asistencia).setParameter("idEstudiante", ID);
+        verify(asistencia).setParameter("idAsignatura", OTHER);
+        assertEquals(2, result.size());
+        assertNull(result.getFirst().asistio());
+        assertNull(result.getFirst().codigoRazonCausa());
+        assertNull(result.getFirst().idSolicitud());
+        assertEquals(Boolean.FALSE, result.get(1).asistio());
+        assertEquals("pendiente", result.get(1).estadoSolicitud());
+        assertEquals(3, result.get(1).codigoDetalle());
     }
 
     @Test
@@ -223,6 +276,8 @@ class JpaQueryAdapterContractTest {
                 .consultarFacultadPorId(ID));
         assertThrows(DatabaseOperationException.class, () -> new SesionMateriaEstudianteJpaRepository(manager)
                 .consultarSesionesMateria(ID, OTHER));
+        assertThrows(DatabaseOperationException.class, () -> new AsistenciaSesionEstudianteJpaRepository(manager)
+                .consultarAsistenciaSesiones(ID, OTHER));
         assertThrows(DatabaseOperationException.class, () -> new AsignaturaJpaRepository(manager,
                 new JpaProcedureExecutor(manager)).consultarAsignaturasPorPlan(ID));
     }

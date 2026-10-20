@@ -213,8 +213,8 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
                         .addValue(PARAM_ID_SESION, dto.sesion())
                         .addValue(PARAM_CATEGORIA, dto.categoria())
                         .addValue(PARAM_JUSTIFICACION, dto.justificacion())
-                        .addValue(PARAM_SOPORTE_NOMBRE, dto.soporteNombre())
-                        .addValue(PARAM_SOPORTE_URL, dto.soporteUrl())
+                        .addValue(PARAM_SOPORTE_NOMBRE, null) // la v1 descarta el soporte; el candidato JPA usa la v2 con idArchivoSoporte
+                        .addValue(PARAM_SOPORTE_URL, null)
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
                         .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );

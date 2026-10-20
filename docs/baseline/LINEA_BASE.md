@@ -19,7 +19,7 @@ La vertical patrÃ³n es [asistencia en lote + consulta + realtime](GOLDEN_PATH_
 | LB-001D | Governance hardening | **CLOSED / FROZEN** â seguridad webhook y aislamiento cloud integration cerrados; MV-003 sigue parcial |
 | LB-002 | Piloto JDBC â JPA | **CLOSED / FROZEN** â query JPA + command JPA `registrarAsistenciasSesion`, paridad SQL Server real, fallback JDBC preservado |
 | LB-003 | Quality Gate Golden Path | **CLOSED / PASS** â local quality gate, SQL Server targeted y CI remoto del PR #14 verdes |
-| LB-004 | Stateless / Serverless readiness | **PAUSED / FROZEN_BY_JPA_MIGRATION â STORAGE FOUNDATION (MinIO+ClamAV) GREEN; REVIEW_BINDING BLOCKED_BY_DB_CONTRACT** ([PAUSE](../work-items/LB-004-stateless-serverless-readiness/PAUSE.md)) |
+| LB-004 | Stateless / Serverless readiness | **IN_PROGRESS — LB-004C (2026-10-18): STORAGE FOUNDATION MinIO+ClamAV CERTIFICADA con proveedores reales y E2E HTTP con Bearer; REVIEW_BINDING BLOCKED_BY_DB_CONTRACT; no DONE** ([LB-004C](../work-items/LB-004-stateless-serverless-readiness/LB-004C-EXECUTION_REPORT.md), [PAUSE](../work-items/LB-004-stateless-serverless-readiness/PAUSE.md)) |
 | LB-008 | Migración persistencia JPA-only | **JPA-07 PASS / CLOSED; JPA-06 PASS / CLOSED; DIRECT_JDBC_IN_SRC_MAIN = 0; TD-010 RESOLVED; TD-055 RESOLVED; PASS (TD-039, TD-043, TD-046, TD-047, TD-056, TD-057 y TD-058 CLOSED 2026-10-07; TD-044 no bloqueante)**; integración global GREEN (188 ITs, 0 fallos, 1 skip TD-044) ([ADR-003](../adr/ADR-003-jpa-only-persistence.md), [ADR-004](../adr/ADR-004-jpa-repository-architecture.md)) |
 | LB-005 | Realtime distribuido | NOT_STARTED |
 | LB-006 | IaC / CD / cloud | NOT_STARTED |
