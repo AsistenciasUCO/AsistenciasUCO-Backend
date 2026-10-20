@@ -32,6 +32,14 @@ P0 valida evidencia y límites de ejecución; no cambia comportamiento de produc
 
 La suite backend y los gates de arquitectura/OpenAPI/JaCoCo pasan fuera del sandbox. La validación frontend oficial conserva el estado versionado de MAINT-004: builds PASS, Karma/ChromeHeadless bloqueado y `verify` no certificable. No se ejecutó integración contra SQL Server, MinIO, Keycloak, Azure ni fixtures E2E del P0.
 
+## Addendum de ejecución — 2026-10-20
+
+La copia F1 preservada del frontend ejecutó `npm run test:ci -- --no-progress` con Chrome Headless 155: `807/807 SUCCESS`, exit code `0`. La salida reportó statements `87.76%`, branches `70.68%` y lines `88.99%`. También pasaron los builds development y production. Este resultado es específico de esa copia y no convierte en PASS la integración con backend/DB ni la copia OneDrive modificada.
+
+El worktree backend limpio de `origin/develop` (`5c06087d`) ejecutó `.\mvnw.cmd -B -ntp verify` con Java 25: `1581` tests, 0 fallos, 0 errores, 0 skips, JaCoCo line `90.85%` y branch `79.97%`, exit code `0`, `BUILD SUCCESS`. El resultado aplica a ese snapshot limpio, no al checkout raíz que conserva cambios locales.
+
+El inventario de remotos, worktrees, PRs y límites de integración está en `CONSOLIDATION_AUDIT_2026-10-20.md`. SQL Server, Docker, MinIO, ClamAV, Keycloak, Azure y E2E reales permanecen `NOT_RUN` o `BLOCKED_BY_ENVIRONMENT`; no se convierten en PASS por evidencia de build/frontend.
+
 ## Criterio de cierre
 
 P0 no puede cerrarse como funcional si falta un provider obligatorio, un contrato está en conflicto, el gate aplicable es rojo, la evidencia está incompleta o la integración externa requerida quedó `NOT_RUN`. Puede cerrarse como auditoría documental con bloqueos explícitos y micro-work-items trazables.

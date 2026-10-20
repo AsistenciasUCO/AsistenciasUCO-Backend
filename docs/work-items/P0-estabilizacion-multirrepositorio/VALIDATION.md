@@ -114,3 +114,37 @@ La mitigación Application sí quedó aislada y publicada para revisión:
 - estado observado: abierto, sin merge; checks remotos aún sin estados reportados al corte.
 
 La frase anterior sobre no crear PR se refiere al P0 transversal completo; el PR #25 contiene únicamente la mitigación acotada y la evidencia asociada.
+
+## Addendum de auditoría — 2026-10-20
+
+`CONSOLIDATION_STATUS = PRESERVED_NOT_INTEGRATED`
+
+Se completó un inventario de consolidación transversal. El detalle reproducible, incluyendo paths y clasificación de cada copia, está en `CONSOLIDATION_AUDIT_2026-10-20.md`.
+
+### Resultado actualizado
+
+- Backend: el checkout P0 conserva 9 elementos modificados/no rastreados; `origin/develop` es `5c06087d`, mientras el HEAD P0 es `d0f170b8a5bf` (28 detrás y 2 delante). No se descartaron cambios.
+- Frontend: `legacy-frontend/develop` (`cdb9bd74`) está 22 commits delante de `origin/develop` (`bd2120f5`). La copia F1 `frontend-lb004d-working` (`fac2f640`) se observó limpia y contiene trabajo único; no se eligió remoto canónico.
+- DB: `legacy-db/develop` (`c35293b8`) está 16 commits delante de `origin/develop` (`32b70ebe`). `_codex-pr37/`, stashes, fixtures y backups se conservaron; no se sincronizó ni se alteró SQL.
+- Infra: existe repositorio separado y worktree P0-D divergente; no se modificó.
+- PRs: #24 y #25 permanecen no fusionados; #26 y #27 ya están integrados; #28 y #29 permanecen abiertos/draft y dependientes de contratos.
+- Seguridad: el PEP no está integrado en el runtime actual. El laboratorio no integrado se registra únicamente como `SECURITY_FINDING` potencial, sin copiar secretos ni promover código.
+
+### Validación nueva
+
+| Comando / comprobación | Resultado | Fecha / alcance |
+|---|---|---|
+| `git diff --check` | `PASS` | 2026-10-20, checkout backend P0 |
+| `.\mvnw.cmd -B -ntp verify` | `PASS`, exit 0 | 2026-10-20, worktree limpio `origin/develop` `5c06087d`; 1581 tests, 0 fallos/errores/skips, `BUILD SUCCESS` |
+| JaCoCo backend | `PASS` | line 90.85%, branch 79.97%; todos los gates del `pom.xml` cumplidos |
+| `npm run build -- --configuration=development` | `PASS`, exit 0 | 2026-10-20, copia F1 |
+| `npm run build -- --configuration=production` | `PASS`, exit 0 | 2026-10-20, copia F1 |
+| `npm run test:ci -- --no-progress` | `PASS`, exit 0; 807/807 | 2026-10-20, Chrome Headless 155, copia F1 |
+| Cobertura frontend | `PASS` según salida del comando | statements 87.76%, branches 70.68%, lines 88.99% |
+| Docker/SQL Server/MinIO/Keycloak/Azure/E2E real | `NOT_RUN` o `BLOCKED_BY_ENVIRONMENT` | Docker Desktop Linux engine y providers controlados no disponibles |
+
+La validación frontend anterior de MAINT-004 queda como evidencia histórica bloqueada; la nueva ejecución F1 demuestra una copia concreta, no certifica que la copia OneDrive modificada ni el remoto elegido sean canónicos.
+
+### Preservación y límites
+
+No se eliminaron logs raíz, `node_modules`, `.angular`, `dist`, `coverage`, `target`, worktrees prunables, backups, volúmenes Docker ni datos DB. La higiene requiere work item hijo con lista exacta, revisión de commits únicos y operación recuperable. La consolidación funcional requiere decisión de owners frontend/DB, DoR, contrato congelado, RED y validación externa controlada.

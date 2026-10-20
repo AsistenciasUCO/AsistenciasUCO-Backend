@@ -97,3 +97,12 @@ Se revisarán TD/MV citadas por los hallazgos. La validación manual de integrac
 - El backend quedó alineado por `git merge --ff-only origin/develop` en `72312d7c60449cd0118b8d32b8da02ad1eb0074d`; se conservaron todas las modificaciones locales preexistentes.
 - Se abrió el work item hijo `P0-SEC-001-coordinador-asignatura-ownership` para el hallazgo confirmado de ownership. Su mitigación Application fue implementada con RED → GREEN y sin cambiar wire HTTP, OpenAPI ni SQL.
 - La evidencia completa está en `VALIDATION.md`. El resultado no habilita `READY_FOR_P1_MINIO`: la integración SQL Server y la ejecución funcional del frontend siguen `NOT_RUN`/`BLOCKED`, y la defensa equivalente dentro de los providers DB requiere decisión del owner de DB.
+
+## Addendum de auditoría multirrepositorio — 2026-10-20
+
+- Se completó el inventario de las copias backend, frontend, DB e Infra visibles, incluyendo remotos alternos, ramas, PRs #24/#25/#26/#27/#28/#29, worktrees, stashes, backups, logs y artefactos generados. El detalle está en `CONSOLIDATION_AUDIT_2026-10-20.md`.
+- El resultado es `CONSOLIDATION_STATUS = PRESERVED_NOT_INTEGRATED`: se preservaron divergencias y cambios locales; no se ejecutó `reset`, `clean`, prune, merge, force-push, publicación ni borrado.
+- La suite CI de la copia frontend F1 pasó con `807/807` y cobertura statements 87.76%, branches 70.68%, lines 88.99%. Esto no sustituye integración backend/DB/E2E.
+- Frontend y DB tienen dos familias de remotos con divergencia de autoridad (`legacy-*` frente a `origin`). No se elige una por suposición; requiere decisión del owner.
+- El PEP permanece clasificado como laboratorio/TARGET no integrado. No se añadió starter, filtro ni wiring al runtime actual.
+- El work item sigue `NOT_READY` para implementación y `READY_FOR_P1_MINIO = NO`; solo queda autorizada la documentación en esta carpeta hasta abrir work items hijos con contrato y DoR.
