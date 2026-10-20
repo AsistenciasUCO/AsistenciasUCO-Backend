@@ -14,8 +14,11 @@ Fecha de inicio: 2026-10-20 (America/Bogota).
 
 - Spring Boot start/restart: `NOT_RUN`; requiere decidir un entorno controlado
   con SQL Server/Keycloak y no se ejecuta contra datos persistentes por defecto.
-- Maven verify: `NOT_RUN` para este cambio de scripts; el baseline vigente del
-  backend permanece PASS, pero no certifica el arranque integrado.
+- Maven verify: `BLOCKED_BY_TOOLING` en la repetición de este corte. Compiló
+  con Java 25, pero Surefire no produjo resumen final y dejó un dumpstream por
+  error de canal de attach de la JVM; el proceso se interrumpió. El baseline
+  previo del backend permanece `PASS` (1581/1581 en worktree limpio), pero no
+  se usa esta repetición fallida como PASS.
 - Los `e2e-*.log` de la raíz no se borraron ni movieron; requieren autorización
   explícita y clasificación de regenerabilidad.
 
