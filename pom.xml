@@ -36,6 +36,7 @@
         <jacoco.version>0.8.15</jacoco.version>
         <swagger-parser.version>2.1.46</swagger-parser.version>
         <swagger-ui.version>5.32.15</swagger-ui.version>
+        <karate.version>1.4.1</karate.version>
         <!-- SEC-002: POI 5.4.1 references commons-compress; align to patched 1.28.0. -->
         <commons-compress.version>1.28.0</commons-compress.version>
         <!-- SEC-002: patched baggage propagation; align the entire OpenTelemetry core family. -->
@@ -142,6 +143,12 @@
             <groupId>io.swagger.parser.v3</groupId>
             <artifactId>swagger-parser</artifactId>
             <version>${swagger-parser.version}</version>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.intuit.karate</groupId>
+            <artifactId>karate-junit5</artifactId>
+            <version>${karate.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
