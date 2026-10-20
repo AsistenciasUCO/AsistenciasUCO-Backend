@@ -67,11 +67,15 @@ class EstudiantePortalControllerTest {
     void consultarSesionesMateria_usa_actor_y_materia() throws Exception {
         when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
                 UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1", "Grupo 1",
-                java.time.LocalDateTime.of(2026, 1, 20, 8, 0), java.time.LocalDateTime.of(2026, 1, 20, 10, 0))));
+                java.time.LocalDateTime.of(2026, 1, 20, 8, 0), java.time.LocalDateTime.of(2026, 1, 20, 10, 0),
+                "AUSENTE", null, true)));
 
         mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].nombre").value("Sesion 1"));
+                .andExpect(jsonPath("$.datos[0].nombre").value("Sesion 1"))
+                .andExpect(jsonPath("$.datos[0].estadoAsistencia").value("AUSENTE"))
+                .andExpect(jsonPath("$.datos[0].estadoSolicitudRevision").doesNotExist())
+                .andExpect(jsonPath("$.datos[0].reclamable").value(true));
         verify(sesiones).execute(ACTOR, MATERIA);
     }
 

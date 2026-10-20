@@ -25,6 +25,10 @@ public class UvDetalleAsistenciaEntity {
     @Column(name = "idAsistencia")
     private UUID idAsistencia;
 
+    /** Consecutivo del detalle dentro de la asistencia; permite quedarse con el ultimo si hubiera varios. */
+    @Column(name = "codigo")
+    private Integer codigo;
+
     /** Nullable en el mapeo (defensivo): la semantica publica sigue siendo la de un flag {@code bit}. */
     @Column(name = "asistio")
     private Boolean asistio;
