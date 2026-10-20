@@ -17,6 +17,7 @@ La validación no cierra el contrato oficial ni modifica producción. No se copi
 | 2026-10-20 / frontend integration | `npm.cmd run verify` | 0 | PASS | 807 SUCCESS; realtime check y production build PASS |
 | 2026-10-20 / stack real | `.\scripts\start-local-stack.ps1 -Check` | 0 | PASS | 1433/8081/9000/3310/8080/4200 LISTENING; `infra/files/.env` MISSING |
 | 2026-10-20 / E2E real | `support_binding_e2e.py main` con SQLCMD en memoria | 0 | PASS | 34 checks, 34 PASS, 0 FAIL, 0 SQL NOT_RUN |
+| 2026-10-20 / E2E sesiones | `student_sessions_e2e.py` con SQLCMD en memoria | 1 | FAIL parcial | 15 checks: 11 PASS, 4 FAIL; Arquitectura de Software y 2 sesiones PASS, estado de asistencia no coincide con el fixture esperado |
 | 2026-10-20 / DB local respaldada | fixture LB-004D + concurrencia | 0 | PASS | resultsets, ownership, rollback, mínimo privilegio y concurrencia PASS |
 
 ## Checks
@@ -33,6 +34,7 @@ La validación no cierra el contrato oficial ni modifica producción. No se copi
 | Seguridad | JWT/RBAC/ownership/secret hygiene | PASS local | 34 E2E PASS, negativos 401/403/404, EICAR rechazado; secretos no registrados |
 | Runtime | procesos y wiring | PASS | PIDs nuevos desde checkouts originales; backend health 200 y frontend 200 |
 | Manual UI | IntelliJ + login visual docente/estudiante | NOT_RUN parcial | helper sin ventana IntelliJ seleccionable; no se inyectaron contraseñas al registro del navegador |
+| Docente / sesiones | Arquitectura de Software, grupo y dos sesiones | PASS parcial | E2E de sesiones devuelve materia y exactamente 2 sesiones; no se certifica el estado de asistencia por fixture inconsistente |
 | Documentos | work item y trazabilidad | PASS | PLAN/TEST_PLAN/VALIDATION creados |
 
 ## Integridad de RED
@@ -43,6 +45,7 @@ No aplica RED nuevo. Los candidatos y sus tests se fijan por SHA; cualquier conf
 
 - `CONTRACT_CONFLICT: P0H-DB-001`: DB baseline v1 fija resultset público de cuatro columnas, mientras D1/R2 candidatea R1 con diez y R2 con veinticinco columnas de lectura. Requiere decisión del owner DB.
 - `BLOCKED_BY_MISSING_EVIDENCE: P0H-INTELLIJ-001`: el helper de escritorio no expuso una ventana/app seleccionable de IntelliJ; el runtime equivalente sí quedó iniciado desde el backend original mediante `spring-boot:run`.
+- `DATA_FIXTURE_MISMATCH: P0H-DATA-001`: `student_sessions_e2e.py` encontró detalles de asistencia en ambas sesiones; el contrato del harness exige SES-01 sin detalle y SES-02 `SJC`. No se limpiaron filas históricas ni se inventó un fixture correctivo.
 - `infra/files/.env` no está presente en el checkout. Los servicios de archivos ya estaban levantados y sanos; un arranque limpio futuro requiere ese archivo local ignorado aportado por un operador autorizado.
 - La evidencia histórica de P0-C/P0-E orienta la reproducción, pero no es resultado actual.
 - El snapshot Git se conserva porque el índice del backend no permitió `stash`; la recuperación se hace con el patch/manifest, sin borrar backups.
@@ -69,6 +72,8 @@ La DMV de SQL Server confirmó W1=4 columnas, W2=4, R1=10 y R2=25, sin errores d
 El flujo real comprobado fue: estudiante sube PDF limpio → ClamAV acepta → MinIO guarda → SQL crea `DRAFT` → propietario descarga → estudiante radica con `soporteArchivoId` → SQL vincula `ATTACHED` → docente titular lista y descarga con SHA-256 idéntico. También pasaron negativos de 401/403/404, docente ajeno, otro estudiante del grupo, coordinador, administrador, segunda radicación, EICAR, tamaño >5 MiB, nombre >250 y ejecutable disfrazado.
 
 La primera corrida tuvo 3 SQL `NOT_RUN` por no heredar `SQLCMDPASSWORD`; se repitió con la variable solo en memoria y terminó `34/34 PASS`, `0 FAIL`, `0 SQL NOT_RUN`. Las identidades E2E se reprovisionaron únicamente en Keycloak local y sus secretos permanecen fuera del repo.
+
+El E2E de sesiones fue lectura real: `Arquitectura de Software` y sus dos sesiones se obtuvieron correctamente, pero terminó `11/15 PASS` porque los datos actuales no corresponden al estado de ausencia esperado por el fixture existente. El fallo queda separado del código recuperado; no se ejecutó `apply`/`cleanup` sobre esas filas.
 
 ## Estado de cierre
 
