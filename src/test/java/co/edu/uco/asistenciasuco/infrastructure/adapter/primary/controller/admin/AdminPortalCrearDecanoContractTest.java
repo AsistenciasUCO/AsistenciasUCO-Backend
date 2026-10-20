@@ -66,6 +66,20 @@ class AdminPortalCrearDecanoContractTest {
         verifyNoInteractions(useCase);
     }
 
+    @Test
+    void request_sin_id_facultad_llega_como_null_al_domain() {
+        final String jsonSinFacultad = "{\"tipoIdentificacionId\":\"" + TIPO_ID + "\",\"numeroIdentificacion\":123456789,\"primerNombre\":\"Ana\","
+                + "\"segundoNombre\":\"Maria\",\"primerApellido\":\"Perez\","
+                + "\"segundoApellido\":\"Gomez\",\"correo\":\"nuevo@uco.edu.co\","
+                + "\"password\":\"Clave123!\"}";
+
+        controller.crearDecano(json.readValue(jsonSinFacultad, AdminPortalController.CrearDecanoRequest.class));
+
+        final ArgumentCaptor<CrearDecanoDomain> domain = ArgumentCaptor.forClass(CrearDecanoDomain.class);
+        verify(useCase).execute(domain.capture());
+        org.junit.jupiter.api.Assertions.assertNull(domain.getValue().getIdFacultad());
+    }
+
     private String requestJson(final String tipoId) {
         final String tipo = tipoId == null ? "" : "\"tipoIdentificacionId\":\"" + tipoId + "\",";
         return "{" + tipo + "\"numeroIdentificacion\":123456789,\"primerNombre\":\"Ana\","

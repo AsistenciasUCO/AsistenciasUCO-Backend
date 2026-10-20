@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.impl;
 
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.internal.InternalApplicationException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
@@ -24,6 +25,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -248,6 +250,41 @@ class CrearDecanoUseCaseImplTest {
 
         assertThrows(ValidationException.class, () -> useCase.execute(sinTipo));
 
+        verifyNoInteractions(command, usuarios, encoder, identity);
+    }
+
+    @Test
+    void crear_decano_sin_facultad_no_consulta_facultad_y_persiste_con_idFacultad_null() {
+        final UsuarioIdentidadRepositoryProjection canonico = usuario(USUARIO_ID, 123456789, CORREO);
+        when(usuarios.consultarUsuarioPorIdentificacion(TIPO_ID, 123456789))
+                .thenReturn(Optional.empty(), Optional.of(canonico));
+        when(encoder.encode(RAW)).thenReturn(HASH);
+
+        final CrearDecanoDomain sinFacultad = new CrearDecanoDomain(
+                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, null, USUARIO_EJECUTOR
+        );
+
+        useCase.execute(sinFacultad);
+
+        final ArgumentCaptor<DecanoCommandPort.CrearDecanoCommand> db =
+                ArgumentCaptor.forClass(DecanoCommandPort.CrearDecanoCommand.class);
+        verify(command).crearDecano(db.capture());
+        verify(facultad, never()).consultarFacultadPorId(any());
+        assertNull(db.getValue().idFacultad());
+        assertNull(db.getValue().nombreFacultad());
+        verify(identity).crearCuenta(any());
+    }
+
+    @Test
+    void crear_decano_con_facultad_inexistente_falla_con_resource_not_found() {
+        final UUID facultadInexistente = UUID.randomUUID();
+        when(facultad.consultarFacultadPorId(facultadInexistente)).thenReturn(Optional.empty());
+
+        final CrearDecanoDomain conFacultadInexistente = new CrearDecanoDomain(
+                TIPO_ID, 123456789, "Ana", "Maria", "Perez", "Gomez", CORREO, RAW, facultadInexistente, USUARIO_EJECUTOR
+        );
+
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(conFacultadInexistente));
         verifyNoInteractions(command, usuarios, encoder, identity);
     }
 
