@@ -50,13 +50,12 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
             """;
 
     private static final String SQL_RADICAR_SOLICITUD_REVISION = """
-            EXEC dbo.usp_radicar_solicitud_revision_asistencia
+            EXEC dbo.usp_radicar_solicitud_revision_asistencia_v2
                  @idEstudiante = :idEstudiante,
                  @idSesion = :idSesion,
                  @categoria = :categoria,
                  @justificacion = :justificacion,
-                 @soporteNombre = :soporteNombre,
-                 @soporteUrl = :soporteUrl,
+                 @idArchivoSoporte = :idArchivoSoporte,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -152,8 +151,9 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idSesion", dto.sesion());
         parametros.put("categoria", dto.categoria());
         parametros.put("justificacion", dto.justificacion());
-        parametros.put("soporteNombre", dto.soporteNombre());
-        parametros.put("soporteUrl", dto.soporteUrl());
+        // El soporte es opcional. Un UUID nulo sin tipo no tiene JdbcType resoluble en Hibernate; la cadena
+        // (o NULL) se convierte a uniqueidentifier en SQL Server de forma implicita y sin ambiguedad.
+        parametros.put("idArchivoSoporte", dto.soporteArchivoId() == null ? null : dto.soporteArchivoId().toString());
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 

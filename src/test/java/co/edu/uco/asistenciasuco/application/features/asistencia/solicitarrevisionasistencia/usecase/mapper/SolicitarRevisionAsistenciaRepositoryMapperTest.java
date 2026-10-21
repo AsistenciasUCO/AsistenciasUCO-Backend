@@ -22,14 +22,16 @@ class SolicitarRevisionAsistenciaRepositoryMapperTest {
         final UUID usuario = UUID.randomUUID();
         final UUID estudianteId = UUID.randomUUID();
         final UUID sesion = UUID.randomUUID();
+        final UUID soporte = UUID.randomUUID();
         final SolicitarRevisionAsistenciaDomain domain = new SolicitarRevisionAsistenciaDomain(
-                sesion, "SALUD", "Justificacion", "soporte.pdf", "https://example.com", usuario
+                sesion, "SALUD", "Justificacion", soporte, usuario
         );
 
         final var dto = SolicitarRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain, estudianteId);
 
         assertEquals(estudianteId, dto.estudiante());
         assertEquals(sesion, dto.sesion());
+        assertEquals(soporte, dto.soporteArchivoId());
         assertEquals(usuario, dto.usuarioEjecutor());
         assertEquals(usuario, domain.getUsuario());
     }

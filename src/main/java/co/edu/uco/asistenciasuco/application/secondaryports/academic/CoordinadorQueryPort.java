@@ -8,4 +8,8 @@ import java.util.UUID;
 public interface CoordinadorQueryPort {
 
     List<CoordinadorProjection> consultarCoordinadoresPorFacultad(UUID idFacultad);
+
+    default List<CoordinadorProjection> consultarCoordinadoresSinPrograma() {
+        return List.of();
+    }
 }

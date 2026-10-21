@@ -35,6 +35,8 @@ DEDICATED_USERS = [
     ("FILES_E2E_ESTUDIANTE1_", "files.e2e.estudiante1", "ESTUDIANTE"),
     ("FILES_E2E_ESTUDIANTE2_", "files.e2e.estudiante2", "ESTUDIANTE"),
     ("FILES_E2E_ADMIN_", "files.e2e.admin", "ADMINISTRADOR"),
+    # LB-004D: un docente que NO es titular del grupo del estudiante (R1 debe devolverle 404).
+    ("FILES_E2E_DOCENTE2_", "files.e2e.docente2", "DOCENTE"),
 ]
 # Fragmentos que nunca deben aparecer en una respuesta HTTP (internals del provider).
 FORBIDDEN_FRAGMENTS = ["asistencias-soportes", "soportes/", "minio", "clamav", ":19000", ":13310", ":9000", ":3310"]
@@ -250,7 +252,7 @@ def context(args):
     for role in ("DOCENTE", "COORDINADOR"):
         users[role] = (require(kc_env, "E2E_%s_USERNAME" % role), require(kc_env, "E2E_%s_PASSWORD" % role))
     for alias, prefix in (("ESTUDIANTE", "FILES_E2E_ESTUDIANTE1_"), ("ESTUDIANTE2", "FILES_E2E_ESTUDIANTE2_"),
-                          ("ADMIN", "FILES_E2E_ADMIN_")):
+                          ("ADMIN", "FILES_E2E_ADMIN_"), ("DOCENTE2", "FILES_E2E_DOCENTE2_")):
         if not secrets_env.get(prefix + "USERNAME"):
             raise Blocked("falta la identidad dedicada %s; ejecute provision-users" % alias)
         users[alias] = (secrets_env[prefix + "USERNAME"], secrets_env[prefix + "PASSWORD"])

@@ -9,7 +9,10 @@ public final class SolicitarRevisionAsistenciaRequest {
     private String categoria;
     private String justificacion;
     private String motivo;
+    private UUID soporteArchivoId;
+    /** Legacy (DEPRECATED): se acepta por compatibilidad de forma pero NUNCA se usa como fuente de verdad. */
     private String soporteNombre;
+    /** Legacy (DEPRECATED): ver soporteNombre. */
     private String soporteUrl;
 
     public UUID getSesionId() {
@@ -46,6 +49,14 @@ public final class SolicitarRevisionAsistenciaRequest {
 
     public void setMotivo(final String motivo) {
         this.motivo = motivo;
+    }
+
+    public UUID getSoporteArchivoId() {
+        return soporteArchivoId;
+    }
+
+    public void setSoporteArchivoId(final UUID soporteArchivoId) {
+        this.soporteArchivoId = soporteArchivoId;
     }
 
     public String getSoporteNombre() {

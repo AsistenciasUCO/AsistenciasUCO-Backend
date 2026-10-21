@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.useca
 import co.edu.uco.asistenciasuco.application.features.archivo.subirarchivo.usecase.impl.SubirArchivoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.malwarescan.MalwareScanPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.storage.FileStoragePort;
+import co.edu.uco.asistenciasuco.application.secondaryports.storage.SoporteArchivoMetadataPort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -19,9 +20,10 @@ public class ArchivoWiringConfiguration {
     @Bean
     public SubirArchivoUseCase subirArchivoUseCase(
             final FileStoragePort fileStoragePort,
-            final MalwareScanPort malwareScanPort
+            final MalwareScanPort malwareScanPort,
+            final SoporteArchivoMetadataPort soporteArchivoMetadataPort
     ) {
-        return new SubirArchivoUseCaseImpl(fileStoragePort, malwareScanPort);
+        return new SubirArchivoUseCaseImpl(fileStoragePort, malwareScanPort, soporteArchivoMetadataPort);
     }
 
     @Bean
@@ -30,8 +32,11 @@ public class ArchivoWiringConfiguration {
     }
 
     @Bean
-    public DescargarArchivoUseCase descargarArchivoUseCase(final FileStoragePort fileStoragePort) {
-        return new DescargarArchivoUseCaseImpl(fileStoragePort);
+    public DescargarArchivoUseCase descargarArchivoUseCase(
+            final FileStoragePort fileStoragePort,
+            final SoporteArchivoMetadataPort soporteArchivoMetadataPort
+    ) {
+        return new DescargarArchivoUseCaseImpl(fileStoragePort, soporteArchivoMetadataPort);
     }
 
     @Bean

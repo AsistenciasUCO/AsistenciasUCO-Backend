@@ -101,6 +101,45 @@ class CoordinadorJpaCommandPatternTest {
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
+
+    @Test
+    void COO_PAT_004_consultar_coordinadores_sin_programa_mapea_correctamente() {
+        final jakarta.persistence.TypedQuery typedQuery = mock(jakarta.persistence.TypedQuery.class);
+        when(entityManager.createQuery(anyString(), org.mockito.ArgumentMatchers.eq(Object[].class))).thenReturn(typedQuery);
+        final Object[] fila = new Object[]{
+                COORDINADOR,
+                UUID.randomUUID(),
+                "1017555444",
+                "Jorge Henao",
+                null,
+                null,
+                1
+        };
+        when(typedQuery.getResultList()).thenReturn(Collections.singletonList(fila));
+
+        final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection> resultado =
+                command.consultarCoordinadoresSinPrograma();
+
+        assertEquals(1, resultado.size());
+        assertEquals(COORDINADOR, resultado.getFirst().id());
+        assertEquals("1017555444", resultado.getFirst().numeroIdentificacion());
+        assertEquals("Jorge Henao", resultado.getFirst().nombreCompleto());
+        assertTrue(resultado.getFirst().estaActivoCoordinador());
+    }
+
+    @Test
+    void COO_PAT_005_consultar_coordinadores_por_facultad_mapea_correctamente() {
+        final jakarta.persistence.TypedQuery typedQuery = mock(jakarta.persistence.TypedQuery.class);
+        when(entityManager.createQuery(anyString(), org.mockito.ArgumentMatchers.eq(co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvCoordinadorEntity.class)))
+                .thenReturn(typedQuery);
+        when(typedQuery.setParameter(anyString(), any())).thenReturn(typedQuery);
+        when(typedQuery.getResultList()).thenReturn(Collections.emptyList());
+
+        final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection> resultado =
+                command.consultarCoordinadoresPorFacultad(FACULTAD);
+
+        assertTrue(resultado.isEmpty());
+    }
 }
 
 

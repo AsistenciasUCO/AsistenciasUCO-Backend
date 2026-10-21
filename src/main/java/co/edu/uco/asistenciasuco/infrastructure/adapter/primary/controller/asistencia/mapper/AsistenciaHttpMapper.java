@@ -49,8 +49,7 @@ public final class AsistenciaHttpMapper {
                 request.getSesionId(),
                 request.getCategoria(),
                 request.getJustificacion(),
-                request.getSoporteNombre(),
-                request.getSoporteUrl(),
+                request.getSoporteArchivoId(),
                 usuarioId
         );
     }

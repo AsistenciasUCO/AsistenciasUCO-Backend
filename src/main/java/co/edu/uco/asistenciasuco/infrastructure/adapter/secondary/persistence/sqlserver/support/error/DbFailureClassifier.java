@@ -74,6 +74,13 @@ final class DbFailureClassifier {
             // Combinacion Programa/Facultad invalida enviada a la operacion.
             case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
+            // LB-004D (soporte de revision): ARC_001 es identico para soporte inexistente, ajeno, ya vinculado u
+            // huerfano (404 sin distinguir casos); ARC_002 registro en conflicto; ARC_003 metadata invalida;
+            // ARC_005 el estudiante no corresponde al ejecutor autenticado.
+            case "ARC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "ARC_002" -> CommonErrorCode.CONFLICT;
+            case "ARC_003" -> CommonErrorCode.VALIDATION_ERROR;
+            case "ARC_005" -> SecurityErrorCode.FORBIDDEN;
             // CAT_001: inconsistencia interna de catalogo DB (p. ej. dbo.Estado sin un codigo esperado).
             // Fallo tecnico conocido, no se reclasifica como 4xx.
             case "CAT_001" -> DatabaseErrorCode.ERR_DB_CATALOG_INCONSISTENT;

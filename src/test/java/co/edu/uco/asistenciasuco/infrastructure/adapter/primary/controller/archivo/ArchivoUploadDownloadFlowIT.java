@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFound
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.archivo.shared.contentsecurity.ChecksumCalculator;
 import co.edu.uco.asistenciasuco.application.secondaryports.storage.FileStoragePort;
+import co.edu.uco.asistenciasuco.application.secondaryports.storage.SoporteArchivoMetadataPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.malwarescan.clamav.ClamAvMalwareScanAdapterConfiguration;
@@ -25,7 +26,10 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.context.TestPropertySource;
 
+import java.time.Instant;
 import java.util.ArrayList;
+import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -56,7 +60,9 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
  * <p>Contexto Spring minimo: Composition Root de storage/malware-scan + wiring de Application +
  * controller real. La identidad se inyecta con un {@link AuthenticatedUserResolver} de prueba: este
  * IT NO certifica Bearer/JWT (eso lo hace el E2E HTTP con Keycloak, ver
- * {@code scripts/e2e/files/files_storage_e2e.py}). No requiere SQL Server. Requiere
+ * {@code scripts/e2e/files/files_storage_e2e.py}). No requiere SQL Server: la metadata durable (SQL) se simula con un
+ * {@link SoporteArchivoMetadataPort} en memoria; el contrato real contra SQL lo cubre {@code SoporteArchivoSqlIT}.
+ * Requiere
  * {@code infra/files/compose.yaml} y las variables {@code MINIO_ENDPOINT}, {@code MINIO_ACCESS_KEY},
  * {@code MINIO_SECRET_KEY}, {@code CLAMAV_HOST}, {@code CLAMAV_PORT} sin valores por defecto.</p>
  */
@@ -274,6 +280,29 @@ class ArchivoUploadDownloadFlowIT {
         @Bean
         AuthenticatedUserResolver authenticatedUserResolver(final AtomicReference<UUID> currentUser) {
             return currentUser::get;
+        }
+
+        /** Sustituto de SQL: registra el borrador y autoriza solo al propietario (el docente titular lo cubre SoporteArchivoSqlIT). */
+        @Bean
+        SoporteArchivoMetadataPort soporteArchivoMetadataPort() {
+            final Map<UUID, SoporteArchivoMetadataPort.RegistrarSoporteBorrador> registros = new ConcurrentHashMap<>();
+            return new SoporteArchivoMetadataPort() {
+                @Override
+                public void registrarBorrador(final RegistrarSoporteBorrador comando) {
+                    registros.putIfAbsent(comando.fileId(), comando);
+                }
+
+                @Override
+                public Optional<SoporteArchivoAutorizado> consultarAutorizado(final UUID fileId, final UUID usuarioEjecutor) {
+                    final RegistrarSoporteBorrador registro = registros.get(fileId);
+                    if (registro == null || !registro.usuarioPropietario().equals(usuarioEjecutor)) {
+                        return Optional.empty();
+                    }
+                    return Optional.of(new SoporteArchivoAutorizado(registro.fileId(), EstadoSoporte.DRAFT,
+                            registro.nombreOriginal(), registro.tipoContenido(), registro.tamanioBytes(),
+                            registro.checksumSha256(), Instant.now(), null, null, RelacionAcceso.PROPIETARIO));
+                }
+            };
         }
     }
 }

@@ -84,7 +84,10 @@ $adminToken = Get-KcAdminToken -ServerUrl $serverUrl -Username $bootstrapAdminUs
 
 $specs = @(
     @{ Key = 'DOCENTE'; Role = 'DOCENTE' },
-    @{ Key = 'ADMIN'; Role = 'ADMINISTRADOR' }
+    @{ Key = 'ADMIN'; Role = 'ADMINISTRADOR' },
+    @{ Key = 'PAGINACION_300'; Role = 'DOCENTE' },
+    @{ Key = 'PAGINACION_1000'; Role = 'DOCENTE' },
+    @{ Key = 'PAGINACION_5000'; Role = 'DOCENTE' }
 )
 
 Write-Host ''
