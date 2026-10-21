@@ -46,4 +46,25 @@ class ConsultarCoordinadoresUseCaseImplTest {
         assertEquals(1, result.size());
         assertEquals(coordinadorId, result.getFirst().id());
     }
+
+    @Test
+    void execute_incluye_coordinadores_disponibles_sin_programa_y_deduplica_por_id() {
+        final UUID actor = UUID.randomUUID();
+        final UUID facultad = UUID.randomUUID();
+        final UUID coordConPrograma = UUID.randomUUID();
+        final UUID coordSinPrograma = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actor)).thenReturn(Optional.of(facultad));
+        when(coordinadorQueryPort.consultarCoordinadoresPorFacultad(facultad)).thenReturn(List.of(
+                new CoordinadorProjection(coordConPrograma, UUID.randomUUID(), "123456", "Ana Perez",
+                        UUID.randomUUID(), "Ingenieria de Sistemas", true)));
+        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma()).thenReturn(List.of(
+                new CoordinadorProjection(coordSinPrograma, UUID.randomUUID(), "789012", "Jorge Henao",
+                        null, null, true)));
+
+        final List<CoordinadorDomain> result = useCase.execute(actor);
+
+        assertEquals(2, result.size());
+        assertEquals(coordConPrograma, result.get(0).id());
+        assertEquals(coordSinPrograma, result.get(1).id());
+    }
 }
