@@ -95,21 +95,16 @@ jobs:
       #
       # develop es la Main Branch en SonarQube Cloud.
       #
-      # Se ejecuta:
-      # - PR -> develop
-      # - push -> develop
-      #
-      # NO se ejecuta:
-      # - PR -> master
-      # - push -> master
-      #
-      # Esto evita intentar branch analysis de master usando el
-      # plan Free de SonarQube Cloud.
+      # Se ejecuta para TODOS los pull requests y los pushes a develop.
+      # Los PR usan el analisis de PR (no branch analysis), de modo que
+      # retargetear un PR entre master/develop no omite Sonar silenciosamente.
+      # Se omiten pushes a master para evitar branch analysis no soportado
+      # por la configuracion Free de SonarQube Cloud.
       # ============================================================
 
       - name: SonarQube Cloud analysis and Quality Gate
         if: >-
-          (github.event_name == 'pull_request' && github.base_ref == 'develop') ||
+          github.event_name == 'pull_request' ||
           (github.event_name == 'push' && github.ref == 'refs/heads/develop')
         env:
           SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
