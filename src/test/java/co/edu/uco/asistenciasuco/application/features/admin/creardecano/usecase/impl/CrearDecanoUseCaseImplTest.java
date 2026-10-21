@@ -128,7 +128,7 @@ class CrearDecanoUseCaseImplTest {
         final ConflictException exception = assertThrows(ConflictException.class,
                 () -> useCase.execute(domain(123456789, CORREO)));
 
-        assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
+        assertEquals("ERR_UNICIDAD_CORREO", exception.getCode());
         verifyNoInteractions(command, encoder, identity);
     }
 
@@ -141,7 +141,7 @@ class CrearDecanoUseCaseImplTest {
         final ConflictException exception = assertThrows(ConflictException.class,
                 () -> useCase.execute(domain(123456789, CORREO)));
 
-        assertEquals("ERR_IDENTIDAD_USUARIO_CONFLICTO", exception.getCode());
+        assertEquals("ERR_UNICIDAD_DOCUMENTO", exception.getCode());
         verifyNoInteractions(command, encoder, identity);
     }
 

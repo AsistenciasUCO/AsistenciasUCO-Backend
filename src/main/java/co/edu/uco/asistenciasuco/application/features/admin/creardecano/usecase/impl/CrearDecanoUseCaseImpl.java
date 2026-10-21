@@ -84,8 +84,13 @@ public final class CrearDecanoUseCaseImpl implements CrearDecanoUseCase {
         if ((porCorreo != null && porCorreo.id() == null) || (porDocumento != null && porDocumento.id() == null)) {
             throw new InternalApplicationException("No fue posible validar la identidad institucional del decano.");
         }
-        if ((porCorreo == null) != (porDocumento == null)
-                || (porCorreo != null && !porCorreo.id().equals(porDocumento.id()))) {
+        if (porCorreo == null && porDocumento != null) {
+            throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO);
+        }
+        if (porCorreo != null && porDocumento == null) {
+            throw new ConflictException(UsuarioErrorCode.ERR_UNICIDAD_CORREO);
+        }
+        if (porCorreo != null && !porCorreo.id().equals(porDocumento.id())) {
             throw new ConflictException(UsuarioErrorCode.ERR_IDENTIDAD_USUARIO_CONFLICTO);
         }
         return Optional.ofNullable(porCorreo == null ? null : porCorreo.id());
