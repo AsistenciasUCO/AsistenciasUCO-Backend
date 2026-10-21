@@ -44,6 +44,14 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
             order by c.nombrePrograma, c.nombreCompleto, c.id
             """;
 
+    static final String HQL_SIN_PROGRAMA = """
+            select c.id, c.idUsuario, c.numeroIdentificacion, c.nombreCompleto,
+                   c.idPrograma, c.nombrePrograma, c.estaActivoCoordinador
+            from UvCoordinadorEntity c
+            where c.idPrograma is null
+            order by c.nombreCompleto, c.id
+            """;
+
     static final String OP_CREAR_COORDINADOR = "crearCoordinador";
 
     private final EntityManager entityManager;
@@ -77,6 +85,26 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                         .setParameter("idFacultad", idFacultad)
                         .getResultList().stream()
                         .map(AcademicViewJpaProjectionMapper::toCoordinador)
+                        .toList()
+        );
+    }
+
+    @Override
+    public List<CoordinadorProjection> consultarCoordinadoresSinPrograma() {
+        return JpaQueryExecutor.execute(
+                "consultarCoordinadoresSinPrograma",
+                "No fue posible consultar los coordinadores disponibles sin programa desde base de datos.",
+                () -> entityManager.createQuery(HQL_SIN_PROGRAMA, Object[].class)
+                        .getResultList().stream()
+                        .map(row -> new CoordinadorProjection(
+                                (UUID) row[0],
+                                (UUID) row[1],
+                                row[2] == null ? null : String.valueOf(row[2]),
+                                (String) row[3],
+                                (UUID) row[4],
+                                (String) row[5],
+                                row[6] != null && ((Integer) row[6]) == 1
+                        ))
                         .toList()
         );
     }
