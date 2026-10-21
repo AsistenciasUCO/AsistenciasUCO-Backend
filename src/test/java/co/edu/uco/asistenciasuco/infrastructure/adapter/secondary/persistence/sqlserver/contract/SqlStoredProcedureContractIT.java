@@ -279,6 +279,37 @@ class SqlStoredProcedureContractIT {
                         input("@respuestaDocente", "nvarchar"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                // LB-004D (ONE_TABLE): soporte de revision. La v1 de arriba permanece intacta.
+                Arguments.of("usp_registrar_archivo_soporte", List.of(
+                        input("@idArchivoSoporte", "uniqueidentifier"),
+                        input("@nombreOriginal", "nvarchar"),
+                        input("@tipoContenido", "varchar"),
+                        input("@tamanioBytes", "bigint"),
+                        input("@checksumSha256", "char"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_radicar_solicitud_revision_asistencia_v2", List.of(
+                        input("@idEstudiante", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@categoria", "nvarchar"),
+                        input("@justificacion", "nvarchar"),
+                        input("@idArchivoSoporte", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_archivo_soporte_autorizado", List.of(
+                        input("@idArchivoSoporte", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_solicitudes_revision_docente", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@codigoEstado", "nvarchar"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
                 ))
         );
     }

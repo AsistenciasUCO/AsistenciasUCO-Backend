@@ -36,6 +36,7 @@ class AsistenciaControllerContractTest {
     private static final UUID STUDENT = UUID.randomUUID();
     private static final UUID GROUP = UUID.randomUUID();
     private static final UUID SESSION = UUID.randomUUID();
+    private static final UUID SUPPORT = UUID.randomUUID();
     private final RegistrarAsistenciaInputPort register = mock(RegistrarAsistenciaInputPort.class);
     private final RegistrarAsistenciasSesionInputPort registerBatch = mock(RegistrarAsistenciasSesionInputPort.class);
     private final SolicitarRevisionAsistenciaInputPort review = mock(SolicitarRevisionAsistenciaInputPort.class);
@@ -66,8 +67,9 @@ class AsistenciaControllerContractTest {
         mvc.perform(post("/api/v1/asistencias/revisiones").contentType("application/json")
                         .content("""
                                 {"sesion":"%s","categoria":"SALUD","motivo":"Cita médica",
+                                 "soporteArchivoId":"%s",
                                  "soporteNombre":"excusa.pdf","soporteUrl":"https://example.com/excusa"}
-                                """.formatted(SESSION)))
+                                """.formatted(SESSION, SUPPORT)))
                 .andExpect(status().isAccepted());
         final var captor = ArgumentCaptor.forClass(SolicitarRevisionAsistenciaDTO.class);
         verify(review).execute(captor.capture());
@@ -75,8 +77,8 @@ class AsistenciaControllerContractTest {
         assertEquals(ACTOR, captor.getValue().getUsuario());
         assertEquals("SALUD", captor.getValue().getCategoria());
         assertEquals("Cita médica", captor.getValue().getJustificacion());
-        assertEquals("excusa.pdf", captor.getValue().getSoporteNombre());
-        assertEquals("https://example.com/excusa", captor.getValue().getSoporteUrl());
+        // El unico dato de soporte que viaja a Application es el fileId; soporteNombre/soporteUrl legacy se ignoran.
+        assertEquals(SUPPORT, captor.getValue().getSoporteArchivoId());
     }
 
     @Test

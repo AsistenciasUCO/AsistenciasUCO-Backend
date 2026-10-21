@@ -7,8 +7,7 @@ public record SolicitarRevisionAsistenciaRepositoryDTO(
         UUID sesion,
         String categoria,
         String justificacion,
-        String soporteNombre,
-        String soporteUrl,
+        UUID soporteArchivoId,
         UUID usuarioEjecutor
 ) {
 }

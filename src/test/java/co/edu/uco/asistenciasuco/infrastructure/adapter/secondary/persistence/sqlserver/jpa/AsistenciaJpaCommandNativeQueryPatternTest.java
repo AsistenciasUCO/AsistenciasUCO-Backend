@@ -50,6 +50,7 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     private static final UUID CORRELATION = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
     private static final UUID SESION = UUID.fromString("22222222-2222-2222-2222-222222222222");
     private static final UUID EJECUTOR = UUID.fromString("33333333-3333-3333-3333-333333333333");
+    private static final UUID SOPORTE = UUID.fromString("55555555-5555-5555-5555-555555555555");
     private static final UUID ESTUDIANTE = UUID.fromString("44444444-4444-4444-4444-444444444441");
     private static final UUID SOLICITUD = UUID.fromString("55555555-5555-5555-5555-555555555555");
     private static final UUID DOCENTE = UUID.fromString("66666666-6666-6666-6666-666666666666");
@@ -110,15 +111,14 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     @Test
     void CMD_PAT_003_solicitar_revision_usa_create_native_query_con_sus_parametros_reales() {
         command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                ESTUDIANTE, SESION, "NOTA", "Justificacion", "soporte.pdf", "https://soporte", EJECUTOR));
+                ESTUDIANTE, SESION, "NOTA", "Justificacion", SOPORTE, EJECUTOR));
 
-        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_radicar_solicitud_revision_asistencia"));
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_radicar_solicitud_revision_asistencia_v2"));
         verify(query).setParameter("idEstudiante", ESTUDIANTE);
         verify(query).setParameter("idSesion", SESION);
         verify(query).setParameter("categoria", "NOTA");
         verify(query).setParameter("justificacion", "Justificacion");
-        verify(query).setParameter("soporteNombre", "soporte.pdf");
-        verify(query).setParameter("soporteUrl", "https://soporte");
+        verify(query).setParameter("idArchivoSoporte", SOPORTE.toString());
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
         verify(query).getResultList();
@@ -178,7 +178,7 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
                 () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
-                        ESTUDIANTE, SESION, "NOTA", "J", "s", "u", EJECUTOR)));
+                        ESTUDIANTE, SESION, "NOTA", "J", null, EJECUTOR)));
 
         assertEquals(DatabaseErrorCode.DATABASE_OPERATION_ERROR.code(), exception.getCode());
         assertTrue(exception.getCause() instanceof PersistenceException);

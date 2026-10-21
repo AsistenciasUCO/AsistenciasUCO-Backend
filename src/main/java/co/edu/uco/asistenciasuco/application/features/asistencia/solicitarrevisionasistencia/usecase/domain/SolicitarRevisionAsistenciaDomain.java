@@ -17,24 +17,21 @@ public final class SolicitarRevisionAsistenciaDomain {
     private final UUID sesion;
     private final String categoria;
     private final String justificacion;
-    private final String soporteNombre;
-    private final String soporteUrl;
+    private final UUID soporteArchivoId;
     private final UUID usuario;
 
     public SolicitarRevisionAsistenciaDomain(
             final UUID sesion,
             final String categoria,
             final String justificacion,
-            final String soporteNombre,
-            final String soporteUrl,
+            final UUID soporteArchivoId,
             final UUID usuario
     ) {
         validarSesion(sesion);
         validarUsuario(usuario);
         this.categoria = validarTextoObligatorio(categoria, AsistenciaErrorCode.ERR_CATEGORIA_REVISION_REQUERIDA);
         this.justificacion = validarTextoObligatorio(justificacion, AsistenciaErrorCode.ERR_JUSTIFICACION_REVISION_REQUERIDA);
-        this.soporteNombre = TextHelper.trim(soporteNombre);
-        this.soporteUrl = TextHelper.trim(soporteUrl);
+        this.soporteArchivoId = soporteArchivoId;
 
         this.sesion = sesion;
         this.usuario = usuario;
@@ -75,12 +72,9 @@ public final class SolicitarRevisionAsistenciaDomain {
         return justificacion;
     }
 
-    public String getSoporteNombre() {
-        return soporteNombre;
-    }
-
-    public String getSoporteUrl() {
-        return soporteUrl;
+    /** fileId opaco del soporte (opcional): SQL valida propiedad y estado antes de vincularlo. */
+    public UUID getSoporteArchivoId() {
+        return soporteArchivoId;
     }
 
     public UUID getUsuario() {

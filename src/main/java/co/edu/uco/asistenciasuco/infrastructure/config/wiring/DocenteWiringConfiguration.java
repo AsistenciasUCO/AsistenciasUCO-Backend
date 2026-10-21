@@ -20,6 +20,11 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultardocentepo
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.primaryports.interactor.ConsultarDocentePorIdInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.ConsultarDocentePorIdUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocenteporid.usecase.impl.ConsultarDocentePorIdUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.interactor.ConsultarReclamosDocenteInteractor;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.usecase.ConsultarReclamosDocenteUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.usecase.impl.ConsultarReclamosDocenteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.ConsultarHorariosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.interactor.ConsultarHorariosDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.usecase.ConsultarHorariosDocenteUseCase;
@@ -110,6 +115,19 @@ public class DocenteWiringConfiguration {
             final AsignarDocenteAGrupoUseCase asignarDocenteAGrupoUseCase
     ) {
         return new AsignarDocenteAGrupoInteractor(asignarDocenteAGrupoUseCase);
+    }
+
+    @Bean
+    ConsultarReclamosDocenteUseCase consultarReclamosDocenteUseCase(
+            final InstitutionalScopePort scopePort,
+            final SolicitudRevisionDocenteQueryPort queryPort
+    ) {
+        return new ConsultarReclamosDocenteUseCaseImpl(scopePort, queryPort);
+    }
+
+    @Bean
+    ConsultarReclamosDocenteInputPort consultarReclamosDocenteInputPort(final ConsultarReclamosDocenteUseCase useCase) {
+        return new ConsultarReclamosDocenteInteractor(useCase);
     }
 
     @Bean
