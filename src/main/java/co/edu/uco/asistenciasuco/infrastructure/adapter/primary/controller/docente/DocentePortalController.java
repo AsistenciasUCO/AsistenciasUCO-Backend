@@ -4,14 +4,19 @@ import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailab
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.dto.ResolverSolicitudRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.ConsultarDetalleReclamoDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.ConsultarDetalleReclamoDocenteDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.DetalleReclamoDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ConsultarReclamosDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamosDocentePaginaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.ConsultarHorariosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.dto.AsignaturaDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.dto.HorarioDocenteDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.mapper.DetalleReclamoDocenteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.mapper.ReclamoDocenteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.ResolverReclamoRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.DetalleReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.ReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
@@ -35,6 +40,7 @@ public final class DocentePortalController {
     private final ConsultarAsignaturasDocenteInputPort consultarAsignaturasDocenteInputPort;
     private final ResolverSolicitudRevisionAsistenciaInputPort resolverSolicitudRevisionAsistenciaInputPort;
     private final ConsultarReclamosDocenteInputPort consultarReclamosDocenteInputPort;
+    private final ConsultarDetalleReclamoDocenteInputPort consultarDetalleReclamoDocenteInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public DocentePortalController(
@@ -42,12 +48,14 @@ public final class DocentePortalController {
             final ConsultarAsignaturasDocenteInputPort consultarAsignaturasDocenteInputPort,
             final ResolverSolicitudRevisionAsistenciaInputPort resolverSolicitudRevisionAsistenciaInputPort,
             final ConsultarReclamosDocenteInputPort consultarReclamosDocenteInputPort,
+            final ConsultarDetalleReclamoDocenteInputPort consultarDetalleReclamoDocenteInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarHorariosDocenteInputPort = consultarHorariosDocenteInputPort;
         this.consultarAsignaturasDocenteInputPort = consultarAsignaturasDocenteInputPort;
         this.resolverSolicitudRevisionAsistenciaInputPort = resolverSolicitudRevisionAsistenciaInputPort;
         this.consultarReclamosDocenteInputPort = consultarReclamosDocenteInputPort;
+        this.consultarDetalleReclamoDocenteInputPort = consultarDetalleReclamoDocenteInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
@@ -67,6 +75,19 @@ public final class DocentePortalController {
                 true,
                 resultado.reclamos().stream().map(ReclamoDocenteHttpMapper::toResponse).toList(),
                 resultado.totalRegistros()));
+    }
+
+    /**
+     * Detalle de una solicitud de revision del docente titular, con su causal y el soporte adjunto (metadatos).
+     * Una solicitud inexistente o de otro docente responde 404 sin distinguir ambos casos.
+     */
+    @GetMapping("/reclamos/{id}")
+    public ResponseEntity<ApiDataResponse<DetalleReclamoDocenteResponse>> consultarDetalleReclamo(
+            @PathVariable final UUID id
+    ) {
+        final DetalleReclamoDocenteDTO detalle = consultarDetalleReclamoDocenteInputPort.execute(
+                new ConsultarDetalleReclamoDocenteDTO(id, authenticatedUserResolver.requireAuthenticatedUserId()));
+        return ResponseEntity.ok(new ApiDataResponse<>(true, DetalleReclamoDocenteHttpMapper.toResponse(detalle)));
     }
 
     @PatchMapping("/reclamos/{id}")

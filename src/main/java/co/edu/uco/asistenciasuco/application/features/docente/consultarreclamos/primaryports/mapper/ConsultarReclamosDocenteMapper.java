@@ -36,7 +36,7 @@ public final class ConsultarReclamosDocenteMapper {
                         p.tipoContenidoSoporte(),
                         p.tamanioSoporteBytes() == null ? 0L : p.tamanioSoporteBytes(),
                         p.fechaRegistroSoporteUtc(),
-                        URL_PREFIX + p.idArchivoSoporte());
+                        urlSoporte(p.idArchivoSoporte()));
         return new ReclamoDocenteDTO(
                 p.idSolicitud(),
                 p.nombreSolicitud(),
@@ -59,7 +59,13 @@ public final class ConsultarReclamosDocenteMapper {
                 soporte);
     }
 
-    private static String estadoLegible(final String codigo) {
+    /** URL relativa autenticada de descarga del soporte (compartida con el detalle de la solicitud). */
+    public static String urlSoporte(final java.util.UUID idArchivoSoporte) {
+        return URL_PREFIX + idArchivoSoporte;
+    }
+
+    /** Traduccion P/A/R a estado legible (compartida con el detalle de la solicitud). */
+    public static String estadoLegible(final String codigo) {
         if (codigo == null) {
             return null;
         }
