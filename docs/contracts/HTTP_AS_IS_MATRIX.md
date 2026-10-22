@@ -26,7 +26,9 @@ Los SP/views de las filas son contratos consumidos/reportados por Java; las firm
 | `GET /api/v1/admin/areas` | ADMINISTRADOR | Consultar areas | `AreaQueryPort` | `uv_area` | IMPLEMENTATION_AVAILABLE_PENDING_E2E |  | `ApiListResponse<AreaDTO>` |
 | `POST /api/v1/admin/cierre-masivo` | ADMINISTRADOR | Ejecutar cierre masivo | `CierrePeriodoCommandPort` | `usp_ejecutar_cierre_masivo_periodo` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Validar firma DB en E2E controlado | `CierreMasivoRequest` |
 | `POST/PUT/PATCH /api/v1/admin/instituciones/**` | ADMINISTRADOR | Mutar institucion |  |  | BLOCKED_BY_DB | No hay command publico confirmado | `FeatureUnavailableException` |
-| `POST/PUT/PATCH /api/v1/admin/facultades/**` | ADMINISTRADOR | Mutar facultad |  |  | BLOCKED_BY_DB | No hay command publico confirmado | `FeatureUnavailableException` |
+| `POST /api/v1/admin/facultades` | ADMINISTRADOR | Crear facultad (HU116) | `FacultadCommandPort` | `usp_crear_facultad` | IMPLEMENTATION_AVAILABLE_PENDING_E2E |  | `CrearFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
+| `PUT /api/v1/admin/facultades/{id}` | ADMINISTRADOR | Modificar nombre y/o decano (HU110, HU117) | `FacultadCommandPort` | `usp_actualizar_facultad` | E2E_VERIFIED_2026-10-22 | 404 `FAC_001`/`DEC_001`, 409 `GEN_003`/`FAC_002` | `ActualizarFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
+| `PATCH /api/v1/admin/facultades/{id}/estado` | ADMINISTRADOR | Cambiar estado deseado (HU111) | `FacultadCommandPort` | `usp_cambiar_estado_facultad` | E2E_VERIFIED_2026-10-22 | Idempotente; 409 `FAC_002` al reactivar | `CambiarEstadoFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
 | `POST/PUT/PATCH /api/v1/admin/areas/**` | ADMINISTRADOR | Mutar area |  |  | BLOCKED_BY_DB | No hay command publico confirmado | `FeatureUnavailableException` |
 | `/api/v1/admin/sedes/**` | ADMINISTRADOR | Sedes |  |  | BLOCKED_BY_DB | Sede no esta modelada actualmente | `FeatureUnavailableException` |
 | `/api/v1/admin/espacios-fisicos/**` | ADMINISTRADOR | Espacios fisicos |  |  | BLOCKED_BY_DB | EspacioFisico no esta modelado actualmente | `FeatureUnavailableException` |
