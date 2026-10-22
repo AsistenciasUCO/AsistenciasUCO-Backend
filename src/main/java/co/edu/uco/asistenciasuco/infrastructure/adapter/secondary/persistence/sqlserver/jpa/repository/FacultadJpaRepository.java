@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.ActualizarFacultadCommand;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CambiarEstadoFacultadCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CrearFacultadCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
@@ -34,6 +36,25 @@ public class FacultadJpaRepository implements FacultadQueryPort, FacultadCommand
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
     static final String OP_CREAR_FACULTAD = "crearFacultad";
+
+    static final String SQL_ACTUALIZAR_FACULTAD = """
+            EXEC dbo.usp_actualizar_facultad
+                 @id = :id,
+                 @nombre = :nombre,
+                 @idDecano = :idDecano,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+    static final String OP_ACTUALIZAR_FACULTAD = "actualizarFacultad";
+
+    static final String SQL_CAMBIAR_ESTADO_FACULTAD = """
+            EXEC dbo.usp_cambiar_estado_facultad
+                 @id = :id,
+                 @estaActiva = :estaActiva,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+    static final String OP_CAMBIAR_ESTADO_FACULTAD = "cambiarEstadoFacultad";
 
     static final String HQL_SELECT = """
             select f
@@ -70,6 +91,33 @@ public class FacultadJpaRepository implements FacultadQueryPort, FacultadCommand
         parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
 
         procedureExecutor.execute(OP_CREAR_FACULTAD, SQL_CREAR_FACULTAD, parametros, correlationId);
+    }
+
+    @Override
+    public void actualizarFacultad(final ActualizarFacultadCommand command) {
+        final UUID correlationId = CorrelationIdContext.require();
+
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("id", command.id());
+        parametros.put("nombre", command.nombre());
+        parametros.put("idDecano", command.idDecano());
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+
+        procedureExecutor.execute(OP_ACTUALIZAR_FACULTAD, SQL_ACTUALIZAR_FACULTAD, parametros, correlationId);
+    }
+
+    @Override
+    public void cambiarEstadoFacultad(final CambiarEstadoFacultadCommand command) {
+        final UUID correlationId = CorrelationIdContext.require();
+
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("id", command.id());
+        parametros.put("estaActiva", command.activa());
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", command.actorUsuarioId());
+
+        procedureExecutor.execute(OP_CAMBIAR_ESTADO_FACULTAD, SQL_CAMBIAR_ESTADO_FACULTAD, parametros, correlationId);
     }
 
     // QUERIES

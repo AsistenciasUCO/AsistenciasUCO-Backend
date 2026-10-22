@@ -1,6 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.ActualizarFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.dto.ActualizarFacultadDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.CambiarEstadoFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.dto.CambiarEstadoFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.dto.AreaDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.ConsultarDecanosInputPort;
@@ -45,6 +50,8 @@ public final class AdminPortalController {
     private final ConsultarInstitucionesInputPort consultarInstitucionesInputPort;
     private final ConsultarFacultadesInputPort consultarFacultadesInputPort;
     private final CrearFacultadInputPort crearFacultadInputPort;
+    private final ActualizarFacultadInputPort actualizarFacultadInputPort;
+    private final CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort;
     private final ConsultarAreasInputPort consultarAreasInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
@@ -56,6 +63,8 @@ public final class AdminPortalController {
             final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
             final ConsultarFacultadesInputPort consultarFacultadesInputPort,
             final CrearFacultadInputPort crearFacultadInputPort,
+            final ActualizarFacultadInputPort actualizarFacultadInputPort,
+            final CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort,
             final ConsultarAreasInputPort consultarAreasInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
@@ -66,6 +75,8 @@ public final class AdminPortalController {
         this.consultarInstitucionesInputPort = consultarInstitucionesInputPort;
         this.consultarFacultadesInputPort = consultarFacultadesInputPort;
         this.crearFacultadInputPort = crearFacultadInputPort;
+        this.actualizarFacultadInputPort = actualizarFacultadInputPort;
+        this.cambiarEstadoFacultadInputPort = cambiarEstadoFacultadInputPort;
         this.consultarAreasInputPort = consultarAreasInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
@@ -177,9 +188,30 @@ public final class AdminPortalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, dto));
     }
     @PutMapping("/facultades/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarFacultad(@PathVariable final UUID id) { throw unavailable("actualizar facultad"); }
+    public ResponseEntity<ApiDataResponse<FacultadDTO>> actualizarFacultad(
+            @PathVariable final UUID id,
+            @RequestBody final ActualizarFacultadRequest request
+    ) {
+        actualizarFacultadInputPort.execute(new ActualizarFacultadDTO(
+                id,
+                request != null ? request.nombre() : null,
+                request != null ? request.idDecano() : null,
+                authenticatedUserResolver.requireAuthenticatedUserId()
+        ));
+        return ResponseEntity.ok(new ApiDataResponse<>(true, releerFacultad(id)));
+    }
     @PatchMapping("/facultades/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoFacultad(@PathVariable final UUID id) { throw unavailable("cambiar estado de facultad"); }
+    public ResponseEntity<ApiDataResponse<FacultadDTO>> cambiarEstadoFacultad(
+            @PathVariable final UUID id,
+            @RequestBody final CambiarEstadoFacultadRequest request
+    ) {
+        cambiarEstadoFacultadInputPort.execute(new CambiarEstadoFacultadDTO(
+                id,
+                request != null ? request.activa() : null,
+                authenticatedUserResolver.requireAuthenticatedUserId()
+        ));
+        return ResponseEntity.ok(new ApiDataResponse<>(true, releerFacultad(id)));
+    }
 
     @GetMapping("/areas")
     public ResponseEntity<ApiListResponse<AreaDTO>> consultarAreas() {
@@ -193,6 +225,13 @@ public final class AdminPortalController {
     @PatchMapping("/areas/{id}/estado")
     public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoArea(@PathVariable final UUID id) { throw unavailable("cambiar estado de area"); }
 
+    private FacultadDTO releerFacultad(final UUID id) {
+        return consultarFacultadesInputPort.execute().stream()
+                .filter(f -> id.equals(f.id()))
+                .findFirst()
+                .orElseThrow(() -> new ResourceNotFoundException("La facultad especificada no existe en el sistema."));
+    }
+
     private FeatureUnavailableException unavailable(final String operation) {
         return new FeatureUnavailableException("La operacion de administrador no esta disponible: " + operation + ".");
     }
@@ -203,6 +242,12 @@ public final class AdminPortalController {
     }
 
     public record CrearFacultadRequest(String nombre, String codigo, UUID idInstitucion, UUID idDecano) {
+    }
+
+    public record ActualizarFacultadRequest(String nombre, UUID idDecano) {
+    }
+
+    public record CambiarEstadoFacultadRequest(Boolean activa) {
     }
 
     public record CierreMasivoRequest(UUID idPeriodoAcademico) {

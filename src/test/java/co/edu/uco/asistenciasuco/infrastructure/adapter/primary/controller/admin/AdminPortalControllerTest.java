@@ -5,6 +5,11 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.prima
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.dto.AreaDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.ConsultarDecanosInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.dto.DecanoDTO;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.ActualizarFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.dto.ActualizarFacultadDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.CambiarEstadoFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.dto.CambiarEstadoFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.ConsultarFacultadesInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.dto.FacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.ConsultarInstitucionesInputPort;
@@ -34,7 +39,12 @@ import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.patch;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -52,10 +62,13 @@ class AdminPortalControllerTest {
     private final ConsultarInstitucionesInputPort consultarInstituciones = mock(ConsultarInstitucionesInputPort.class);
     private final ConsultarFacultadesInputPort consultarFacultades = mock(ConsultarFacultadesInputPort.class);
     private final CrearFacultadInputPort crearFacultad = mock(CrearFacultadInputPort.class);
+    private final ActualizarFacultadInputPort actualizarFacultad = mock(ActualizarFacultadInputPort.class);
+    private final CambiarEstadoFacultadInputPort cambiarEstadoFacultad = mock(CambiarEstadoFacultadInputPort.class);
     private final ConsultarAreasInputPort consultarAreas = mock(ConsultarAreasInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
-            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad, consultarAreas, identity);
+            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad,
+            actualizarFacultad, cambiarEstadoFacultad, consultarAreas, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -155,6 +168,121 @@ class AdminPortalControllerTest {
         assertEquals(ACTOR, captor.getValue().actorUsuarioId());
     }
 
+    private FacultadDTO facultadDto(final String nombre, final boolean activa) {
+        return new FacultadDTO(FACULTAD, nombre, UUID.randomUUID(), "UCO", DECANO, "Ada Lovelace", activa, activa ? "SI" : "NO");
+    }
+
+    @Test
+    void actualizarFacultad_mapea_cuerpo_delega_y_devuelve_la_facultad_releida() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of(facultadDto("Ciencias", true)));
+        final String body = "{\"nombre\":\"Ciencias\",\"idDecano\":\"" + DECANO + "\"}";
+
+        mvc.perform(put("/api/v1/admin/facultades/" + FACULTAD).contentType("application/json").content(body))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.id").value(FACULTAD.toString()))
+                .andExpect(jsonPath("$.datos.nombreFacultad").value("Ciencias"));
+
+        final ArgumentCaptor<ActualizarFacultadDTO> captor = ArgumentCaptor.forClass(ActualizarFacultadDTO.class);
+        verify(actualizarFacultad).execute(captor.capture());
+        assertEquals(FACULTAD, captor.getValue().id());
+        assertEquals("Ciencias", captor.getValue().nombre());
+        assertEquals(DECANO, captor.getValue().idDecano());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+    }
+
+    @Test
+    void actualizarFacultad_con_un_solo_campo_envia_el_otro_como_nulo() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of(facultadDto("Ingenieria", true)));
+
+        mvc.perform(put("/api/v1/admin/facultades/" + FACULTAD).contentType("application/json")
+                        .content("{\"idDecano\":\"" + DECANO + "\"}"))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<ActualizarFacultadDTO> captor = ArgumentCaptor.forClass(ActualizarFacultadDTO.class);
+        verify(actualizarFacultad).execute(captor.capture());
+        assertNull(captor.getValue().nombre());
+        assertEquals(DECANO, captor.getValue().idDecano());
+    }
+
+    @Test
+    void actualizarFacultad_con_cuerpo_vacio_delega_nulos_para_que_el_caso_de_uso_valide() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of(facultadDto("Ingenieria", true)));
+
+        mvc.perform(put("/api/v1/admin/facultades/" + FACULTAD).contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<ActualizarFacultadDTO> captor = ArgumentCaptor.forClass(ActualizarFacultadDTO.class);
+        verify(actualizarFacultad).execute(captor.capture());
+        assertNull(captor.getValue().nombre());
+        assertNull(captor.getValue().idDecano());
+    }
+
+    @Test
+    void actualizarFacultad_conflicto_se_traduce_a_409() throws Exception {
+        doThrow(new ConflictException("Nombre duplicado")).when(actualizarFacultad).execute(any());
+
+        mvc.perform(put("/api/v1/admin/facultades/" + FACULTAD).contentType("application/json")
+                        .content("{\"nombre\":\"Ciencias\"}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void actualizarFacultad_si_la_facultad_no_aparece_al_releer_responde_404() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of());
+
+        mvc.perform(put("/api/v1/admin/facultades/" + FACULTAD).contentType("application/json")
+                        .content("{\"nombre\":\"Ciencias\"}"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    void cambiarEstadoFacultad_mapea_cuerpo_delega_y_devuelve_la_facultad_releida() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of(facultadDto("Ingenieria", false)));
+
+        mvc.perform(patch("/api/v1/admin/facultades/" + FACULTAD + "/estado").contentType("application/json")
+                        .content("{\"activa\":false}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.estaActivaFacultad").value(false));
+
+        final ArgumentCaptor<CambiarEstadoFacultadDTO> captor = ArgumentCaptor.forClass(CambiarEstadoFacultadDTO.class);
+        verify(cambiarEstadoFacultad).execute(captor.capture());
+        assertEquals(FACULTAD, captor.getValue().id());
+        assertEquals(Boolean.FALSE, captor.getValue().activa());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+    }
+
+    @Test
+    void cambiarEstadoFacultad_sin_activa_delega_nulo_para_que_el_caso_de_uso_valide() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of(facultadDto("Ingenieria", true)));
+
+        mvc.perform(patch("/api/v1/admin/facultades/" + FACULTAD + "/estado").contentType("application/json").content("{}"))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<CambiarEstadoFacultadDTO> captor = ArgumentCaptor.forClass(CambiarEstadoFacultadDTO.class);
+        verify(cambiarEstadoFacultad).execute(captor.capture());
+        assertNull(captor.getValue().activa());
+    }
+
+    @Test
+    void cambiarEstadoFacultad_conflicto_se_traduce_a_409() throws Exception {
+        doThrow(new ConflictException("Decano en conflicto")).when(cambiarEstadoFacultad).execute(any());
+
+        mvc.perform(patch("/api/v1/admin/facultades/" + FACULTAD + "/estado").contentType("application/json")
+                        .content("{\"activa\":true}"))
+                .andExpect(status().isConflict());
+    }
+
+    @Test
+    void cambiarEstadoFacultad_si_la_facultad_no_aparece_al_releer_responde_404() throws Exception {
+        when(consultarFacultades.execute()).thenReturn(List.of());
+
+        mvc.perform(patch("/api/v1/admin/facultades/" + FACULTAD + "/estado").contentType("application/json")
+                        .content("{\"activa\":true}"))
+                .andExpect(status().isNotFound());
+    }
+
     @Test
     void endpoints_no_implementados_lanzan_featureUnavailable() {
         final List<Executable> operations = List.of(
@@ -166,8 +294,6 @@ class AdminPortalControllerTest {
                 () -> controller.actualizarParametro(FACULTAD), controller::consultarAuditoria,
                 controller::crearInstitucion, () -> controller.actualizarInstitucion(FACULTAD),
                 () -> controller.cambiarEstadoInstitucion(FACULTAD),
-                () -> controller.actualizarFacultad(FACULTAD),
-                () -> controller.cambiarEstadoFacultad(FACULTAD),
                 controller::crearArea, () -> controller.actualizarArea(FACULTAD), () -> controller.cambiarEstadoArea(FACULTAD)
         );
 
