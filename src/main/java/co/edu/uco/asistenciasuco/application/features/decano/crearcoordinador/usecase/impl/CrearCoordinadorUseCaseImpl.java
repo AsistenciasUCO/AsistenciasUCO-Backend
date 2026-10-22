@@ -104,13 +104,17 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         if (domain.getNumeroIdentificacion() != null && !domain.getNumeroIdentificacion().isBlank()) {
             try {
                 numeroId = Integer.valueOf(domain.getNumeroIdentificacion().trim());
-            } catch (final NumberFormatException ignored) {
+            } catch (final NumberFormatException _) {
                 numeroId = null;
             }
         }
-        final String rawPassword = (domain.getPassword() == null || domain.getPassword().isBlank())
-                ? "UcoCoord_" + (numeroId != null ? numeroId : "2026") + "!"
-                : domain.getPassword().trim();
+        final String rawPassword;
+        if (domain.getPassword() == null || domain.getPassword().isBlank()) {
+            final String sufijo = numeroId != null ? String.valueOf(numeroId) : "2026";
+            rawPassword = "UcoCoord_" + sufijo + "!";
+        } else {
+            rawPassword = domain.getPassword().trim();
+        }
         return PasswordRegistroRule.resolverCredencialNueva(rawPassword, numeroId != null ? numeroId : 10000000);
     }
 }

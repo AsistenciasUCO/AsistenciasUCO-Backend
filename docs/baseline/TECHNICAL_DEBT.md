@@ -868,3 +868,30 @@ GOLDEN PATH EFFECT:         NONE
 - **Bloquea línea base:** no bloquea JPA-03 ni JPA-04. Bloquea el uso operativo seguro del cierre masivo mientras la deuda esté abierta. **Estado:** **OPEN / HIGH / DB_OWNER / PREEXISTING / NON_CAUSAL_TO_JPA**. **Work item:** [LB-008](../work-items/LB-008-jpa-only-persistence-migration/TEST_PLAN.md#jpa-03--academic--user-commands).
 
 - **Actualización LB-008 cierre de alineación (2026-10-07) — CLOSED:** deuda cerrada mediante la alineación/corrección final de la DB; el Backend ahora consume ese contrato final. Los bloques anteriores (OPEN) son históricos. Estado vigente: **CLOSED**.
+
+## TD-059
+
+- **Fecha / responsable:** 2026-10-21 / fullstack-team (HU035-HU036, E2E y triage de `-Pintegration`). **Clasificación:** `DB_ENGINE_PLAN_DEFECT`. **Prioridad:** ALTA.
+- **Descripción:** cualquier `DELETE` sobre `dbo.SolicitudRevisionAsistencia` falla con `Msg 8624` (Internal Query Processor Error), incluso por `id`. Con pistas de join (`LOOP`, `MERGE`, `HASH`, `FORCE_LEGACY_CARDINALITY_ESTIMATION`) el error cambia a `Msg 8622`. Si se deshabilita `FK_ArchivoSoporte_SolicitudRevisionAsistencia`, el borrado funciona. La causa está en el plan de verificación de esa FK junto con el índice único filtrado `UX_ArchivoSoporte_Solicitud` (`WHERE solicitudRevisionAsistencia IS NOT NULL`), ambos de LB-004D.
+- **Impacto:** no se pueden eliminar solicitudes de revisión desde ningún SP, fixture ni limpieza. El fixture `GestioAsistenciaDB/test/fixtures/maint_003g_attendance_fixture.sql` aborta, y con él no se cargan los datos de MAINT-003G/H; en consecuencia fallan `CoreViewQueriesJpaParityIT` y `SesionGrupoCommandsSpParityIT.GRP_04` en `-Pintegration` local. También bloquea cualquier HU futura de eliminación o anulación de reclamos.
+- **Evidencia:** SQL Server 2022 RTM-CU26 (16.0.4265.3) en Docker, BD reconstruida desde el repositorio. Reproducción aislada con rollback: `BEGIN TRAN; DELETE FROM dbo.SolicitudRevisionAsistencia WHERE ...; ROLLBACK;` da 8624. Con `NOCHECK` de la FK y `sp_executesql` se elimina 1 fila. Detalle en `docs/work-items/HU035-HU036-bandeja-detalle-reclamos-docente/VALIDATION.md`.
+- **Motivo para no resolver ahora:** el esquema de `ArchivoSoporte` está bajo el manifiesto LB-004D (WORM) y fuera del alcance de HU035/HU036. Workaround solo para pruebas: `NOCHECK` + `DELETE` + `WITH CHECK CHECK CONSTRAINT` en la misma transacción (`scratch/test_hu035_hu036.ps1`).
+- **Resolución esperada y condición de cierre:** decisión del owner DB. Opciones: (a) reemplazar el índice filtrado por otro mecanismo de unicidad que no rompa la verificación de la FK; (b) aplicar un CU o trace flag que corrija el optimizador, si existe; (c) cambiar el orden o la forma del borrado en los SP. Se cierra cuando un `DELETE` por `id` funcione con la FK habilitada y el fixture MAINT-003G cargue.
+- **Bloquea línea base:** no bloquea HU035/HU036 (solo lectura). Bloquea el verde completo de `-Pintegration` local y las HU de eliminación de reclamos. **Estado:** **OPEN / HIGH / DB_OWNER / PREEXISTING (LB-004D)**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/VALIDATION.md).
+
+## TD-060
+
+- **Fecha / responsable:** 2026-10-21 / fullstack-team (HU035-HU036, análisis AS-IS). **Clasificación:** `DATA_LOSS_CONTRACT_GAP`. **Prioridad:** MEDIA.
+- **Descripción:** `dbo.usp_radicar_solicitud_revision_asistencia_v2` recibe `@categoria`, que el backend exige (`ERR_CATEGORIA_REVISION_REQUERIDA`), pero no la persiste: `dbo.SolicitudRevisionAsistencia` no tiene columna para la categoría. La categoría elegida por el estudiante se pierde.
+- **Impacto:** el docente no puede ver la categoría (médica, laboral, etc.) de la justificación. HU036 se resolvió mostrando la causal de la inasistencia (`RazonCausa`) por decisión D1 = B. HU014 (justificación médica) depende de que la categoría se persista.
+- **Evidencia:** definición del SP v2 (parámetro declarado y sin uso) y DDL de `SolicitudRevisionAsistencia`.
+- **Motivo para no resolver ahora:** requiere DDL y un cambio en un SP del manifiesto LB-004D. Decisión del owner D1 = B (2026-10-21).
+- **Resolución esperada:** columna nullable o FK a un catálogo de categorías, persistida por el SP v2 y expuesta en el detalle; abordarla junto con HU005/HU014.
+- **Bloquea línea base:** no. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/PLAN.md).
+
+## TD-061
+
+- **Fecha / responsable:** 2026-10-21 / fullstack-team. **Clasificación:** `HARDCODED_STATE_LITERAL`. **Prioridad:** BAJA.
+- **Descripción:** `usp_consultar_solicitudes_revision_docente` (R2), `usp_consultar_archivo_soporte_autorizado` y `usp_radicar_solicitud_revision_asistencia_v2` comparan contra los literales `'ATTACHED'` y `'DRAFT'`, lo que contradice la regla "Cero Datos Quemados". HU035/HU036 creó el parámetro `ARCHIVO.ESTADO_ADJUNTO` y lo usa en el SP nuevo.
+- **Resolución esperada:** que los SP de LB-004D lean los estados desde parámetros o catálogo, con alineación del manifiesto LB-004D.
+- **Bloquea línea base:** no. **Estado:** **OPEN / LOW / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/CONTRACT.md).

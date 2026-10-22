@@ -8,6 +8,14 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.pri
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.interactor.ConsultarDecanosInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.usecase.ConsultarDecanosUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.usecase.impl.ConsultarDecanosUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.ActualizarFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.interactor.ActualizarFacultadInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.usecase.ActualizarFacultadUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.usecase.impl.ActualizarFacultadUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.CambiarEstadoFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.interactor.CambiarEstadoFacultadInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.usecase.CambiarEstadoFacultadUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.usecase.impl.CambiarEstadoFacultadUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.ConsultarFacultadesInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.interactor.ConsultarFacultadesInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.usecase.ConsultarFacultadesUseCase;
@@ -71,6 +79,10 @@ public class AdminWiringConfiguration {
     @Bean ConsultarFacultadesInputPort consultarFacultadesInputPort(final ConsultarFacultadesUseCase useCase) { return new ConsultarFacultadesInteractor(useCase); }
     @Bean CrearFacultadUseCase crearFacultadUseCase(final FacultadCommandPort port) { return new CrearFacultadUseCaseImpl(port); }
     @Bean CrearFacultadInputPort crearFacultadInputPort(final CrearFacultadUseCase useCase) { return new CrearFacultadInteractor(useCase); }
+    @Bean ActualizarFacultadUseCase actualizarFacultadUseCase(final FacultadCommandPort port) { return new ActualizarFacultadUseCaseImpl(port); }
+    @Bean ActualizarFacultadInputPort actualizarFacultadInputPort(final ActualizarFacultadUseCase useCase) { return new ActualizarFacultadInteractor(useCase); }
+    @Bean CambiarEstadoFacultadUseCase cambiarEstadoFacultadUseCase(final FacultadCommandPort port) { return new CambiarEstadoFacultadUseCaseImpl(port); }
+    @Bean CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort(final CambiarEstadoFacultadUseCase useCase) { return new CambiarEstadoFacultadInteractor(useCase); }
     @Bean ConsultarAreasUseCase consultarAreasUseCase(final AreaQueryPort port) { return new ConsultarAreasUseCaseImpl(port); }
     @Bean ConsultarAreasInputPort consultarAreasInputPort(final ConsultarAreasUseCase useCase) { return new ConsultarAreasInteractor(useCase); }
     @Bean EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(final PeriodoAcademicoQueryPort periodoPort, final CierrePeriodoCommandPort cierrePort) { return new EjecutarCierreMasivoUseCaseImpl(periodoPort, cierrePort); }

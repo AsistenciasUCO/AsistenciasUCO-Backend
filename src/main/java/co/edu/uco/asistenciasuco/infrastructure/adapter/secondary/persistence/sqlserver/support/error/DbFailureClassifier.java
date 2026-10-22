@@ -51,11 +51,13 @@ final class DbFailureClassifier {
             // GEN_003: "Ya existe un {} registrado con este {}"; lo emite usp_registrar_o_actualizar_plan_estudio
             // ante un plan duplicado (programa + inp). Conflicto de negocio, no fallo tecnico.
             case "GEN_003" -> CommonErrorCode.CONFLICT;
+            // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
+            case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
-            case "SES_001", "PROG_001", "PER_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "SES_001", "PROG_001", "PER_001", "FAC_001", "DEC_001" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             // USU_001: validacion de usuario inexistente por id, emitida por los SP publicos que la exigen.
             case "USU_001" -> UsuarioErrorCode.ERR_USUARIO_NO_EXISTE;
             // IDN_001: usp_registrar_estudiante_en_grupo (conflicto de identidad correo/documento).

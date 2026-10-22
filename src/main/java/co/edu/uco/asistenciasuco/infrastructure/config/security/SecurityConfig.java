@@ -35,6 +35,12 @@ import java.util.List;
 @EnableMethodSecurity
 public class SecurityConfig {
 
+    private static final String ROLE_ADMINISTRADOR = "ADMINISTRADOR";
+    private static final String ROLE_DECANO = "DECANO";
+    private static final String ROLE_COORDINADOR = "COORDINADOR";
+    private static final String ROLE_DOCENTE = "DOCENTE";
+    private static final String ROLE_ESTUDIANTE = "ESTUDIANTE";
+
     @Value("${app.security.cors.allowed-origins:http://localhost:4200,http://127.0.0.1:4200,http://localhost:5174,http://localhost:5173,http://localhost:5175}")
     private String allowedOrigins;
 
@@ -130,70 +136,75 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/openapi/openapi-golden-path.yaml"
                 ).permitAll()
-                .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
-                .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
-                .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
-                .requestMatchers("/api/v1/docente/**").hasRole("DOCENTE")
+                // Catálogos institucionales de solo lectura: sedes y áreas de conocimiento
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/sedes", "/api/v1/admin/sedes/**", "/api/v1/admin/areas", "/api/v1/admin/areas/**")
+                    .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
+                .requestMatchers("/api/v1/admin/**").hasRole(ROLE_ADMINISTRADOR)
+                .requestMatchers("/api/v1/decano/**").hasAnyRole(ROLE_DECANO, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
+                    .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers("/api/v1/coordinador/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers("/api/v1/docente/**").hasRole(ROLE_DOCENTE)
                 // Directorio general de docentes (crear/consultar/asignar a grupo): hoy sin
                 // contrato funcional explícito de quién debe administrarlo; se restringe a los
                 // roles que ya administran docentes en otros endpoints (ver duda documentada
                 // en docs/security/runtime-security-provider-architecture.md).
-                .requestMatchers("/api/v1/docentes/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
-                .requestMatchers("/api/v1/estudiante/**").hasRole("ESTUDIANTE")
+                .requestMatchers("/api/v1/docentes/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers("/api/v1/estudiante/**").hasRole(ROLE_ESTUDIANTE)
                 // Directorio general/institucional de estudiantes: permite a DOCENTE consultar y validar
                 // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
-                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
-                .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole("DOCENTE")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole("DOCENTE")
-                .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 // Generación del QR/PIN de una sesión: acción del docente que dicta la sesión.
-                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole(ROLE_DOCENTE)
                 // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
                 // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
                 // Application via InstitutionalScopePort (ver ConsultarSesionesPorGrupoUseCaseImpl).
-                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/grupo/*").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/grupo/*").hasRole(ROLE_DOCENTE)
                 // Contrato UTC v2 de sesiones (UTC-D05/D08): escrituras y lecturas solo DOCENTE; la
                 // titularidad sobre grupo/sesion se valida en Application (InstitutionalScopePort) y,
                 // en escrituras, tambien en la DB (usp_*_sesion_v2).
-                .requestMatchers("/api/v2/sesiones/**").hasRole("DOCENTE")
-                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole("DOCENTE")
-                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole("ESTUDIANTE")
+                .requestMatchers("/api/v2/sesiones/**").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/lote").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/revisiones").hasRole(ROLE_ESTUDIANTE)
                 // Subida de soportes de revision: unicamente el estudiante propietario sube en su
                 // propio nombre (OWNERSHIP_DECISION.md: DOCENTE upload = OUT_OF_SCOPE, sin
                 // capability). La descarga GET /api/v1/archivos/{fileId} queda en la regla
                 // catch-all authenticated() de abajo: el ownership real (404 para no-propietario,
                 // incluido cualquier rol) se resuelve en Application, no aqui.
-                .requestMatchers(HttpMethod.POST, "/api/v1/archivos/subir").hasRole("ESTUDIANTE")
-                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole("DOCENTE")
+                .requestMatchers(HttpMethod.POST, "/api/v1/archivos/subir").hasRole(ROLE_ESTUDIANTE)
+                .requestMatchers(HttpMethod.POST, "/api/v1/asistencias").hasRole(ROLE_DOCENTE)
                 // Consulta de asistencias por grupo (ruta legacy vía POST): mismo criterio que
                 // GET /api/v1/grupos/{grupoId}/asistencias.
                 .requestMatchers(HttpMethod.POST, "/api/v1/asistencias/consultas/grupo")
-                    .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // Listado institucional completo de grupos: NO es la fuente de "mis grupos" del
                 // docente (esa es GET /api/v1/docente/horarios, ya scopeada por Usuario->Docente).
                 // Abrir este listado a DOCENTE permitiria enumerar grupos de otros docentes.
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos")
-                    .hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                    .hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // Sub-recursos de un grupo especifico (estudiantes, asistencias): el DOCENTE si
                 // los necesita, pero scopeados a su propio grupo en Application via
                 // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
-                    .hasAnyRole("DOCENTE", "COORDINADOR", "ADMINISTRADOR")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // Matricula de estudiante en grupo: la DB controla titularidad (DOCENTE titular del
                 // grupo O COORDINADOR del programa, ver usp_registrar_estudiante_en_grupo, SEC_002).
                 // ADMINISTRADOR no tiene bypass en la DB para esta operacion; por eso no se incluye
                 // aqui, a diferencia de crear/actualizar grupo.
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes", "/api/v1/grupos/{grupoId}/estudiantes")
-                    .hasAnyRole("DOCENTE", "COORDINADOR")
-                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
-                .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
-                .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 // Utilidad de desarrollo para forzar eventos SSE manualmente: no tiene todavía
                 // un rol funcional propio; se restringe a ADMINISTRADOR hasta que Realtime
                 // tenga su propio Port (ver documentación).
-                .requestMatchers(HttpMethod.POST, "/api/v1/realtime/emit").hasRole("ADMINISTRADOR")
+                .requestMatchers(HttpMethod.POST, "/api/v1/realtime/emit").hasRole(ROLE_ADMINISTRADOR)
                 .requestMatchers("/api/v1/realtime/**").authenticated()
                 .requestMatchers("/api/v1/**").authenticated()
                 .anyRequest().authenticated()

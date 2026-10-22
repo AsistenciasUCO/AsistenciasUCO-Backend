@@ -1,7 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionDocenteQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DetalleSolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SolicitudRevisionDocenteProjection;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpDetalleSolicitudRevisionDocenteEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpSolicitudRevisionDocenteBaseEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpSolicitudRevisionDocenteEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
@@ -10,6 +13,7 @@ import org.springframework.stereotype.Repository;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 import java.util.UUID;
 
 /**
@@ -28,6 +32,15 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                  @codigoEstado = :codigoEstado,
                  @numeroPagina = :numeroPagina,
                  @tamanoPagina = :tamanoPagina
+            """;
+
+    static final String OP_DETALLE = "consultarDetalleSolicitudRevisionDocente";
+
+    static final String SQL_DETALLE = """
+            EXEC dbo.usp_consultar_detalle_solicitud_revision_docente
+                 @idSolicitud = :idSolicitud,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion
             """;
 
     private final EntityManager entityManager;
@@ -59,7 +72,48 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
         );
     }
 
+    @Override
+    public Optional<DetalleSolicitudRevisionDocenteProjection> consultarDetalleSolicitudDocente(
+            final UUID idSolicitud,
+            final UUID usuarioEjecutor
+    ) {
+        final UUID correlationId = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute(
+                OP_DETALLE,
+                "No fue posible consultar el detalle de la solicitud de revision del docente desde base de datos.",
+                () -> entityManager.createNativeQuery(SQL_DETALLE, SpDetalleSolicitudRevisionDocenteEntity.class)
+                        .setParameter("idSolicitud", idSolicitud)
+                        .setParameter("idUsuarioEjecutor", usuarioEjecutor)
+                        .setParameter("idCorrelacion", correlationId)
+                        .getResultList().stream()
+                        .map(fila -> toDetalleProjection((SpDetalleSolicitudRevisionDocenteEntity) fila))
+                        .findFirst()
+        );
+    }
+
+    private static DetalleSolicitudRevisionDocenteProjection toDetalleProjection(
+            final SpDetalleSolicitudRevisionDocenteEntity fila
+    ) {
+        final SolicitudRevisionDocenteProjection base = toProjection(fila, 0);
+        return new DetalleSolicitudRevisionDocenteProjection(
+                base.idSolicitud(), base.nombreSolicitud(), base.fechaSolicitud(), base.codigoEstado(),
+                base.nombreEstado(), base.justificacionSolicitud(), base.justificacionRespuesta(),
+                base.idEstudiante(), base.nombreEstudiante(), base.idSesion(), base.numeroSesion(),
+                base.fechaHoraInicioSesionUtc(), base.procedenciaTemporalSesion(), base.idGrupo(),
+                base.codigoGrupo(), base.nombreGrupo(), base.idAsignatura(), base.codigoAsignatura(),
+                base.nombreAsignatura(), fila.asistio(), fila.codigoRazonCausa(), fila.nombreRazonCausa(),
+                base.idArchivoSoporte(), base.nombreSoporte(), base.tipoContenidoSoporte(),
+                base.tamanioSoporteBytes(), base.fechaRegistroSoporteUtc());
+    }
+
     private static SolicitudRevisionDocenteProjection toProjection(final SpSolicitudRevisionDocenteEntity fila) {
+        return toProjection(fila, fila.totalRegistros() == null ? 0 : fila.totalRegistros());
+    }
+
+    private static SolicitudRevisionDocenteProjection toProjection(
+            final SpSolicitudRevisionDocenteBaseEntity fila,
+            final int totalRegistros
+    ) {
         final String procedencia = fila.procedenciaTemporalSesion();
         return new SolicitudRevisionDocenteProjection(
                 fila.idSolicitudRevisionAsistencia(),
@@ -87,7 +141,7 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                 fila.tipoContenidoSoporte(),
                 fila.tamanioSoporteBytes(),
                 SoporteArchivoJpaRepository.toUtcInstant(fila.fechaRegistroSoporteUtc()),
-                fila.totalRegistros() == null ? 0 : fila.totalRegistros()
+                totalRegistros
         );
     }
 }

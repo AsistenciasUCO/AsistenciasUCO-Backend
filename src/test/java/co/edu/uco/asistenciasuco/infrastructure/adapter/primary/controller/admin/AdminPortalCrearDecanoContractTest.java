@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.ActualizarFacultadInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadofacultad.primaryports.CambiarEstadoFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.ConsultarDecanosInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.ConsultarFacultadesInputPort;
@@ -36,7 +38,8 @@ class AdminPortalCrearDecanoContractTest {
             mock(ConsultarDecanosInputPort.class), new CrearDecanoInteractor(useCase),
             mock(ConsultarParametrosInputPort.class), mock(EjecutarCierreMasivoInputPort.class),
             mock(ConsultarInstitucionesInputPort.class), mock(ConsultarFacultadesInputPort.class),
-            mock(CrearFacultadInputPort.class), mock(ConsultarAreasInputPort.class), authenticatedUserResolver
+            mock(CrearFacultadInputPort.class), mock(ActualizarFacultadInputPort.class),
+            mock(CambiarEstadoFacultadInputPort.class), mock(ConsultarAreasInputPort.class), authenticatedUserResolver
     );
 
     @Test

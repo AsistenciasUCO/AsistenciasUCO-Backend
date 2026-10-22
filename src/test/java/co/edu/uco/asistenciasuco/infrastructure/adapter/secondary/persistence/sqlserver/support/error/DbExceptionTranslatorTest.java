@@ -584,6 +584,27 @@ class DbExceptionTranslatorTest {
         ));
     }
 
+    @ParameterizedTest
+    @CsvSource({"FAC_001", "DEC_001"})
+    void dbcode_de_facultad_o_decano_inexistente_lanza_resource_not_found(final String dbCode) {
+        final ResourceNotFoundException exception = assertThrows(
+                ResourceNotFoundException.class,
+                () -> translateFailure("irrelevante", "DBCODE=" + dbCode + "|detalle", OPERATION)
+        );
+
+        assertEquals("RESOURCE_NOT_FOUND", exception.getCode());
+    }
+
+    @Test
+    void dbcode_decano_ya_titular_de_otra_facultad_activa_lanza_conflict() {
+        final ConflictException exception = assertThrows(
+                ConflictException.class,
+                () -> translateFailure("irrelevante", "DBCODE=FAC_002|detalle", OPERATION)
+        );
+
+        assertEquals("CONFLICT", exception.getCode());
+    }
+
     private void translateFailure(final String userMessage, final String operation) {
         translateFailure(userMessage, TECHNICAL_MESSAGE, operation);
     }

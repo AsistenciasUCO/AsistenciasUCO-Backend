@@ -358,17 +358,6 @@
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
             </plugin>
-            <plugin>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <!--
-                        Mockito 5.20 self-attaches on demand. Java 25 can reject
-                        that attach path in a forked test JVM, so provide the
-                        agent explicitly while preserving JaCoCo's @{argLine}.
-                    -->
-                    <argLine>@{argLine} -javaagent:${settings.localRepository}/org/mockito/mockito-core/${mockito.version}/mockito-core-${mockito.version}.jar</argLine>
-                </configuration>
-            </plugin>
         </plugins>
     </build>
 

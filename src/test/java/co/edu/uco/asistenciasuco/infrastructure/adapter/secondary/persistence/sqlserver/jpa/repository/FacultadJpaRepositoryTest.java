@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.ActualizarFacultadCommand;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CambiarEstadoFacultadCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort.CrearFacultadCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.FacultadProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvFacultadEntity;
@@ -10,6 +12,7 @@ import jakarta.persistence.TypedQuery;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.Test;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.UUID;
@@ -56,6 +59,76 @@ class FacultadJpaRepositoryTest {
                         "idCorrelacion", CORRELATION_ID,
                         "idUsuarioEjecutor", actorId)),
                 eq(CORRELATION_ID));
+    }
+
+    @Test
+    void actualizarFacultad_delega_el_comando_con_correlacion_y_ejecutor() {
+        final JpaProcedureExecutor procedureExecutor = mock(JpaProcedureExecutor.class);
+        final FacultadJpaRepository repository = new FacultadJpaRepository(mock(EntityManager.class), procedureExecutor);
+        final UUID actorId = UUID.fromString("99999999-8888-7777-6666-555555555555");
+        final UUID deanId = UUID.fromString("abababab-cdcd-efef-0101-232323232323");
+        CorrelationIdContext.set(CORRELATION_ID);
+
+        repository.actualizarFacultad(new ActualizarFacultadCommand(FACULTY_ID, "Ingenieria", deanId, actorId));
+
+        verify(procedureExecutor).execute(
+                eq(FacultadJpaRepository.OP_ACTUALIZAR_FACULTAD),
+                eq(FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD),
+                eq(Map.of(
+                        "id", FACULTY_ID,
+                        "nombre", "Ingenieria",
+                        "idDecano", deanId,
+                        "idCorrelacion", CORRELATION_ID,
+                        "idUsuarioEjecutor", actorId)),
+                eq(CORRELATION_ID));
+    }
+
+    @Test
+    void actualizarFacultad_envia_null_para_los_campos_no_modificados() {
+        final JpaProcedureExecutor procedureExecutor = mock(JpaProcedureExecutor.class);
+        final FacultadJpaRepository repository = new FacultadJpaRepository(mock(EntityManager.class), procedureExecutor);
+        final UUID actorId = UUID.fromString("99999999-8888-7777-6666-555555555555");
+        CorrelationIdContext.set(CORRELATION_ID);
+
+        repository.actualizarFacultad(new ActualizarFacultadCommand(FACULTY_ID, "Ingenieria", null, actorId));
+
+        final Map<String, Object> esperado = new HashMap<>();
+        esperado.put("id", FACULTY_ID);
+        esperado.put("nombre", "Ingenieria");
+        esperado.put("idDecano", null);
+        esperado.put("idCorrelacion", CORRELATION_ID);
+        esperado.put("idUsuarioEjecutor", actorId);
+        verify(procedureExecutor).execute(
+                eq(FacultadJpaRepository.OP_ACTUALIZAR_FACULTAD),
+                eq(FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD),
+                eq(esperado),
+                eq(CORRELATION_ID));
+    }
+
+    @Test
+    void cambiarEstadoFacultad_delega_el_comando_con_correlacion_y_ejecutor() {
+        final JpaProcedureExecutor procedureExecutor = mock(JpaProcedureExecutor.class);
+        final FacultadJpaRepository repository = new FacultadJpaRepository(mock(EntityManager.class), procedureExecutor);
+        final UUID actorId = UUID.fromString("99999999-8888-7777-6666-555555555555");
+        CorrelationIdContext.set(CORRELATION_ID);
+
+        repository.cambiarEstadoFacultad(new CambiarEstadoFacultadCommand(FACULTY_ID, false, actorId));
+
+        verify(procedureExecutor).execute(
+                eq(FacultadJpaRepository.OP_CAMBIAR_ESTADO_FACULTAD),
+                eq(FacultadJpaRepository.SQL_CAMBIAR_ESTADO_FACULTAD),
+                eq(Map.of(
+                        "id", FACULTY_ID,
+                        "estaActiva", false,
+                        "idCorrelacion", CORRELATION_ID,
+                        "idUsuarioEjecutor", actorId)),
+                eq(CORRELATION_ID));
+    }
+
+    @Test
+    void los_sql_de_comando_ejecutan_los_sp_publicos() {
+        assertTrue(FacultadJpaRepository.SQL_ACTUALIZAR_FACULTAD.contains("EXEC dbo.usp_actualizar_facultad"));
+        assertTrue(FacultadJpaRepository.SQL_CAMBIAR_ESTADO_FACULTAD.contains("EXEC dbo.usp_cambiar_estado_facultad"));
     }
 
     @Test
