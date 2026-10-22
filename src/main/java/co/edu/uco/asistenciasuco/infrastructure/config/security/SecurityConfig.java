@@ -130,8 +130,13 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/openapi/openapi-golden-path.yaml"
                 ).permitAll()
+                // Catálogos institucionales de solo lectura: sedes y áreas de conocimiento
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/sedes", "/api/v1/admin/sedes/**", "/api/v1/admin/areas", "/api/v1/admin/areas/**")
+                    .hasAnyRole("ADMINISTRADOR", "DECANO", "COORDINADOR")
                 .requestMatchers("/api/v1/admin/**").hasRole("ADMINISTRADOR")
                 .requestMatchers("/api/v1/decano/**").hasAnyRole("DECANO", "ADMINISTRADOR")
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
+                    .hasAnyRole("DECANO", "COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/coordinador/**").hasAnyRole("COORDINADOR", "ADMINISTRADOR")
                 .requestMatchers("/api/v1/docente/**").hasRole("DOCENTE")
                 // Directorio general de docentes (crear/consultar/asignar a grupo): hoy sin
