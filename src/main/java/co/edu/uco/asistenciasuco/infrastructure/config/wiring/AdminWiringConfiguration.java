@@ -1,5 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.ActualizarAreaInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.interactor.ActualizarAreaInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizararea.usecase.ActualizarAreaUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizararea.usecase.impl.ActualizarAreaUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.CrearAreaInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.interactor.CrearAreaInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.creararea.usecase.CrearAreaUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.creararea.usecase.impl.CrearAreaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.interactor.ConsultarAreasInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.usecase.ConsultarAreasUseCase;
@@ -32,6 +40,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.interactor.EjecutarCierreMasivoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.EjecutarCierreMasivoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.usecase.impl.EjecutarCierreMasivoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.AreaCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AreaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CierrePeriodoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
@@ -73,6 +82,10 @@ public class AdminWiringConfiguration {
     @Bean CrearFacultadInputPort crearFacultadInputPort(final CrearFacultadUseCase useCase) { return new CrearFacultadInteractor(useCase); }
     @Bean ConsultarAreasUseCase consultarAreasUseCase(final AreaQueryPort port) { return new ConsultarAreasUseCaseImpl(port); }
     @Bean ConsultarAreasInputPort consultarAreasInputPort(final ConsultarAreasUseCase useCase) { return new ConsultarAreasInteractor(useCase); }
+    @Bean CrearAreaUseCase crearAreaUseCase(final AreaCommandPort port) { return new CrearAreaUseCaseImpl(port); }
+    @Bean CrearAreaInputPort crearAreaInputPort(final CrearAreaUseCase useCase) { return new CrearAreaInteractor(useCase); }
+    @Bean ActualizarAreaUseCase actualizarAreaUseCase(final AreaCommandPort port) { return new ActualizarAreaUseCaseImpl(port); }
+    @Bean ActualizarAreaInputPort actualizarAreaInputPort(final ActualizarAreaUseCase useCase) { return new ActualizarAreaInteractor(useCase); }
     @Bean EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(final PeriodoAcademicoQueryPort periodoPort, final CierrePeriodoCommandPort cierrePort) { return new EjecutarCierreMasivoUseCaseImpl(periodoPort, cierrePort); }
     @Bean EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort(final EjecutarCierreMasivoUseCase useCase) { return new EjecutarCierreMasivoInteractor(useCase); }
 }

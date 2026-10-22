@@ -5,5 +5,5 @@ import java.util.UUID;
 /**
  * Modelo de resultado interno de la consulta de areas.
  */
-public record AreaDomain(UUID id, String nombre) {
+public record AreaDomain(UUID id, String codigo, String nombre, Long totalAsignaturas) {
 }

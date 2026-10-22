@@ -1,6 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.ActualizarAreaInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.dto.ActualizarAreaDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.CrearAreaInputPort;
+import co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.dto.CrearAreaDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.dto.AreaDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.ConsultarDecanosInputPort;
@@ -46,6 +50,8 @@ public final class AdminPortalController {
     private final ConsultarFacultadesInputPort consultarFacultadesInputPort;
     private final CrearFacultadInputPort crearFacultadInputPort;
     private final ConsultarAreasInputPort consultarAreasInputPort;
+    private final CrearAreaInputPort crearAreaInputPort;
+    private final ActualizarAreaInputPort actualizarAreaInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AdminPortalController(
@@ -57,6 +63,8 @@ public final class AdminPortalController {
             final ConsultarFacultadesInputPort consultarFacultadesInputPort,
             final CrearFacultadInputPort crearFacultadInputPort,
             final ConsultarAreasInputPort consultarAreasInputPort,
+            final CrearAreaInputPort crearAreaInputPort,
+            final ActualizarAreaInputPort actualizarAreaInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarDecanosInputPort = consultarDecanosInputPort;
@@ -67,6 +75,8 @@ public final class AdminPortalController {
         this.consultarFacultadesInputPort = consultarFacultadesInputPort;
         this.crearFacultadInputPort = crearFacultadInputPort;
         this.consultarAreasInputPort = consultarAreasInputPort;
+        this.crearAreaInputPort = crearAreaInputPort;
+        this.actualizarAreaInputPort = actualizarAreaInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
@@ -187,14 +197,59 @@ public final class AdminPortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     @PostMapping("/areas")
-    public ResponseEntity<ApiDataResponse<Void>> crearArea() { throw unavailable("crear area"); }
+    public ResponseEntity<ApiDataResponse<AreaDTO>> crearArea(@RequestBody final CrearAreaRequest request) {
+        final UUID actorId = authenticatedUserResolver.requireAuthenticatedUserId();
+        final UUID areaId = UUID.randomUUID();
+        final String codigo = request != null ? request.codigo() : null;
+        final String nombre = request != null ? request.nombre() : null;
+
+        crearAreaInputPort.execute(new CrearAreaDTO(
+                areaId,
+                codigo,
+                nombre,
+                actorId
+        ));
+
+        final AreaDTO dto = consultarAreasInputPort.execute().stream()
+                .filter(a -> a.id().equals(areaId))
+                .findFirst()
+                .orElse(new AreaDTO(areaId, codigo != null ? codigo.trim().toUpperCase() : null, nombre != null ? nombre.trim() : null, 0L));
+
+        return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, dto));
+    }
+
     @PutMapping("/areas/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarArea(@PathVariable final UUID id) { throw unavailable("actualizar area"); }
+    public ResponseEntity<ApiDataResponse<AreaDTO>> actualizarArea(@PathVariable final UUID id, @RequestBody final ActualizarAreaRequest request) {
+        final UUID actorId = authenticatedUserResolver.requireAuthenticatedUserId();
+        final String codigo = request != null ? request.codigo() : null;
+        final String nombre = request != null ? request.nombre() : null;
+
+        actualizarAreaInputPort.execute(new ActualizarAreaDTO(
+                id,
+                codigo,
+                nombre,
+                actorId
+        ));
+
+        final AreaDTO dto = consultarAreasInputPort.execute().stream()
+                .filter(a -> a.id().equals(id))
+                .findFirst()
+                .orElse(new AreaDTO(id, codigo != null ? codigo.trim().toUpperCase() : null, nombre != null ? nombre.trim() : null, 0L));
+
+        return ResponseEntity.ok(new ApiDataResponse<>(true, dto));
+    }
+
     @PatchMapping("/areas/{id}/estado")
     public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoArea(@PathVariable final UUID id) { throw unavailable("cambiar estado de area"); }
 
     private FeatureUnavailableException unavailable(final String operation) {
         return new FeatureUnavailableException("La operacion de administrador no esta disponible: " + operation + ".");
+    }
+
+    public record CrearAreaRequest(String codigo, String nombre) {
+    }
+
+    public record ActualizarAreaRequest(String codigo, String nombre) {
     }
 
     public record CrearDecanoRequest(UUID tipoIdentificacionId, Integer numeroIdentificacion, String primerNombre,

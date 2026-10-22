@@ -19,12 +19,14 @@ public final class AreaJdbcBaseline implements AreaQueryPort {
     @Override
     public List<AreaProjection> consultarAreas() {
         return jdbcOperations.query("""
-                SELECT id, nombre
+                SELECT id, codigo, nombre, totalAsignaturas
                 FROM dbo.uv_area
                 ORDER BY nombre, id
                 """, (rs, rowNum) -> new AreaProjection(
                 JdbcBaselineValueMapper.toUuid(rs.getObject("id")),
-                JdbcBaselineValueMapper.toString(rs.getObject("nombre"))
+                JdbcBaselineValueMapper.toString(rs.getObject("codigo")),
+                JdbcBaselineValueMapper.toString(rs.getObject("nombre")),
+                rs.getObject("totalAsignaturas") != null ? ((Number) rs.getObject("totalAsignaturas")).longValue() : 0L
         ));
     }
 }

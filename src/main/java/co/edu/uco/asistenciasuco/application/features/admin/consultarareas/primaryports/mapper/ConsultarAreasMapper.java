@@ -9,6 +9,6 @@ public final class ConsultarAreasMapper {
     }
 
     public static AreaDTO toDTO(final AreaDomain domain) {
-        return new AreaDTO(domain.id(), domain.nombre());
+        return new AreaDTO(domain.id(), domain.codigo(), domain.nombre(), domain.totalAsignaturas());
     }
 }

@@ -20,8 +20,14 @@ public class UvAreaEntity {
     @Column(name = "id")
     private UUID id;
 
+    @Column(name = "codigo")
+    private String codigo;
+
     @Column(name = "nombre")
     private String nombre;
+
+    @Column(name = "totalAsignaturas")
+    private Long totalAsignaturas;
 
     protected UvAreaEntity() {
         // requerido por JPA
@@ -31,8 +37,16 @@ public class UvAreaEntity {
         return id;
     }
 
+    public String codigo() {
+        return codigo;
+    }
+
     public String nombre() {
         return nombre;
+    }
+
+    public Long totalAsignaturas() {
+        return totalAsignaturas;
     }
 }
 

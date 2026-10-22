@@ -36,7 +36,10 @@ class AdminPortalCrearDecanoContractTest {
             mock(ConsultarDecanosInputPort.class), new CrearDecanoInteractor(useCase),
             mock(ConsultarParametrosInputPort.class), mock(EjecutarCierreMasivoInputPort.class),
             mock(ConsultarInstitucionesInputPort.class), mock(ConsultarFacultadesInputPort.class),
-            mock(CrearFacultadInputPort.class), mock(ConsultarAreasInputPort.class), authenticatedUserResolver
+            mock(CrearFacultadInputPort.class), mock(ConsultarAreasInputPort.class),
+            mock(co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.CrearAreaInputPort.class),
+            mock(co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.ActualizarAreaInputPort.class),
+            authenticatedUserResolver
     );
 
     @Test

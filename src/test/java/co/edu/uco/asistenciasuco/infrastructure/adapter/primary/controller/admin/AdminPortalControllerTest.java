@@ -22,11 +22,17 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contrac
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.function.Executable;
 import org.mockito.ArgumentCaptor;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.List;
 import java.util.UUID;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
@@ -53,9 +59,11 @@ class AdminPortalControllerTest {
     private final ConsultarFacultadesInputPort consultarFacultades = mock(ConsultarFacultadesInputPort.class);
     private final CrearFacultadInputPort crearFacultad = mock(CrearFacultadInputPort.class);
     private final ConsultarAreasInputPort consultarAreas = mock(ConsultarAreasInputPort.class);
+    private final co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.CrearAreaInputPort crearArea = mock(co.edu.uco.asistenciasuco.application.features.admin.creararea.primaryports.CrearAreaInputPort.class);
+    private final co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.ActualizarAreaInputPort actualizarArea = mock(co.edu.uco.asistenciasuco.application.features.admin.actualizararea.primaryports.ActualizarAreaInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
-            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad, consultarAreas, identity);
+            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad, consultarAreas, crearArea, actualizarArea, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -132,11 +140,38 @@ class AdminPortalControllerTest {
 
     @Test
     void consultarAreas_serializa_lista_del_puerto() throws Exception {
-        when(consultarAreas.execute()).thenReturn(List.of(new AreaDTO(UUID.randomUUID(), "Matematicas")));
+        when(consultarAreas.execute()).thenReturn(List.of(new AreaDTO(UUID.randomUUID(), "MAT", "Matematicas", 5L)));
 
         mvc.perform(get("/api/v1/admin/areas"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].nombre").value("Matematicas"));
+                .andExpect(jsonPath("$.datos[0].codigo").value("MAT"))
+                .andExpect(jsonPath("$.datos[0].nombre").value("Matematicas"))
+                .andExpect(jsonPath("$.datos[0].totalAsignaturas").value(5));
+    }
+
+    @Test
+    void crearArea_delega_al_puerto_y_retorna_201() throws Exception {
+        mvc.perform(post("/api/v1/admin/areas")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\":\"ISW\",\"nombre\":\"Ingenieria de Software\"}"))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.datos.codigo").value("ISW"))
+                .andExpect(jsonPath("$.datos.nombre").value("Ingenieria de Software"));
+
+        verify(crearArea).execute(any());
+    }
+
+    @Test
+    void actualizarArea_delega_al_puerto_y_retorna_200() throws Exception {
+        final UUID idArea = UUID.randomUUID();
+        mvc.perform(put("/api/v1/admin/areas/" + idArea)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"codigo\":\"IS2\",\"nombre\":\"Ingenieria de Software 2\"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.codigo").value("IS2"))
+                .andExpect(jsonPath("$.datos.nombre").value("Ingenieria de Software 2"));
+
+        verify(actualizarArea).execute(any());
     }
 
     @Test
@@ -168,7 +203,7 @@ class AdminPortalControllerTest {
                 () -> controller.cambiarEstadoInstitucion(FACULTAD),
                 () -> controller.actualizarFacultad(FACULTAD),
                 () -> controller.cambiarEstadoFacultad(FACULTAD),
-                controller::crearArea, () -> controller.actualizarArea(FACULTAD), () -> controller.cambiarEstadoArea(FACULTAD)
+                () -> controller.cambiarEstadoArea(FACULTAD)
         );
 
         for (final var operation : operations) {

@@ -9,6 +9,6 @@ public final class ConsultarAreasRepositoryMapper {
     }
 
     public static AreaDomain toDomain(final AreaProjection projection) {
-        return new AreaDomain(projection.id(), projection.nombre());
+        return new AreaDomain(projection.id(), projection.codigo(), projection.nombre(), projection.totalAsignaturas());
     }
 }

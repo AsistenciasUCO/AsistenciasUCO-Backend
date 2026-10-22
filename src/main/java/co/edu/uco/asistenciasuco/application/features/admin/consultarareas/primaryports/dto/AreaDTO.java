@@ -2,5 +2,5 @@ package co.edu.uco.asistenciasuco.application.features.admin.consultarareas.prim
 
 import java.util.UUID;
 
-public record AreaDTO(UUID id, String nombre) {
+public record AreaDTO(UUID id, String codigo, String nombre, Long totalAsignaturas) {
 }
