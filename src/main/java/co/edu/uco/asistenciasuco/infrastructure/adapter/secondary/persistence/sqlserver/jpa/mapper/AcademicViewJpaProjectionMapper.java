@@ -13,9 +13,13 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ParametroProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PlanEstudioProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ProgramaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.TipoProgramaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsistenciaRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvDocenteEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvProgramaEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvTipoProgramaEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsignaturaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvAreaEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvCoordinadorEntity;
@@ -135,6 +139,32 @@ public final class AcademicViewJpaProjectionMapper {
                 row.correo(),
                 row.asistio(),
                 row.nombreRazonCausa());
+    }
+
+    public static ProgramaProjection toPrograma(final UvProgramaEntity row) {
+        return new ProgramaProjection(
+                row.id(),
+                row.nombrePrograma(),
+                row.idFacultad(),
+                row.nombreFacultad(),
+                row.idInstitucion(),
+                row.nombreInstitucion(),
+                row.idCoordinador(),
+                row.nombreCoordinador(),
+                flag(row.estaActivoPrograma()),
+                row.estaActivoTextoPrograma(),
+                row.idTipoPrograma(),
+                row.nombreTipoPrograma()
+        );
+    }
+
+    public static TipoProgramaProjection toTipoPrograma(final UvTipoProgramaEntity row) {
+        return new TipoProgramaProjection(
+                row.id(),
+                row.nombre(),
+                flag(row.estaActivoTipoPrograma()),
+                row.estaActivoTextoTipoPrograma()
+        );
     }
 
     /** Conversion certificada en JPA-04: NULL es {@code false}. */

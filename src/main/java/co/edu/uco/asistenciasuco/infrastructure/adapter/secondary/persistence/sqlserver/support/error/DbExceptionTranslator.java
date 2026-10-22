@@ -95,6 +95,9 @@ public final class DbExceptionTranslator {
 
         for (final Map.Entry<Set<ErrorDefinition>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
             if (entry.getKey().contains(code)) {
+                if (entry.getKey() == CONFLICT_CODES && !TextHelper.isNullOrBlank(userMessage) && !userMessage.equals(CommonErrorCode.CONFLICT.defaultMessage())) {
+                    throw new ConflictException(userMessage);
+                }
                 throw entry.getValue().create(code);
             }
         }

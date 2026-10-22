@@ -104,7 +104,7 @@ public final class CrearCoordinadorUseCaseImpl implements CrearCoordinadorUseCas
         if (domain.getNumeroIdentificacion() != null && !domain.getNumeroIdentificacion().isBlank()) {
             try {
                 numeroId = Integer.valueOf(domain.getNumeroIdentificacion().trim());
-            } catch (final NumberFormatException _) {
+            } catch (final NumberFormatException ignored) {
                 numeroId = null;
             }
         }
