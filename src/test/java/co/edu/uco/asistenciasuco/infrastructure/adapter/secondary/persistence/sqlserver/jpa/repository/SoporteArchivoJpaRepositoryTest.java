@@ -195,7 +195,18 @@ class SoporteArchivoJpaRepositoryTest {
     }
 
     private static void poner(final Object objetivo, final String campo, final Object valor) throws Exception {
-        final Field field = objetivo.getClass().getDeclaredField(campo);
+        Class<?> tipo = objetivo.getClass();
+        Field field = null;
+        while (field == null) {
+            try {
+                field = tipo.getDeclaredField(campo);
+            } catch (final NoSuchFieldException e) {
+                tipo = tipo.getSuperclass();
+                if (tipo == null) {
+                    throw e;
+                }
+            }
+        }
         field.setAccessible(true);
         field.set(objetivo, valor);
     }

@@ -380,6 +380,35 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
+    // --- GET /api/v1/docente/reclamos/{id} : detalle de solicitud de revision (HU036, SEC-01) ---
+
+    @Test
+    void detalle_reclamo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(get("/api/v1/docente/reclamos/{id}", "33333333-3333-3333-3333-333333333333")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void detalle_reclamo_docente_estudiante_recibe_403() throws Exception {
+        mockMvc.perform(get("/api/v1/docente/reclamos/{id}", "33333333-3333-3333-3333-333333333333")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void detalle_reclamo_docente_coordinador_recibe_403() throws Exception {
+        mockMvc.perform(get("/api/v1/docente/reclamos/{id}", "33333333-3333-3333-3333-333333333333")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void detalle_reclamo_docente_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(get("/api/v1/docente/reclamos/{id}", "33333333-3333-3333-3333-333333333333"))
+                .andExpect(status().isUnauthorized());
+    }
+
     // --- GET /api/v1/realtime/stream : canal SSE, requiere autenticacion (cualquier rol) ---
 
     @Test
@@ -505,6 +534,11 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/estudiante/materias")
         String materiasEstudiante() {
+            return "ok";
+        }
+
+        @GetMapping("/api/v1/docente/reclamos/{id}")
+        String detalleReclamoDocente() {
             return "ok";
         }
 

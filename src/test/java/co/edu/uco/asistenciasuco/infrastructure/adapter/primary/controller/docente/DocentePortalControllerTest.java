@@ -1,11 +1,15 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente;
 
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.dto.ResolverSolicitudRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.dto.AsignaturaDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.ConsultarHorariosDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.ConsultarDetalleReclamoDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.ConsultarDetalleReclamoDocenteDTO;
+import co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.dto.DetalleReclamoDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ConsultarReclamosDocenteDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.dto.ReclamoDocenteDTO;
@@ -44,9 +48,11 @@ class DocentePortalControllerTest {
     private final ResolverSolicitudRevisionAsistenciaInputPort resolverReclamo =
             mock(ResolverSolicitudRevisionAsistenciaInputPort.class);
     private final ConsultarReclamosDocenteInputPort reclamos = mock(ConsultarReclamosDocenteInputPort.class);
+    private final ConsultarDetalleReclamoDocenteInputPort detalleReclamo =
+            mock(ConsultarDetalleReclamoDocenteInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final DocentePortalController controller =
-            new DocentePortalController(horarios, asignaturas, resolverReclamo, reclamos, identity);
+            new DocentePortalController(horarios, asignaturas, resolverReclamo, reclamos, detalleReclamo, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -82,6 +88,95 @@ class DocentePortalControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(0))
                 .andExpect(jsonPath("$.datos").isEmpty());
+    }
+
+    // CT-01 (AC-05/06): 200 con ApiDataResponse, causal, soporte y UTC v2.
+    @Test
+    void consultarDetalleReclamo_devuelve_api_data_response_con_causal_y_soporte() throws Exception {
+        final UUID soporte = UUID.randomUUID();
+        final DetalleReclamoDocenteDTO detalle = new DetalleReclamoDocenteDTO(RECLAMO, "REV-1",
+                java.time.LocalDate.of(2026, 10, 15), "P", "PENDIENTE", "pendiente", "Cita medica", "",
+                UUID.randomUUID(), "Ana Perez", UUID.randomUUID(), 4,
+                java.time.Instant.parse("2026-10-14T13:00:00.1234567Z"), "UTC_V2", UUID.randomUUID(), 1, "Grupo 1",
+                UUID.randomUUID(), "MAT101", "Calculo I",
+                new DetalleReclamoDocenteDTO.CausalInasistenciaDTO("SJC", "sin justa causa", Boolean.FALSE),
+                new ReclamoDocenteDTO.SoporteAdjuntoDTO(soporte, "incapacidad.pdf", "application/pdf", 2048L,
+                        java.time.Instant.parse("2026-10-15T10:00:00Z"), "/api/v1/archivos/" + soporte));
+        when(detalleReclamo.execute(new ConsultarDetalleReclamoDocenteDTO(RECLAMO, ACTOR))).thenReturn(detalle);
+
+        mvc.perform(get("/api/v1/docente/reclamos/{id}", RECLAMO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.id").value(RECLAMO.toString()))
+                .andExpect(jsonPath("$.datos.codigoEstado").value("P"))
+                .andExpect(jsonPath("$.datos.estadoSolicitud").value("PENDIENTE"))
+                .andExpect(jsonPath("$.datos.nombreEstado").value("pendiente"))
+                .andExpect(jsonPath("$.datos.estudianteNombre").value("Ana Perez"))
+                .andExpect(jsonPath("$.datos.fechaSesionUtc").value("2026-10-14T13:00:00.1234567Z"))
+                .andExpect(jsonPath("$.datos.causalInasistencia.codigo").value("SJC"))
+                .andExpect(jsonPath("$.datos.causalInasistencia.nombre").value("sin justa causa"))
+                .andExpect(jsonPath("$.datos.causalInasistencia.asistio").value(false))
+                .andExpect(jsonPath("$.datos.soporteAdjunto.fileId").value(soporte.toString()))
+                .andExpect(jsonPath("$.datos.soporteAdjunto.fechaSubidaUtc").value("2026-10-15T10:00:00Z"))
+                .andExpect(jsonPath("$.datos.soporteAdjunto.url").value("/api/v1/archivos/" + soporte))
+                .andExpect(jsonPath("$.total").doesNotExist());
+    }
+
+    @Test
+    void consultarDetalleReclamo_sin_causal_ni_soporte_los_serializa_como_nulos() throws Exception {
+        final DetalleReclamoDocenteDTO detalle = new DetalleReclamoDocenteDTO(RECLAMO, "REV-1",
+                java.time.LocalDate.of(2026, 10, 15), "R", "RECHAZADA", "rechazada", "Cita medica", "No procede",
+                UUID.randomUUID(), "Ana Perez", UUID.randomUUID(), 4, null, null, UUID.randomUUID(), 1, "Grupo 1",
+                UUID.randomUUID(), "MAT101", "Calculo I", null, null);
+        when(detalleReclamo.execute(new ConsultarDetalleReclamoDocenteDTO(RECLAMO, ACTOR))).thenReturn(detalle);
+
+        mvc.perform(get("/api/v1/docente/reclamos/{id}", RECLAMO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.estadoSolicitud").value("RECHAZADA"))
+                .andExpect(jsonPath("$.datos.justificacionRespuesta").value("No procede"))
+                .andExpect(jsonPath("$.datos.fechaSesionUtc").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.datos.causalInasistencia").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.datos.soporteAdjunto").value(org.hamcrest.Matchers.nullValue()));
+    }
+
+    // CT-02 (AC-05): id con formato no UUID -> 400, sin invocar el caso de uso.
+    @Test
+    void consultarDetalleReclamo_con_id_no_uuid_responde_400_sin_invocar_el_caso_de_uso() throws Exception {
+        mvc.perform(get("/api/v1/docente/reclamos/abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        org.mockito.Mockito.verifyNoInteractions(detalleReclamo);
+    }
+
+    // CT-03 (AC-05): inexistente o ajena -> 404 RESOURCE_NOT_FOUND.
+    @Test
+    void consultarDetalleReclamo_no_encontrado_responde_404_resource_not_found() throws Exception {
+        when(detalleReclamo.execute(new ConsultarDetalleReclamoDocenteDTO(RECLAMO, ACTOR)))
+                .thenThrow(new ResourceNotFoundException("La solicitud de revision no existe."));
+
+        mvc.perform(get("/api/v1/docente/reclamos/{id}", RECLAMO))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.code").value("RESOURCE_NOT_FOUND"));
+    }
+
+    // CT-04 (AC-05): el actor sale del usuario autenticado y el id de la ruta, nunca del request.
+    @Test
+    void consultarDetalleReclamo_toma_el_actor_del_usuario_autenticado_y_el_id_de_la_ruta() throws Exception {
+        when(detalleReclamo.execute(new ConsultarDetalleReclamoDocenteDTO(RECLAMO, ACTOR)))
+                .thenThrow(new ResourceNotFoundException("La solicitud de revision no existe."));
+
+        mvc.perform(get("/api/v1/docente/reclamos/{id}", RECLAMO)
+                .param("actorUsuarioId", UUID.randomUUID().toString())
+                .header("X-Usuario-Id", UUID.randomUUID().toString()));
+
+        final ArgumentCaptor<ConsultarDetalleReclamoDocenteDTO> captor =
+                ArgumentCaptor.forClass(ConsultarDetalleReclamoDocenteDTO.class);
+        verify(detalleReclamo).execute(captor.capture());
+        assertEquals(ACTOR, captor.getValue().actorUsuarioId());
+        assertEquals(RECLAMO, captor.getValue().idSolicitud());
     }
 
     @Test

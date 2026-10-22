@@ -29,14 +29,9 @@ public final class ConsultarReclamosDocenteMapper {
     }
 
     private static ReclamoDocenteDTO toDTO(final ReclamoDocenteDomain p) {
-        final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte = p.idArchivoSoporte() == null ? null
-                : new ReclamoDocenteDTO.SoporteAdjuntoDTO(
-                        p.idArchivoSoporte(),
-                        p.nombreSoporte(),
-                        p.tipoContenidoSoporte(),
-                        p.tamanioSoporteBytes() == null ? 0L : p.tamanioSoporteBytes(),
-                        p.fechaRegistroSoporteUtc(),
-                        URL_PREFIX + p.idArchivoSoporte());
+        final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte = soporte(
+                p.idArchivoSoporte(), p.nombreSoporte(), p.tipoContenidoSoporte(),
+                p.tamanioSoporteBytes(), p.fechaRegistroSoporteUtc());
         return new ReclamoDocenteDTO(
                 p.idSolicitud(),
                 p.nombreSolicitud(),
@@ -59,7 +54,29 @@ public final class ConsultarReclamosDocenteMapper {
                 soporte);
     }
 
-    private static String estadoLegible(final String codigo) {
+    /** Soporte adjunto del reclamo; nulo sin archivo (compartido con el detalle de la solicitud). */
+    public static ReclamoDocenteDTO.SoporteAdjuntoDTO soporte(
+            final java.util.UUID idArchivo,
+            final String nombre,
+            final String tipoContenido,
+            final Long tamanioBytes,
+            final java.time.Instant fechaRegistroUtc
+    ) {
+        if (idArchivo == null) {
+            return null;
+        }
+        final long bytes = tamanioBytes == null ? 0L : tamanioBytes;
+        return new ReclamoDocenteDTO.SoporteAdjuntoDTO(
+                idArchivo, nombre, tipoContenido, bytes, fechaRegistroUtc, urlSoporte(idArchivo));
+    }
+
+    /** URL relativa autenticada de descarga del soporte (compartida con el detalle de la solicitud). */
+    public static String urlSoporte(final java.util.UUID idArchivoSoporte) {
+        return URL_PREFIX + idArchivoSoporte;
+    }
+
+    /** Traduccion P/A/R a estado legible (compartida con el detalle de la solicitud). */
+    public static String estadoLegible(final String codigo) {
         if (codigo == null) {
             return null;
         }
