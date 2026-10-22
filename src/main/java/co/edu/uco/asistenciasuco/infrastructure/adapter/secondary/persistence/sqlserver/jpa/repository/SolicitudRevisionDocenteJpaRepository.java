@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRe
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DetalleSolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpDetalleSolicitudRevisionDocenteEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpSolicitudRevisionDocenteBaseEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.SpSolicitudRevisionDocenteEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
@@ -93,40 +94,26 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
     private static DetalleSolicitudRevisionDocenteProjection toDetalleProjection(
             final SpDetalleSolicitudRevisionDocenteEntity fila
     ) {
-        final String procedencia = fila.procedenciaTemporalSesion();
+        final SolicitudRevisionDocenteProjection base = toProjection(fila, 0);
         return new DetalleSolicitudRevisionDocenteProjection(
-                fila.idSolicitudRevisionAsistencia(),
-                fila.nombreSolicitud(),
-                fila.fechaSolicitud(),
-                fila.codigoEstado(),
-                fila.nombreEstado(),
-                fila.justificacionSolicitud(),
-                fila.justificacionRespuesta(),
-                fila.idEstudiante(),
-                fila.nombreEstudiante(),
-                fila.idSesion(),
-                fila.numeroSesion(),
-                // Solo se afirma un instante UTC cuando la DB conoce la procedencia (contrato UTC v2).
-                procedencia == null ? null : SoporteArchivoJpaRepository.toUtcInstant(fila.fechaHoraInicioSesion()),
-                procedencia,
-                fila.idGrupo(),
-                fila.codigoGrupo(),
-                fila.nombreGrupo(),
-                fila.idAsignatura(),
-                fila.codigoAsignatura(),
-                fila.nombreAsignatura(),
-                fila.asistio(),
-                fila.codigoRazonCausa(),
-                fila.nombreRazonCausa(),
-                fila.idArchivoSoporte(),
-                fila.nombreSoporte(),
-                fila.tipoContenidoSoporte(),
-                fila.tamanioSoporteBytes(),
-                SoporteArchivoJpaRepository.toUtcInstant(fila.fechaRegistroSoporteUtc())
-        );
+                base.idSolicitud(), base.nombreSolicitud(), base.fechaSolicitud(), base.codigoEstado(),
+                base.nombreEstado(), base.justificacionSolicitud(), base.justificacionRespuesta(),
+                base.idEstudiante(), base.nombreEstudiante(), base.idSesion(), base.numeroSesion(),
+                base.fechaHoraInicioSesionUtc(), base.procedenciaTemporalSesion(), base.idGrupo(),
+                base.codigoGrupo(), base.nombreGrupo(), base.idAsignatura(), base.codigoAsignatura(),
+                base.nombreAsignatura(), fila.asistio(), fila.codigoRazonCausa(), fila.nombreRazonCausa(),
+                base.idArchivoSoporte(), base.nombreSoporte(), base.tipoContenidoSoporte(),
+                base.tamanioSoporteBytes(), base.fechaRegistroSoporteUtc());
     }
 
     private static SolicitudRevisionDocenteProjection toProjection(final SpSolicitudRevisionDocenteEntity fila) {
+        return toProjection(fila, fila.totalRegistros() == null ? 0 : fila.totalRegistros());
+    }
+
+    private static SolicitudRevisionDocenteProjection toProjection(
+            final SpSolicitudRevisionDocenteBaseEntity fila,
+            final int totalRegistros
+    ) {
         final String procedencia = fila.procedenciaTemporalSesion();
         return new SolicitudRevisionDocenteProjection(
                 fila.idSolicitudRevisionAsistencia(),
@@ -154,7 +141,7 @@ public class SolicitudRevisionDocenteJpaRepository implements SolicitudRevisionD
                 fila.tipoContenidoSoporte(),
                 fila.tamanioSoporteBytes(),
                 SoporteArchivoJpaRepository.toUtcInstant(fila.fechaRegistroSoporteUtc()),
-                fila.totalRegistros() == null ? 0 : fila.totalRegistros()
+                totalRegistros
         );
     }
 }

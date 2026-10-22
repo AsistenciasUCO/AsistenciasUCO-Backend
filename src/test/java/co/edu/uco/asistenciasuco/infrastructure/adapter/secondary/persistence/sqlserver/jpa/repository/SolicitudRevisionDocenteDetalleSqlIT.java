@@ -118,6 +118,14 @@ class SolicitudRevisionDocenteDetalleSqlIT {
                 () -> assertNotNull(detalle.idAsignatura()),
                 () -> assertNotNull(detalle.codigoAsignatura()),
                 () -> assertNotNull(detalle.nombreAsignatura()),
+                () -> assertNull(detalle.procedenciaTemporalSesion()),
+                () -> assertNull(detalle.fechaHoraInicioSesionUtc())
+        );
+        assertCausalYSoporte(detalle, archivo);
+    }
+
+    private void assertCausalYSoporte(final DetalleSolicitudRevisionDocenteProjection detalle, final UUID archivo) {
+        assertAll(
                 () -> assertEquals(Boolean.FALSE, detalle.asistio()),
                 () -> assertEquals("SJC", detalle.codigoRazonCausa()),
                 () -> assertEquals(jdbc.queryForObject("SELECT nombre FROM dbo.RazonCausa WHERE codigo = 'SJC'", String.class),
@@ -126,9 +134,7 @@ class SolicitudRevisionDocenteDetalleSqlIT {
                 () -> assertEquals("incapacidad.pdf", detalle.nombreSoporte()),
                 () -> assertEquals("application/pdf", detalle.tipoContenidoSoporte()),
                 () -> assertEquals(2048L, detalle.tamanioSoporteBytes()),
-                () -> assertNotNull(detalle.fechaRegistroSoporteUtc()),
-                () -> assertNull(detalle.procedenciaTemporalSesion()),
-                () -> assertNull(detalle.fechaHoraInicioSesionUtc())
+                () -> assertNotNull(detalle.fechaRegistroSoporteUtc())
         );
     }
 
