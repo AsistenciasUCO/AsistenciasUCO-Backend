@@ -19,14 +19,9 @@ public final class ConsultarDetalleReclamoDocenteMapper {
     }
 
     public static DetalleReclamoDocenteDTO toDTO(final DetalleReclamoDocenteDomain d) {
-        final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte = d.idArchivoSoporte() == null ? null
-                : new ReclamoDocenteDTO.SoporteAdjuntoDTO(
-                        d.idArchivoSoporte(),
-                        d.nombreSoporte(),
-                        d.tipoContenidoSoporte(),
-                        d.tamanioSoporteBytes() == null ? 0L : d.tamanioSoporteBytes(),
-                        d.fechaRegistroSoporteUtc(),
-                        ConsultarReclamosDocenteMapper.urlSoporte(d.idArchivoSoporte()));
+        final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte = ConsultarReclamosDocenteMapper.soporte(
+                d.idArchivoSoporte(), d.nombreSoporte(), d.tipoContenidoSoporte(),
+                d.tamanioSoporteBytes(), d.fechaRegistroSoporteUtc());
         // Sin detalle de asistencia (LEFT JOIN vacio) no hay causal que informar.
         final DetalleReclamoDocenteDTO.CausalInasistenciaDTO causal =
                 d.asistio() == null && d.codigoRazonCausa() == null ? null

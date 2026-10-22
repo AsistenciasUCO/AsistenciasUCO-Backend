@@ -35,10 +35,15 @@ public final class ReclamoDocenteHttpMapper {
                 dto.materiaId(),
                 dto.materiaCodigo(),
                 dto.materiaNombre(),
-                soporte == null ? null : new ReclamoDocenteResponse.SoporteAdjuntoResponse(
-                        soporte.fileId(), soporte.nombre(), soporte.tipo(), soporte.tamanioBytes(),
-                        utc(soporte.fechaSubidaUtc()), soporte.url())
+                soporte(soporte)
         );
+    }
+
+    /** Soporte adjunto en HTTP; nulo sin archivo (compartido con el detalle de la solicitud). */
+    static ReclamoDocenteResponse.SoporteAdjuntoResponse soporte(final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte) {
+        return soporte == null ? null : new ReclamoDocenteResponse.SoporteAdjuntoResponse(
+                soporte.fileId(), soporte.nombre(), soporte.tipo(), soporte.tamanioBytes(),
+                utc(soporte.fechaSubidaUtc()), soporte.url());
     }
 
     /** Instant UTC -> {@code yyyy-MM-ddTHH:mm:ss[.fffffff]Z} sin pasar por la zona de la JVM. */

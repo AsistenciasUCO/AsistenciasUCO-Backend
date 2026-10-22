@@ -29,14 +29,9 @@ public final class ConsultarReclamosDocenteMapper {
     }
 
     private static ReclamoDocenteDTO toDTO(final ReclamoDocenteDomain p) {
-        final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte = p.idArchivoSoporte() == null ? null
-                : new ReclamoDocenteDTO.SoporteAdjuntoDTO(
-                        p.idArchivoSoporte(),
-                        p.nombreSoporte(),
-                        p.tipoContenidoSoporte(),
-                        p.tamanioSoporteBytes() == null ? 0L : p.tamanioSoporteBytes(),
-                        p.fechaRegistroSoporteUtc(),
-                        urlSoporte(p.idArchivoSoporte()));
+        final ReclamoDocenteDTO.SoporteAdjuntoDTO soporte = soporte(
+                p.idArchivoSoporte(), p.nombreSoporte(), p.tipoContenidoSoporte(),
+                p.tamanioSoporteBytes(), p.fechaRegistroSoporteUtc());
         return new ReclamoDocenteDTO(
                 p.idSolicitud(),
                 p.nombreSolicitud(),
@@ -57,6 +52,21 @@ public final class ConsultarReclamosDocenteMapper {
                 p.codigoAsignatura(),
                 p.nombreAsignatura(),
                 soporte);
+    }
+
+    /** Soporte adjunto del reclamo; nulo sin archivo (compartido con el detalle de la solicitud). */
+    public static ReclamoDocenteDTO.SoporteAdjuntoDTO soporte(
+            final java.util.UUID idArchivo,
+            final String nombre,
+            final String tipoContenido,
+            final Long tamanioBytes,
+            final java.time.Instant fechaRegistroUtc
+    ) {
+        return idArchivo == null ? null
+                : new ReclamoDocenteDTO.SoporteAdjuntoDTO(
+                        idArchivo, nombre, tipoContenido,
+                        tamanioBytes == null ? 0L : tamanioBytes,
+                        fechaRegistroUtc, urlSoporte(idArchivo));
     }
 
     /** URL relativa autenticada de descarga del soporte (compartida con el detalle de la solicitud). */
