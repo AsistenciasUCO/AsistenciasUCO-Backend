@@ -358,6 +358,7 @@ class OpenApiGoldenPathConformanceTest {
                 mock(ConsultarAsignaturasDocenteInputPort.class),
                 mock(co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort.class),
                 mock(co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort.class),
+                mock(co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.ConsultarDetalleReclamoDocenteInputPort.class),
                 identity
         );
 
