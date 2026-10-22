@@ -22,8 +22,10 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertAll;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -98,37 +100,36 @@ class SolicitudRevisionDocenteDetalleSqlIT {
         final DetalleSolicitudRevisionDocenteProjection detalle =
                 detallePort.consultarDetalleSolicitudDocente(solicitud, docenteTitular).orElseThrow();
 
-        assertEquals(solicitud, detalle.idSolicitud());
-        assertEquals("P", detalle.codigoEstado());
-        assertEquals("pendiente", detalle.nombreEstado().toLowerCase());
-        assertEquals(JUSTIFICACION_PREFIX + "con-causal", detalle.justificacionSolicitud());
-        assertEquals("", detalle.justificacionRespuesta());
-        assertNotNull(detalle.nombreSolicitud());
-        assertNotNull(detalle.fechaSolicitud());
-        assertEquals(estudiante, detalle.idEstudiante());
-        assertFalse(detalle.nombreEstudiante().isBlank());
-        assertEquals(sesion, detalle.idSesion());
-        assertNotNull(detalle.numeroSesion());
-        assertEquals(fixture.grupoId(), detalle.idGrupo());
-        assertNotNull(detalle.codigoGrupo());
-        assertNotNull(detalle.nombreGrupo());
-        assertNotNull(detalle.idAsignatura());
-        assertNotNull(detalle.codigoAsignatura());
-        assertNotNull(detalle.nombreAsignatura());
-        // Causal: DetalleAsistencia -> RazonCausa.
-        assertEquals(Boolean.FALSE, detalle.asistio());
-        assertEquals("SJC", detalle.codigoRazonCausa());
-        assertEquals(jdbc.queryForObject("SELECT nombre FROM dbo.RazonCausa WHERE codigo = 'SJC'", String.class),
-                detalle.nombreRazonCausa());
-        // Soporte adjunto (metadatos).
-        assertEquals(archivo, detalle.idArchivoSoporte());
-        assertEquals("incapacidad.pdf", detalle.nombreSoporte());
-        assertEquals("application/pdf", detalle.tipoContenidoSoporte());
-        assertEquals(2048L, detalle.tamanioSoporteBytes());
-        assertNotNull(detalle.fechaRegistroSoporteUtc());
-        // Sesiones del fixture son historicas (v1): sin procedencia no se afirma un instante UTC.
-        assertNull(detalle.procedenciaTemporalSesion());
-        assertNull(detalle.fechaHoraInicioSesionUtc());
+        assertAll(
+                () -> assertEquals(solicitud, detalle.idSolicitud()),
+                () -> assertEquals("P", detalle.codigoEstado()),
+                () -> assertEquals("pendiente", detalle.nombreEstado().toLowerCase()),
+                () -> assertEquals(JUSTIFICACION_PREFIX + "con-causal", detalle.justificacionSolicitud()),
+                () -> assertEquals("", detalle.justificacionRespuesta()),
+                () -> assertNotNull(detalle.nombreSolicitud()),
+                () -> assertNotNull(detalle.fechaSolicitud()),
+                () -> assertEquals(estudiante, detalle.idEstudiante()),
+                () -> assertFalse(detalle.nombreEstudiante().isBlank()),
+                () -> assertEquals(sesion, detalle.idSesion()),
+                () -> assertNotNull(detalle.numeroSesion()),
+                () -> assertEquals(fixture.grupoId(), detalle.idGrupo()),
+                () -> assertNotNull(detalle.codigoGrupo()),
+                () -> assertNotNull(detalle.nombreGrupo()),
+                () -> assertNotNull(detalle.idAsignatura()),
+                () -> assertNotNull(detalle.codigoAsignatura()),
+                () -> assertNotNull(detalle.nombreAsignatura()),
+                () -> assertEquals(Boolean.FALSE, detalle.asistio()),
+                () -> assertEquals("SJC", detalle.codigoRazonCausa()),
+                () -> assertEquals(jdbc.queryForObject("SELECT nombre FROM dbo.RazonCausa WHERE codigo = 'SJC'", String.class),
+                        detalle.nombreRazonCausa()),
+                () -> assertEquals(archivo, detalle.idArchivoSoporte()),
+                () -> assertEquals("incapacidad.pdf", detalle.nombreSoporte()),
+                () -> assertEquals("application/pdf", detalle.tipoContenidoSoporte()),
+                () -> assertEquals(2048L, detalle.tamanioSoporteBytes()),
+                () -> assertNotNull(detalle.fechaRegistroSoporteUtc()),
+                () -> assertNull(detalle.procedenciaTemporalSesion()),
+                () -> assertNull(detalle.fechaHoraInicioSesionUtc())
+        );
     }
 
     @Test
@@ -193,6 +194,8 @@ class SolicitudRevisionDocenteDetalleSqlIT {
                 String.class, JUSTIFICACION_PREFIX + marca));
     }
 
+    private static final Random RANDOM = new Random();
+
     private UUID asistenciaDe(final UUID solicitud) {
         return UUID.fromString(jdbc.queryForObject(
                 "SELECT asistencia FROM dbo.SolicitudRevisionAsistencia WHERE id = ?", String.class, solicitud.toString()));
@@ -204,7 +207,7 @@ class SolicitudRevisionDocenteDetalleSqlIT {
         jdbc.update("""
                 INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin)
                 VALUES (?, ?, ?, ?, ?, ?, ?)""",
-                UUID.randomUUID().toString(), 900_000 + (int) (Math.random() * 90_000), asistencia.toString(),
+                UUID.randomUUID().toString(), 900_000 + RANDOM.nextInt(90_000), asistencia.toString(),
                 asistio, razon, ahora.minusHours(1), ahora);
     }
 }

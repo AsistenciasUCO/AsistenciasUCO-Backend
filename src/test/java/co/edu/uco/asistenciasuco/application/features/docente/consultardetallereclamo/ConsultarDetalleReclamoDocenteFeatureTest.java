@@ -71,8 +71,8 @@ class ConsultarDetalleReclamoDocenteFeatureTest {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         when(query.consultarDetalleSolicitudDocente(SOLICITUD, ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ResourceNotFoundException.class,
-                () -> interactor.execute(new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, ACTOR)));
+        final ConsultarDetalleReclamoDocenteDTO dto = new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, ACTOR);
+        assertThrows(ResourceNotFoundException.class, () -> interactor.execute(dto));
     }
 
     // UC-03
@@ -80,18 +80,19 @@ class ConsultarDetalleReclamoDocenteFeatureTest {
     void quien_no_es_docente_institucional_recibe_forbidden_y_el_puerto_no_se_invoca() {
         when(scope.findDocenteIdByUsuario(ACTOR)).thenReturn(Optional.empty());
 
-        assertThrows(ForbiddenException.class,
-                () -> interactor.execute(new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, ACTOR)));
+        final ConsultarDetalleReclamoDocenteDTO dto = new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, ACTOR);
+        assertThrows(ForbiddenException.class, () -> interactor.execute(dto));
 
         verifyNoInteractions(query);
     }
 
     @Test
     void solicitud_o_actor_nulos_son_error_de_validacion_sin_consultar() {
-        assertThrows(ValidationException.class,
-                () -> interactor.execute(new ConsultarDetalleReclamoDocenteDTO(null, ACTOR)));
-        assertThrows(ValidationException.class,
-                () -> interactor.execute(new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, null)));
+        final ConsultarDetalleReclamoDocenteDTO sinSolicitud = new ConsultarDetalleReclamoDocenteDTO(null, ACTOR);
+        final ConsultarDetalleReclamoDocenteDTO sinActor = new ConsultarDetalleReclamoDocenteDTO(SOLICITUD, null);
+
+        assertThrows(ValidationException.class, () -> interactor.execute(sinSolicitud));
+        assertThrows(ValidationException.class, () -> interactor.execute(sinActor));
         assertThrows(ValidationException.class, () -> interactor.execute(null));
 
         verifyNoInteractions(scope, query);
@@ -186,7 +187,7 @@ class ConsultarDetalleReclamoDocenteFeatureTest {
         assertEquals(Instant.parse("2026-10-19T15:00:00Z"), conSoporte.soporteAdjunto().fechaSubidaUtc());
         assertEquals("/api/v1/archivos/" + archivo, conSoporte.soporteAdjunto().url());
         assertNull(sinSoporte.soporteAdjunto());
-        assertFalse(sinSoporte.id() == null);
+        assertNotNull(sinSoporte.id());
     }
 
     private static DetalleSolicitudRevisionDocenteProjection proyeccion(

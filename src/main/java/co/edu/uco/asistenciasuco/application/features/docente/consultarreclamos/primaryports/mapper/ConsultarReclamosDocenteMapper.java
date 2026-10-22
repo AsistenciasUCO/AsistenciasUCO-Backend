@@ -62,11 +62,12 @@ public final class ConsultarReclamosDocenteMapper {
             final Long tamanioBytes,
             final java.time.Instant fechaRegistroUtc
     ) {
-        return idArchivo == null ? null
-                : new ReclamoDocenteDTO.SoporteAdjuntoDTO(
-                        idArchivo, nombre, tipoContenido,
-                        tamanioBytes == null ? 0L : tamanioBytes,
-                        fechaRegistroUtc, urlSoporte(idArchivo));
+        if (idArchivo == null) {
+            return null;
+        }
+        final long bytes = tamanioBytes == null ? 0L : tamanioBytes;
+        return new ReclamoDocenteDTO.SoporteAdjuntoDTO(
+                idArchivo, nombre, tipoContenido, bytes, fechaRegistroUtc, urlSoporte(idArchivo));
     }
 
     /** URL relativa autenticada de descarga del soporte (compartida con el detalle de la solicitud). */
