@@ -105,12 +105,20 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     static final String OP_ACTUALIZAR_GRUPO = "actualizarGrupo";
     static final String OP_REGISTRAR_ESTUDIANTE = "registrarEstudianteEnGrupo";
     static final String OP_GUARDAR_HORARIOS = "guardarHorariosGrupo";
+    static final String OP_PRECARGAR_SESIONES = "precargarSesionesGrupo";
 
     // F1: horario semanal del grupo. Se ejecuta en la MISMA transaccion que crear/actualizar grupo (si falla, nada queda).
     static final String SQL_GUARDAR_HORARIOS = """
             EXEC dbo.usp_guardar_horarios_grupo
                  @idGrupo = :idGrupo,
                  @horariosJSON = :horariosJSON,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+    // F2: precarga las sesiones futuras del horario recien guardado, tambien en la misma transaccion.
+    static final String SQL_PRECARGAR_SESIONES = """
+            EXEC dbo.usp_precargar_sesiones_grupo
+                 @idGrupo = :idGrupo,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -256,7 +264,7 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         return procedureExecutor.execute(OP_REGISTRAR_ESTUDIANTE, SQL_REGISTRAR_ESTUDIANTE, parametros, correlationId);
     }
 
-    // F1: guarda el horario semanal solo si el comando trae franjas (null = el horario no cambia).
+    // F1/F2: guarda el horario semanal y precarga sus sesiones solo si el comando trae franjas (null = el horario no cambia).
     private void guardarHorariosSiCorresponde(
             final UUID idGrupo,
             final List<FranjaHorarioRepositoryDTO> franjas,
@@ -272,6 +280,16 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", usuarioEjecutor);
         procedureExecutor.execute(OP_GUARDAR_HORARIOS, SQL_GUARDAR_HORARIOS, parametros, correlationId);
+        precargarSesiones(idGrupo, usuarioEjecutor, correlationId);
+    }
+
+    // F2: las sesiones futuras se alinean con el horario guardado (crea las que faltan y retira las generadas que ya no encajan).
+    private void precargarSesiones(final UUID idGrupo, final UUID usuarioEjecutor, final UUID correlationId) {
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idGrupo", idGrupo);
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        procedureExecutor.execute(OP_PRECARGAR_SESIONES, SQL_PRECARGAR_SESIONES, parametros, correlationId);
     }
 
     private static String serializarFranjas(final List<FranjaHorarioRepositoryDTO> franjas) {
