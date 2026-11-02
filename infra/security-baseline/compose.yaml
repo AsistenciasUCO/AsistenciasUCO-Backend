@@ -1,4 +1,4 @@
-# Security Baseline 0.1.7 — instalación local ÚNICA de AsistenciasUCO.
+# Security Baseline 0.1.9 — instalación local ÚNICA de AsistenciasUCO.
 #
 # Origen: distribution/compose.yaml del release oficial de Seguridad-UCO (imágenes
 # davidalzate/security-{keycloak-local,opa,pdp,pep}:${SECURITY_VERSION}), endurecido para este repositorio:
@@ -54,7 +54,8 @@ services:
 
   redis:
     networks: [lab]
-    image: redis:7.4-alpine
+    # Versión fija (igual que distribution/compose.yaml 0.1.9): un tag flotante cambia Redis sin aviso en cada `pull`.
+    image: redis:7.4.12-alpine
     command: ["redis-server", "--appendonly", "yes"]
     volumes:
       - asistencias-security-lab-redis-data:/data
@@ -89,6 +90,10 @@ services:
       # Origenes de la SPA de AsistenciasUCO autorizados a recuperar su URL tras el login BFF del PDP (allow-list,
       # nunca un reflejo libre de return_to). El login del PDP aprovisiona la identidad del usuario en el catalogo.
       PDP_SECURITY_LOGIN_ALLOWED_RETURN_ORIGINS: ${PDP_SECURITY_LOGIN_ALLOWED_RETURN_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200}
+      # Nombres que consume el PDP desde 0.1.7 (antes los inyectaba un override externo): allow-list exacta de
+      # return_to y orígenes CORS del canal Bearer (GUIA-INTEGRACION 9.1). Nunca `*`.
+      PDP_LOGIN_ALLOWED_RETURN_ORIGINS: ${PDP_LOGIN_ALLOWED_RETURN_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200}
+      PDP_CORS_ALLOWED_ORIGINS: ${PDP_CORS_ALLOWED_ORIGINS:-http://localhost:4200,http://127.0.0.1:4200}
       # Destino del logout BFF del PDP (cierra la sesion BFF y la sesion SSO de Keycloak y vuelve a la SPA).
       PDP_FRONTEND_ORIGIN: ${PDP_FRONTEND_ORIGIN:-http://localhost:4200}
       PDP_SECURITY_MFA_ENABLED: ${PDP_SECURITY_MFA_ENABLED:-false}
