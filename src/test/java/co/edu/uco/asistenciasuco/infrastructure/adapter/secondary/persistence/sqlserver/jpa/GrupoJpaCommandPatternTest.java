@@ -113,7 +113,7 @@ class GrupoJpaCommandPatternTest {
     }
 
     @Test
-    void GRP_PAT_005_crear_grupo_con_franjas_guarda_el_horario_en_la_misma_transaccion() {
+    void GRP_PAT_005_crear_grupo_con_franjas_guarda_el_horario_y_precarga_sus_sesiones_en_la_misma_transaccion() {
         command.crearGrupo(new CrearGrupoRepositoryDTO(GRUPO, ASIGNATURA, PERIODO, 1, "Grupo A", DOCENTE, EJECUTOR,
                 List.of(new FranjaHorarioRepositoryDTO("LU", LocalTime.of(8, 0), LocalTime.of(10, 0)),
                         new FranjaHorarioRepositoryDTO("MI", LocalTime.of(14, 0), LocalTime.of(16, 30)))));
@@ -121,6 +121,7 @@ class GrupoJpaCommandPatternTest {
         final InOrder orden = inOrder(entityManager);
         orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_crear_grupo"));
         orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_guardar_horarios_grupo"));
+        orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_precargar_sesiones_grupo"));
         verify(transactionOperations).execute(any());
         verify(query).setParameter("horariosJSON",
                 "[{\"codigoDia\":\"LU\",\"horaInicio\":\"08:00\",\"horaFin\":\"10:00\"},"
@@ -128,10 +129,23 @@ class GrupoJpaCommandPatternTest {
     }
 
     @Test
-    void GRP_PAT_006_sin_franjas_no_toca_el_horario() {
+    void GRP_PAT_006_sin_franjas_no_toca_el_horario_ni_las_sesiones() {
         command.actualizarGrupo(new ActualizarGrupoRepositoryDTO(GRUPO, 2, "Grupo B", DOCENTE, 30, EJECUTOR));
 
         verify(entityManager, never()).createNativeQuery(contains("usp_guardar_horarios_grupo"));
+        verify(entityManager, never()).createNativeQuery(contains("usp_precargar_sesiones_grupo"));
+    }
+
+    @Test
+    void GRP_PAT_007_actualizar_grupo_con_franjas_regenera_las_sesiones_futuras_con_el_ejecutor() {
+        command.actualizarGrupo(new ActualizarGrupoRepositoryDTO(GRUPO, 2, "Grupo B", DOCENTE, 30, EJECUTOR,
+                List.of(new FranjaHorarioRepositoryDTO("LU", LocalTime.of(8, 0), LocalTime.of(10, 0)))));
+
+        final InOrder orden = inOrder(entityManager);
+        orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_grupo"));
+        orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_guardar_horarios_grupo"));
+        orden.verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_precargar_sesiones_grupo"));
+        verify(query, org.mockito.Mockito.atLeastOnce()).setParameter("idUsuarioEjecutor", EJECUTOR);
     }
 
     @Test
