@@ -22,7 +22,9 @@ param(
     [string]$LabEnv,
     [string]$DatasourceEnv,
     [string]$PepUrl = 'http://localhost:18081',
-    [string]$LogDirectory
+    [string]$LogDirectory,
+    # JAR ya construido en una ruta aislada (despliegue controlado sin sobrescribir el de target/ en uso).
+    [string]$JarPath
 )
 
 Set-StrictMode -Version Latest
@@ -31,10 +33,16 @@ $scriptDirectory = if ($PSScriptRoot) { $PSScriptRoot } else { Split-Path -Paren
 $repoRoot = (Resolve-Path (Join-Path $scriptDirectory '..\..\..')).Path
 if (-not $BackendEnv) { $BackendEnv = Join-Path $repoRoot '.env' }
 if (-not $LabEnv) { $LabEnv = Join-Path $env:USERPROFILE '.asistencias-security-lab\lab.env' }
-if (-not $LogDirectory) { $LogDirectory = Join-Path $env:TEMP 'asistencias-baseline' }
-$jar = Get-ChildItem -Path (Join-Path $repoRoot 'target') -Filter '*.jar' |
-    Where-Object { $_.Name -notlike '*plain*' } | Select-Object -First 1
+# Alloy (infra/observability) lee infra/observability/logs/*.jsonl y lo envia a Loki; ese directorio esta fuera de Git.
+if (-not $LogDirectory) { $LogDirectory = Join-Path $repoRoot 'infra\observability\logs' }
+$jar = if ($JarPath) { Get-Item -LiteralPath $JarPath } else { Get-ChildItem -Path (Join-Path $repoRoot 'target') -Filter '*.jar' |
+    Where-Object { $_.Name -notlike '*plain*' } | Select-Object -First 1 }
 if ($null -eq $jar) { throw 'No hay jar en target/. Ejecute .\mvnw.cmd -B -DskipTests package' }
+Add-Type -AssemblyName System.IO.Compression.FileSystem
+$archive = [System.IO.Compression.ZipFile]::OpenRead($jar.FullName)
+try { $isBootJar = $null -ne ($archive.Entries | Where-Object { $_.FullName -like 'BOOT-INF/*' } | Select-Object -First 1) }
+finally { $archive.Dispose() }
+if (-not $isBootJar) { throw "$($jar.FullName) no es un jar ejecutable de Spring Boot (falta BOOT-INF; fallo spring-boot:repackage)." }
 if (Get-NetTCPConnection -State Listen -LocalPort $Port -ErrorAction SilentlyContinue) { throw "El puerto $Port ya esta en uso." }
 
 function Import-ProcessEnvFile([string]$Path) {
@@ -77,8 +85,18 @@ New-Item -ItemType Directory -Force -Path $LogDirectory | Out-Null
 $env:ASISTENCIAS_UCO_LOG_FILE = Join-Path $LogDirectory "backend-$Provider.jsonl"
 $env:ASISTENCIAS_UCO_LOG_FILE_PATTERN = Join-Path $LogDirectory "backend-$Provider.%d{yyyy-MM-dd}.%i.jsonl"
 
-Write-Host "Backend $Provider en http://127.0.0.1:$Port (logs: $LogDirectory)"
+# La JVM carga las clases del jar bajo demanda: si un build sobrescribe target\*.jar con el proceso vivo, toda ruta que
+# necesite una clase aun no cargada (401/404, manejo de errores, rollover de logs) falla con NoClassDefFoundError y la
+# peticion queda sin respuesta. Por eso siempre se ejecuta una copia inmutable fuera de target\.
+$runDirectory = Join-Path $env:LOCALAPPDATA 'AsistenciasUCO\backend-run'
+New-Item -ItemType Directory -Force -Path $runDirectory | Out-Null
+Get-ChildItem -LiteralPath $runDirectory -Filter '*.jar' | Sort-Object Name -Descending | Select-Object -Skip 3 |
+    Remove-Item -ErrorAction SilentlyContinue  # las copias en uso estan bloqueadas y se conservan
+$runJar = Join-Path $runDirectory ('AsistenciasUCO-{0}-{1}.jar' -f (Get-Date -Format 'yyyyMMddHHmmss'), $Port)
+Copy-Item -LiteralPath $jar.FullName -Destination $runJar
+
+Write-Host "Backend $Provider en http://127.0.0.1:$Port (jar: $runJar; logs: $LogDirectory)"
 # La JVM se supervisa por su exit code, no por stderr (PowerShell 5.1 convierte stderr nativo en ErrorRecord).
 $ErrorActionPreference = 'Continue'
-& (Join-Path $env:JAVA_HOME 'bin\java.exe') -jar $jar.FullName
+& (Join-Path $env:JAVA_HOME 'bin\java.exe') -jar $runJar
 exit $LASTEXITCODE
