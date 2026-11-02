@@ -61,7 +61,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
  *       {@code COORDINADOR}/{@code ADMINISTRADOR} — ver duda documentada en
  *       docs/security/runtime-security-provider-architecture.md (no hay contrato funcional
  *       explícito; DOCENTE NO tiene acceso bajo la política actual).</li>
- *   <li>{@code POST /api/v1/grupos} (command de coordinación): {@code COORDINADOR}/{@code ADMINISTRADOR}.</li>
+ *   <li>{@code POST /api/v1/grupos} (command de coordinación; el DOCENTE solo crea a su nombre, lo exige la DB): {@code COORDINADOR}/{@code ADMINISTRADOR}/{@code DOCENTE}.</li>
  *   <li>{@code POST /api/v1/asistencias/lote} (registro docente por lote): {@code DOCENTE}.</li>
  *   <li>{@code /api/v1/estudiante/**} (portal del propio estudiante): {@code ESTUDIANTE}.</li>
  * </ul>
@@ -377,11 +377,27 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isUnauthorized());
     }
 
-    // --- POST /api/v1/grupos : command de coordinación ---
+    // --- POST /api/v1/grupos : command de coordinación; el DOCENTE solo crea a su nombre (F3, lo exige la DB) ---
 
     @Test
     void crear_grupo_estudiante_recibe_403() throws Exception {
         mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isForbidden());
+    }
+
+    @Test
+    void crear_grupo_docente_es_permitido_por_security_filter_chain() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void actualizar_y_eliminar_grupo_siguen_cerrados_al_docente() throws Exception {
+        mockMvc.perform(put("/api/v1/grupos/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(delete("/api/v1/grupos/{id}", "11111111-1111-1111-1111-111111111111")
+                        .header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
                 .andExpect(status().isForbidden());
     }
 

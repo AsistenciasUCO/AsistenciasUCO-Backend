@@ -186,6 +186,7 @@ class DbExceptionTranslatorTest {
             "HOR_001, ERR_CRUCE_HORARIO_ESTUDIANTE",
             "HOR_002, ERR_CRUCE_HORARIO_DOCENTE",
             "VAL_006, CONFLICT",
+            "HOR_005, CONFLICT",
             "GEN_003, CONFLICT"
     })
     void dbcode_formal_de_conflicto_lanza_conflict_con_codigo_especifico(final String dbCode, final String expectedCode) {

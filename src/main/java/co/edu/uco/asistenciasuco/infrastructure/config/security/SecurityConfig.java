@@ -184,6 +184,10 @@ public class SecurityConfig {
                 // que el ejecutor sea docente titular del grupo o coordinador de su programa.
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes/*/reenviar-verificacion")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
+                // F3: el DOCENTE crea sus propios grupos (la DB exige que el titular sea el propio docente y que
+                // este tenga vinculo activo con el programa, ver usp_crear_grupo). PUT/DELETE siguen sin DOCENTE.
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos")
+                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
