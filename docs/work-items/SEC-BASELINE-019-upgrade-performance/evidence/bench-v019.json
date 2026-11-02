@@ -1,0 +1,225 @@
+{
+  "label": "v0.1.9",
+  "started": "2026-11-02T03:23:55-0500",
+  "scenarios": {
+    "S1_pep_decision": {
+      "n": 30,
+      "ok": 30,
+      "codes": {
+        "204": 30
+      },
+      "p50_ms": 142.0,
+      "p95_ms": 167.5,
+      "max_ms": 181.4,
+      "mean_ms": 140.4,
+      "wall_ms": null,
+      "note": "POST embedded-access-decisions, 6 rutas rotadas",
+      "warmup": 5
+    },
+    "S2_pdp_security_summary": {
+      "n": 20,
+      "ok": 20,
+      "codes": {
+        "200": 20
+      },
+      "p50_ms": 26.3,
+      "p95_ms": 46.8,
+      "max_ms": 47.9,
+      "mean_ms": 28.6,
+      "wall_ms": null,
+      "note": "GET security/summary con Bearer del administrador",
+      "warmup": 3
+    },
+    "S3_backend_auth_me": {
+      "n": 30,
+      "ok": 30,
+      "codes": {
+        "200": 30
+      },
+      "p50_ms": 151.3,
+      "p95_ms": 231.0,
+      "max_ms": 240.4,
+      "mean_ms": 164.1,
+      "wall_ms": null,
+      "note": "GET /api/v1/auth/me autenticado",
+      "warmup": 3
+    },
+    "S4_backend_admin_decanos": {
+      "n": 15,
+      "ok": 15,
+      "codes": {
+        "200": 15
+      },
+      "p50_ms": 138.5,
+      "p95_ms": 156.0,
+      "max_ms": 159.3,
+      "mean_ms": 140.8,
+      "wall_ms": null,
+      "note": "Spring->PEP->PDP->SQL",
+      "warmup": 3
+    },
+    "S5_pep_burst_x5": {
+      "n": 15,
+      "ok": 15,
+      "codes": {
+        "204": 15
+      },
+      "p50_ms": 535.1,
+      "p95_ms": 553.2,
+      "max_ms": 561.0,
+      "mean_ms": 511.4,
+      "wall_ms": 525.4,
+      "note": "decisiones PEP simultaneas",
+      "reps": 3,
+      "concurrency": 5,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.93% mem=355.8MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.21% mem=491.7MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=0.37% mem=3.609MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=0.22% mem=696.3MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=15.85MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=8.00% mem=94.18MiB / 7.61GiB"
+      ]
+    },
+    "S5_pep_burst_x20": {
+      "n": 60,
+      "ok": 60,
+      "codes": {
+        "204": 60
+      },
+      "p50_ms": 1875.8,
+      "p95_ms": 2287.2,
+      "max_ms": 2294.6,
+      "mean_ms": 1938.4,
+      "wall_ms": 1982.5,
+      "note": "decisiones PEP simultaneas",
+      "reps": 3,
+      "concurrency": 20,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.17% mem=377.8MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.23% mem=508MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=0.32% mem=3.609MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=0.20% mem=696.3MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=18.66MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=0.19% mem=103.1MiB / 7.61GiB"
+      ]
+    },
+    "S5_pep_burst_x50": {
+      "n": 150,
+      "ok": 83,
+      "codes": {
+        "503": 67,
+        "204": 83
+      },
+      "p50_ms": 4047.6,
+      "p95_ms": 4493.7,
+      "max_ms": 4532.1,
+      "mean_ms": 4105.0,
+      "wall_ms": 4208.4,
+      "note": "decisiones PEP simultaneas",
+      "reps": 3,
+      "concurrency": 50,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.19% mem=393.8MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.41% mem=541.1MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=0.60% mem=3.621MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=0.28% mem=696.3MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=19.11MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=0.30% mem=108MiB / 7.61GiB"
+      ]
+    },
+    "S6_backend_admin_decanos_burst_x5": {
+      "n": 10,
+      "ok": 10,
+      "codes": {
+        "200": 10
+      },
+      "p50_ms": 489.6,
+      "p95_ms": 920.3,
+      "max_ms": 920.3,
+      "mean_ms": 698.8,
+      "wall_ms": 706.6,
+      "note": "cadena completa simultanea",
+      "reps": 2,
+      "concurrency": 5,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.24% mem=394MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.24% mem=541MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=0.46% mem=3.871MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=0.23% mem=696.3MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=19.21MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=0.13% mem=108.1MiB / 7.61GiB"
+      ]
+    },
+    "S6_backend_admin_decanos_burst_x20": {
+      "n": 40,
+      "ok": 40,
+      "codes": {
+        "200": 40
+      },
+      "p50_ms": 1585.3,
+      "p95_ms": 1623.0,
+      "max_ms": 1630.5,
+      "mean_ms": 1574.2,
+      "wall_ms": 1601.1,
+      "note": "cadena completa simultanea",
+      "reps": 2,
+      "concurrency": 20,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.19% mem=398.9MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.30% mem=541.1MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=2.89% mem=3.641MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=2.56% mem=696.3MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=19.38MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=5.13% mem=115.7MiB / 7.61GiB"
+      ]
+    },
+    "S6b_backend_auth_me_burst_x5": {
+      "n": 10,
+      "ok": 10,
+      "codes": {
+        "200": 10
+      },
+      "p50_ms": 353.9,
+      "p95_ms": 390.3,
+      "max_ms": 390.3,
+      "mean_ms": 369.0,
+      "wall_ms": 373.8,
+      "note": "auth/me simultaneo",
+      "reps": 2,
+      "concurrency": 5,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.09% mem=399.3MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.20% mem=541.1MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=0.36% mem=3.871MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=0.23% mem=696.2MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=18.16MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=0.00% mem=107.6MiB / 7.61GiB"
+      ]
+    },
+    "S6b_backend_auth_me_burst_x20": {
+      "n": 40,
+      "ok": 40,
+      "codes": {
+        "200": 40
+      },
+      "p50_ms": 1460.1,
+      "p95_ms": 1494.6,
+      "max_ms": 1497.6,
+      "mean_ms": 1454.3,
+      "wall_ms": 1488.6,
+      "note": "auth/me simultaneo",
+      "reps": 2,
+      "concurrency": 20,
+      "docker_stats_after": [
+        "asistencias-security-lab-pep-1 cpu=0.09% mem=401.6MiB / 7.61GiB",
+        "asistencias-security-lab-pdp-1 cpu=0.22% mem=545.8MiB / 7.61GiB",
+        "asistencias-security-lab-redis-1 cpu=2.21% mem=3.906MiB / 7.61GiB",
+        "asistencias-security-lab-keycloak-1 cpu=2.37% mem=696.3MiB / 7.61GiB",
+        "asistencias-security-lab-opa-1 cpu=0.00% mem=18.48MiB / 7.61GiB",
+        "asistencias-security-lab-surrealdb-1 cpu=0.00% mem=107.1MiB / 7.61GiB"
+      ]
+    }
+  },
+  "finished": "2026-11-02T03:25:47-0500"
+}
