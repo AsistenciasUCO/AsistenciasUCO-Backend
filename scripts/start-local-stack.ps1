@@ -196,7 +196,7 @@ Write-Status -Kind 'PATH' -Name 'files-env' -Value ($(if (Test-RequiredFile -Pat
 
 Write-Status -Kind 'SECURITY' -Name 'provider' -Value $Provider
 $securityPorts = if ($Provider -eq 'baseline') { @(19090, 18080, 18081) } else { @(8081) }
-foreach ($port in (@(1433) + $securityPorts + @(9000, 3310, 8080, 4200))) {
+foreach ($port in (@(1433) + $securityPorts + @(9000, 3310, 3025, 8080, 4200))) {
     Write-Status -Kind 'PORT' -Name ([string]$port) -Value ($(if (Test-ListeningPort -Port $port) { 'LISTENING' } else { 'FREE' }))
 }
 
@@ -240,6 +240,17 @@ if (-not $NoDependencies) {
         Invoke-ComposeUp -Root $filesRoot -ComposeFile (Join-Path $filesRoot 'compose.yaml') -EnvFile $FilesEnvFile
         if (-not (Wait-ListeningPort -Port 9000) -or -not (Wait-ListeningPort -Port 3310)) { throw 'MinIO/ClamAV no abrieron sus puertos oficiales.' }
     }
+    if (-not (Test-ListeningPort -Port 3025)) {
+        # SMTP de pruebas (GreenMail): el outbox SMTP del backend necesita un servidor que responda; no entrega a nadie.
+        Push-Location (Join-Path $backendRoot 'infra\mail')
+        try {
+            & docker compose --file compose.yaml up -d
+            if ($LASTEXITCODE -ne 0) { throw 'Compose no pudo iniciar GreenMail.' }
+        } finally {
+            Pop-Location
+        }
+        if (-not (Wait-ListeningPort -Port 3025)) { throw 'GreenMail no abrio el puerto SMTP 3025.' }
+    }
 }
 
 $started = @()
@@ -268,6 +279,6 @@ if ($started.Count -eq 0) {
 } else {
     foreach ($item in $started) { Write-Status -Kind 'PROCESS' -Name $item.Name -Value ('STARTED_PID=' + $item.Pid) }
 }
-Write-Status -Kind 'LOG' -Name 'backend' -Value (Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-baseline')
+Write-Status -Kind 'LOG' -Name 'backend' -Value (Join-Path $backendRoot 'infra\observability\logs')
 Write-Status -Kind 'LOG' -Name 'frontend' -Value (Join-Path ([System.IO.Path]::GetTempPath()) 'asistencias-uco-local-stack-frontend.out.log')
 Write-Status -Kind 'STACK' -Name 'result' -Value 'READY'
