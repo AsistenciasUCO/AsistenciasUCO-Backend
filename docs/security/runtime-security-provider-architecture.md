@@ -538,7 +538,8 @@ Estado vigente de las familias revisadas:
 | `/api/v1/estudiante/**` | `ESTUDIANTE` |
 | `/api/v1/estudiantes/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
 | `GET /api/v1/grupos/**` | `DOCENTE`, `COORDINADOR` o `ADMINISTRADOR` |
-| `POST/PUT/DELETE /api/v1/grupos/**` | `COORDINADOR` o `ADMINISTRADOR` |
+| `POST /api/v1/grupos` | `DOCENTE` (solo crea a su nombre, lo exige la DB), `COORDINADOR` o `ADMINISTRADOR` |
+| `POST/PUT/DELETE /api/v1/grupos/**` (resto) | `COORDINADOR` o `ADMINISTRADOR` |
 | `POST/PUT/PATCH /api/v1/sesiones/**` | `DOCENTE` |
 | `GET /api/v1/sesiones/*/qr-token` | `DOCENTE` |
 | `POST /api/v1/asistencias` | `DOCENTE` |

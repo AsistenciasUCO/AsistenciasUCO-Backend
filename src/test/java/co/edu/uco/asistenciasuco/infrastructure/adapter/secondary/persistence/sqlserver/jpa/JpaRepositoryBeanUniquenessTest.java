@@ -31,7 +31,8 @@ class JpaRepositoryBeanUniquenessTest {
     // SolicitudRevisionDocenteJpaRepository y AsistenciaSesionEstudianteJpaRepository) + AuditEventJpaRepository
     // (@Repository sin Port, TD-010 OPTION A). HU076-HU078: + ProgramaAcademicoJpaRepository y CatalogoProgramaJpaRepository; HU062-HU093: + DocenteProgramaJpaRepository y TipoVinculacionJpaRepository; +1 por la integracion de HU121-HU122/HU154 (ramas que no actualizaron el conteo); HU065-HU070: + CoordinadorIndicadoresJpaRepository; HU102-HU144: + DecanoIndicadoresJpaRepository; HU133-HU139: + AdminIndicadoresJpaRepository; develop (HU096-HU098, HU064-HU060, HU104-HU145): + PeriodoAcademicoCommandJpaRepository, AsistenciaProgramaJpaRepository, FacultadDecanoJpaRepository; SEC-BASELINE-017: + ExternalIdentityLinkJpaRepository; HU010-HU011: + SolicitudRevisionEstudianteJpaRepository; HU051: + RetiroEstudianteGrupoJpaRepository; HU053-HU055: + SolicitudIngresoGrupoJpaRepository; HU008: + OfertaGruposEstudianteJpaRepository; HU094-HU095: + DocenteProgramaReporteJpaRepository; HU006: + PerfilUsuarioJpaRepository.
     // IDENT-001: + VerificacionCorreoJpaRepository (verificacion de correo, reenvio y token de un solo uso).
-    private static final int EXPECTED_REPOSITORIES = 51;
+    // F3: + OfertaCreacionGruposDocenteJpaRepository (oferta de asignaturas del docente para crear grupos).
+    private static final int EXPECTED_REPOSITORIES = 52;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

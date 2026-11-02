@@ -8,6 +8,11 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarasignatur
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.interactor.ConsultarAsignaturasDocenteInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.ConsultarAsignaturasDocenteUseCase;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.usecase.impl.ConsultarAsignaturasDocenteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarofertacreaciongrupos.primaryports.ConsultarOfertaCreacionGruposDocenteInputPort;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarofertacreaciongrupos.primaryports.interactor.ConsultarOfertaCreacionGruposDocenteInteractor;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarofertacreaciongrupos.usecase.ConsultarOfertaCreacionGruposDocenteUseCase;
+import co.edu.uco.asistenciasuco.application.features.docente.consultarofertacreaciongrupos.usecase.impl.ConsultarOfertaCreacionGruposDocenteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.OfertaCreacionGruposDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.ConsultarDocentesInputPort;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.primaryports.interactor.ConsultarDocentesInteractor;
 import co.edu.uco.asistenciasuco.application.features.docente.consultardocentes.usecase.ConsultarDocentesUseCase;
@@ -148,6 +153,16 @@ public class DocenteWiringConfiguration {
     @Bean
     ConsultarAsignaturasDocenteInputPort consultarAsignaturasDocenteInputPort(final ConsultarAsignaturasDocenteUseCase useCase) {
         return new ConsultarAsignaturasDocenteInteractor(useCase);
+    }
+
+    @Bean
+    ConsultarOfertaCreacionGruposDocenteUseCase consultarOfertaCreacionGruposDocenteUseCase(final InstitutionalScopePort scopePort, final OfertaCreacionGruposDocenteQueryPort queryPort) {
+        return new ConsultarOfertaCreacionGruposDocenteUseCaseImpl(scopePort, queryPort);
+    }
+
+    @Bean
+    ConsultarOfertaCreacionGruposDocenteInputPort consultarOfertaCreacionGruposDocenteInputPort(final ConsultarOfertaCreacionGruposDocenteUseCase useCase) {
+        return new ConsultarOfertaCreacionGruposDocenteInteractor(useCase);
     }
 
     @Bean
