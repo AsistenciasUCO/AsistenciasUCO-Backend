@@ -91,6 +91,11 @@ public final class ProfileSyncingIdentityProvider implements IdentityProviderPor
     }
 
     @Override
+    public void confirmarCorreoCuenta(final String idExterno) {
+        delegate.confirmarCorreoCuenta(idExterno);
+    }
+
+    @Override
     public void actualizarDatosCuenta(final String idExterno, final ActualizarCuentaIdentidadDTO datos) {
         delegate.actualizarDatosCuenta(idExterno, datos);
     }
