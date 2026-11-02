@@ -151,4 +151,12 @@ class ProfileSyncingIdentityProviderTest {
         verify(delegate).rolesDeCuenta("kc-1");
         verify(profiles, never()).sincronizar(anyString(), any());
     }
+
+    @Test
+    void confirmar_correo_se_delega_al_proveedor_y_no_cae_en_la_operacion_no_soportada_del_puerto() {
+        provider.confirmarCorreoCuenta("kc-1");
+
+        verify(delegate).confirmarCorreoCuenta("kc-1");
+        verify(profiles, never()).sincronizar(anyString(), any());
+    }
 }
