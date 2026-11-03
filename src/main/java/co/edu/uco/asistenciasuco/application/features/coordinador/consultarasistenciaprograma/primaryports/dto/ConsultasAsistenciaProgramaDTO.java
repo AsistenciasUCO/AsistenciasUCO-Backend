@@ -20,9 +20,14 @@ public final class ConsultasAsistenciaProgramaDTO {
                                    LocalDate finPeriodo) {
     }
 
+    /**
+     * {@code fechaHoraInicio}/{@code fechaHoraFin}: valor v1 sin zona, intacto. APP-04 (aditivo):
+     * {@code fechaHoraInicioUtc}/{@code fechaHoraFinUtc} son instantes UTC solo si {@code estadoTemporal = CONFIRMADA}.
+     */
     public record SesionGrupoDTO(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,
                                  Integer numero, String codigo, Integer numeroSemana, LocalDateTime fechaHoraInicio,
-                                 LocalDateTime fechaHoraFin) {
+                                 LocalDateTime fechaHoraFin, LocalDateTime fechaHoraInicioUtc,
+                                 LocalDateTime fechaHoraFinUtc, String estadoTemporal) {
     }
 
     public record AsistenciaSesionDTO(UUID idDetalleAsistencia, UUID idSesion, String nombreSesion, UUID idEstudiante,

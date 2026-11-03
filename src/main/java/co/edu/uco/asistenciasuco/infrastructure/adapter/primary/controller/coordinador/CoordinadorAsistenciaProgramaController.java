@@ -47,14 +47,17 @@ public final class CoordinadorAsistenciaProgramaController {
     }
 
     @GetMapping("/grupos/{grupoId}/sesiones")
-    public ResponseEntity<ApiListResponse<SesionGrupoDTO>> consultarSesiones(
+    public ResponseEntity<ApiListResponse<SesionGrupoCoordinadorResponse>> consultarSesiones(
             @PathVariable("grupoId") final UUID grupoId,
             @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate desde,
             @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate hasta,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return respuesta(inputPort.consultarSesionesGrupo(usuario(), grupoId, desde, hasta, pagina, tamano));
+        final PaginaDTO<SesionGrupoDTO> sesiones =
+                inputPort.consultarSesionesGrupo(usuario(), grupoId, desde, hasta, pagina, tamano);
+        return ResponseEntity.ok(new ApiListResponse<>(true,
+                sesiones.elementos().stream().map(SesionGrupoCoordinadorResponse::from).toList(), sesiones.total()));
     }
 
     @GetMapping("/sesiones/{sesionId}/asistencias")

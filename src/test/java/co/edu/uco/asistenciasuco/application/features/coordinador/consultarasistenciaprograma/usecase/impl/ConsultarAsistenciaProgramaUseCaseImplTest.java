@@ -8,6 +8,10 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaP
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.GrupoProgramaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.Pagina;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.SesionGrupoProjection;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.domain.SesionGrupoHorarioDomain;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -20,6 +24,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
@@ -40,18 +45,23 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
 
     private final AsistenciaProgramaQueryPort queryPort = mock(AsistenciaProgramaQueryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
+    private final SesionProcedenciaQueryPort procedenciaPort = mock(SesionProcedenciaQueryPort.class);
     private ConsultarAsistenciaProgramaUseCaseImpl useCase;
 
     @BeforeEach
     void preparar() {
-        useCase = new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, scopePort);
+        useCase = new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, scopePort, procedenciaPort);
         when(scopePort.findProgramaIdByCoordinadorUsuario(COORDINADOR)).thenReturn(Optional.of(PROGRAMA));
     }
 
     @Test
     void constructor_rechaza_dependencias_nulas() {
-        assertThrows(NullPointerException.class, () -> new ConsultarAsistenciaProgramaUseCaseImpl(null, scopePort));
-        assertThrows(NullPointerException.class, () -> new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, null));
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarAsistenciaProgramaUseCaseImpl(null, scopePort, procedenciaPort));
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, null, procedenciaPort));
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, scopePort, null));
     }
 
     @Test
@@ -120,6 +130,85 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
     }
 
     @Test
+    void T_APP04_01_sesion_confirmada_expone_instante_utc_y_conserva_el_valor_v1() {
+        final LocalDateTime inicioUtc = LocalDateTime.of(2026, 11, 3, 15, 0, 0, 123_456_700);
+        final LocalDateTime finUtc = LocalDateTime.of(2026, 11, 3, 17, 0);
+        when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(sesion()), 1));
+        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO))
+                .thenReturn(List.of(procedencia(SESION, GRUPO, inicioUtc, finUtc, "UTC_V2")));
+
+        final var sesion = useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null)
+                .elementos().getFirst();
+
+        assertEquals(EstadoHorarioSesion.CONFIRMADA, sesion.estadoTemporal());
+        assertEquals(inicioUtc, sesion.fechaHoraInicioUtc());
+        assertEquals(finUtc, sesion.fechaHoraFinUtc());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 7, 0), sesion.fechaHoraInicio());
+    }
+
+    @Test
+    void T_APP04_02_sin_procedencia_confirmada_no_se_ofrece_instante() {
+        final UUID legado = UUID.randomUUID();
+        final UUID sinFila = UUID.randomUUID();
+        when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(sesion(legado), sesion(sinFila)), 2));
+        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(
+                procedencia(legado, GRUPO, LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0),
+                        null)));
+
+        final var sesiones = useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null).elementos();
+
+        assertEquals(2, sesiones.size());
+        for (final var sesion : sesiones) {
+            assertEquals(EstadoHorarioSesion.INDETERMINADA, sesion.estadoTemporal());
+            assertNull(sesion.fechaHoraInicioUtc());
+            assertNull(sesion.fechaHoraFinUtc());
+        }
+    }
+
+    @Test
+    void T_APP04_03_procedencia_de_otro_grupo_no_se_usa() {
+        when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(sesion()), 1));
+        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(procedencia(SESION,
+                UUID.randomUUID(), LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0), "UTC_V2")));
+
+        final var sesion = useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null)
+                .elementos().getFirst();
+
+        assertEquals(EstadoHorarioSesion.INDETERMINADA, sesion.estadoTemporal());
+        assertNull(sesion.fechaHoraInicioUtc());
+    }
+
+    @Test
+    void T_APP04_04_pagina_vacia_no_consulta_procedencia() {
+        when(queryPort.consultarSesionesGrupo(any(), any(), any(), any(), anyInt(), anyInt()))
+                .thenReturn(new Pagina<>(List.of(), 0));
+
+        useCase.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null);
+
+        verifyNoInteractions(procedenciaPort);
+    }
+
+    @Test
+    void T_APP04_05_dominio_descarta_instantes_si_la_procedencia_no_es_confirmada() {
+        final var dominio = horario(SESION, LocalDateTime.of(2026, 2, 3, 12, 0), EstadoHorarioSesion.INDETERMINADA);
+
+        assertNull(dominio.fechaHoraInicioUtc());
+        assertNull(dominio.fechaHoraFinUtc());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 7, 0), dominio.fechaHoraInicio());
+        assertThrows(NullPointerException.class, () -> horario(null, null, EstadoHorarioSesion.INDETERMINADA));
+        assertThrows(NullPointerException.class, () -> horario(SESION, null, null));
+    }
+
+    private static SesionGrupoHorarioDomain horario(final UUID id, final LocalDateTime utc,
+                                                    final EstadoHorarioSesion estado) {
+        return new SesionGrupoHorarioDomain(id, GRUPO, 1, "Grupo 1", "Sesion 1", 1, "S-01", 2,
+                LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0), utc, utc, estado);
+    }
+
+    @Test
     void T_061_01_asistencias_envia_filtro_asistio() {
         when(queryPort.consultarAsistenciasSesion(COORDINADOR, SESION, false, 1, 10))
                 .thenReturn(new Pagina<>(List.of(asistencia()), 1));
@@ -138,6 +227,8 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
     @Test
     void interactor_mapea_proyecciones_a_dto_con_pagina_y_tamano() {
         final ConsultarAsistenciaProgramaInteractor interactor = new ConsultarAsistenciaProgramaInteractor(useCase);
+        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(procedencia(SESION, GRUPO,
+                LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0), "UTC_GENERADOR")));
         when(queryPort.consultarGrupos(COORDINADOR, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(grupo()), 7));
         when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 2, 5))
                 .thenReturn(new Pagina<>(List.of(sesion()), 6));
@@ -154,6 +245,10 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
         final var sesiones = interactor.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 2, 5);
         assertEquals(2, sesiones.pagina());
         assertEquals("S-01", sesiones.elementos().getFirst().codigo());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 7, 0), sesiones.elementos().getFirst().fechaHoraInicio());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 12, 0), sesiones.elementos().getFirst().fechaHoraInicioUtc());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 14, 0), sesiones.elementos().getFirst().fechaHoraFinUtc());
+        assertEquals("CONFIRMADA", sesiones.elementos().getFirst().estadoTemporal());
 
         final var asistencias = interactor.consultarAsistenciasSesion(COORDINADOR, SESION, null, null, null);
         assertEquals("Ana Ruiz", asistencias.elementos().getFirst().nombreCompleto());
@@ -171,7 +266,19 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
     }
 
     private static SesionGrupoProjection sesion() {
-        return new SesionGrupoProjection(SESION, GRUPO, 1, "Grupo 1", "Sesion 1", 1, "S-01", 2,
+        return sesion(SESION);
+    }
+
+    private static SesionProcedenciaRepositoryProjection procedencia(final UUID sesion, final UUID grupo,
+                                                                      final LocalDateTime inicio,
+                                                                      final LocalDateTime fin,
+                                                                      final String procedenciaTemporal) {
+        return new SesionProcedenciaRepositoryProjection(sesion, grupo, "Sesion 1", 1, "S-01", 2, "1", "Grupo 1",
+                inicio, fin, procedenciaTemporal);
+    }
+
+    private static SesionGrupoProjection sesion(final UUID id) {
+        return new SesionGrupoProjection(id, GRUPO, 1, "Grupo 1", "Sesion 1", 1, "S-01", 2,
                 LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0));
     }
 
