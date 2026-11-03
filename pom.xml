@@ -42,6 +42,19 @@
         <opentelemetry.version>1.62.0</opentelemetry.version>
         <sonar.coverage.jacoco.xmlReportPaths>${project.build.directory}/site/jacoco/jacoco.xml</sonar.coverage.jacoco.xmlReportPaths>
     </properties>
+    <!--
+        MessageUcoLab (componente externo del equipo de mensajeria): el starter se publica en GitHub Packages.
+        El <id> debe coincidir con el <server> de ~/.m2/settings.xml (token con read:packages). Ver
+        AsistenciasUCO-Infra/docs/hardening/MESSAGE_CATALOG_SWITCH_GUIDE.md.
+    -->
+    <repositories>
+        <repository>
+            <id>github</id>
+            <url>https://maven.pkg.github.com/CamiloGarcia09/MessageUcolab--Backend</url>
+            <releases><enabled>true</enabled></releases>
+            <snapshots><enabled>false</enabled></snapshots>
+        </repository>
+    </repositories>
     <dependencies>
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -154,6 +167,12 @@
         <dependency>
             <groupId>com.github.ben-manes.caffeine</groupId>
             <artifactId>caffeine</artifactId>
+        </dependency>
+        <!-- Provider alterno del catalogo de mensajes (app.adapters.message-catalog.provider=messageucolab). Solo Infrastructure. -->
+        <dependency>
+            <groupId>co.edu.uco</groupId>
+            <artifactId>messageucolab-spring-boot-starter</artifactId>
+            <version>0.1.1</version>
         </dependency>
         <!--
             LB-004B.2: MinIO Java SDK oficial, solo en Infrastructure (MinioFileStorageAdapter).

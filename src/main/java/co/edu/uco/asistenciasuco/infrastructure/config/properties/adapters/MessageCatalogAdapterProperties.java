@@ -13,6 +13,8 @@ public record MessageCatalogAdapterProperties(Provider provider) {
 
     public enum Provider {
         SQLSERVER,
-        AZURE
+        AZURE,
+        /** Componente externo MessageUcoLab (equipo de mensajeria). */
+        MESSAGEUCOLAB
     }
 }

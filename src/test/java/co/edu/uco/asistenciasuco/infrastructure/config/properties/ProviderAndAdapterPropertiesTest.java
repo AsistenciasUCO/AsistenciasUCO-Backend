@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.infrastructure.config.properties.adapters.Param
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.adapters.VaultAdapterProperties;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.AzureAppConfigProviderProperties;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.AzureKeyVaultProviderProperties;
+import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.MessageUcoLabProviderProperties;
 import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
@@ -25,6 +26,25 @@ class ProviderAndAdapterPropertiesTest {
                 new MessageCatalogAdapterProperties(MessageCatalogAdapterProperties.Provider.AZURE).provider());
         assertEquals(MessageCatalogAdapterProperties.Provider.SQLSERVER,
                 new MessageCatalogAdapterProperties(MessageCatalogAdapterProperties.Provider.SQLSERVER).provider());
+        assertEquals(MessageCatalogAdapterProperties.Provider.MESSAGEUCOLAB,
+                new MessageCatalogAdapterProperties(MessageCatalogAdapterProperties.Provider.MESSAGEUCOLAB).provider());
+    }
+
+    @Test
+    void messageucolab_aplica_valores_por_defecto_y_rechaza_timeout_invalido() {
+        final MessageUcoLabProviderProperties defaults = new MessageUcoLabProviderProperties(null, null, null, null, null);
+
+        assertEquals(java.time.Duration.ofSeconds(3), defaults.timeout());
+        assertEquals(java.time.Duration.ofMinutes(5), defaults.cacheTtl());
+        assertThrows(IllegalStateException.class,
+                () -> new MessageUcoLabProviderProperties(null, java.time.Duration.ofSeconds(-1), null, null, null));
+        assertEquals(MessageUcoLabProviderProperties.Fallback.AZURE, defaults.fallback());
+        assertEquals("MSG_", defaults.codePrefix());
+        assertTrue(defaults.codeAliases().isEmpty());
+        assertThrows(IllegalStateException.class,
+                () -> new MessageUcoLabProviderProperties(java.time.Duration.ZERO, null, null, null, null));
+        assertThrows(IllegalStateException.class,
+                () -> new MessageUcoLabProviderProperties(java.time.Duration.ofSeconds(-1), null, null, null, null));
     }
 
     @Test

@@ -96,6 +96,14 @@ logging:
 # app.providers.* -> CÓMO se configura esa tecnología ya elegida.
 # Ver docs/architecture/adapter-composition-standard.md
 # ──────────────────────────────────────────────────────────────
+# Conexion al starter de MessageUcoLab (messageucolab-spring-boot-starter). El starter se autoconfigura aunque
+# el provider activo sea otro, por eso hay valores por defecto inocuos; solo se consulta con
+# app.adapters.message-catalog.provider=messageucolab. Los identificadores no son secretos (guia, paso 7).
+messageucolab:
+  url: ${MESSAGEUCOLAB_URL:http://localhost:8000}
+  application-id: ${MESSAGEUCOLAB_APPLICATION_ID:}
+  environment-id: ${MESSAGEUCOLAB_ENVIRONMENT_ID:}
+
 app:
   # MAINT-003F: contrato UTC v2 de sesiones. Activo por defecto en local; el verificador comprueba
   # al arrancar que la DB del ambiente tenga desplegado UTC-D06-POST-FREEZE.
@@ -120,6 +128,8 @@ app:
     parameter-catalog:
       provider: ${APP_ADAPTERS_PARAMETER_CATALOG_PROVIDER:azure_appconfig}
     message-catalog:
+      # azure (predeterminado) | messageucolab (componente del equipo de mensajeria) | sqlserver.
+      # Guia: AsistenciasUCO-Infra/docs/hardening/MESSAGE_CATALOG_SWITCH_GUIDE.md
       provider: ${APP_ADAPTERS_MESSAGE_CATALOG_PROVIDER:azure}
     storage:
       # LB-004B.2: minio es el unico provider soportado (decision humana, ver
@@ -136,6 +146,12 @@ app:
         targets: ${APP_ADAPTERS_NOTIFICATION_COMPOSITE_TARGETS:log,outbox}   # solo aplica con provider=composite
 
   providers:
+    # Solo aplica con app.adapters.message-catalog.provider=messageucolab (la conexion va en `messageucolab.*`).
+    messageucolab:
+      timeout: ${MESSAGEUCOLAB_TIMEOUT:3s}
+      cache-ttl: ${MESSAGEUCOLAB_CACHE_TTL:5m}   # 0 desactiva; el gateway limita a 120 peticiones/min por IP
+      fallback: ${MESSAGEUCOLAB_FALLBACK:azure}   # azure | none
+      code-prefix: ${MESSAGEUCOLAB_CODE_PREFIX:MSG_}
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI)
     azure-keyvault:
       endpoint: ${AZURE_KEYVAULT_ENDPOINT:https://kv-asist-dev-21245.vault.azure.net/}
