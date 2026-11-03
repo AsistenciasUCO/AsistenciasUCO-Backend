@@ -8,7 +8,12 @@ import org.springframework.boot.autoconfigure.AutoConfigurations;
 import org.springframework.boot.test.context.runner.ApplicationContextRunner;
 import org.springframework.boot.webclient.autoconfigure.WebClientAutoConfiguration;
 
+import java.io.BufferedReader;
+import java.io.InputStreamReader;
+import java.nio.charset.StandardCharsets;
 import java.time.Duration;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
@@ -78,6 +83,35 @@ class MessageUcoLabLiveIT {
         assertEquals(Optional.of("Los nombres y apellidos son obligatorios."), port.findUserMessage("VAL_003"));
         assertEquals(Optional.of("El identificador de correlación no está presente o está vacío."),
                 port.findUserMessage("CORR_001"));
+    }
+
+    /**
+     * Garantiza el ORIGEN: el adaptador de estas pruebas se construye sin contingencia, de modo que un acierto solo
+     * puede venir de MessageUcoLab (Azure no puede enmascarar un mensaje ausente ni distinto).
+     */
+    @Test
+    void todos_los_mensajes_cortos_cargados_se_sirven_desde_messageucolab_con_el_texto_exacto_del_seed() throws Exception {
+        requireLive();
+
+        final MessageCatalogPort port = adapter(new ApplicationContextRunnerHolder(), ENV);
+        final List<String> lines;
+        try (var in = getClass().getResourceAsStream("/messageucolab/mensajes-cortos-cargados.psv")) {
+            lines = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines()
+                    .filter(l -> !l.isBlank() && !l.startsWith("#")).toList();
+        }
+        assertEquals(48, lines.size());
+
+        final List<String> discrepancias = new ArrayList<>();
+        for (final String line : lines) {
+            final int sep = line.indexOf('|');
+            final String code = line.substring(0, sep);
+            final Optional<String> actual = port.findUserMessage(code);
+            if (!Optional.of(line.substring(sep + 1)).equals(actual)) {
+                discrepancias.add(code + " -> " + actual.orElse("<vacio>"));
+            }
+        }
+
+        assertEquals(List.of(), discrepancias);
     }
 
     @Test
