@@ -20,7 +20,7 @@ Validación local (Windows 10, Java 25) del 2026-11-02/03.
 | DB | `test/test_consultas_transversales_hu112_hu157.sql` sobre el SQL Server local | 8/8 `TEST_PASS` (T-112-01, T-128-01, T-143-01, T-157-01, T-157-02, T-SEC-03, T-PAG-02, T-INT-01) |
 | DB | Gate completo en un contenedor SQL Server 2022 limpio (réplica del job `DB Quality Gate CI/CD`) | 2026-11-03: `TOTAL_EXECUTED=396`, `PASSED=395`, `FAILED=0`, `SKIPPED=1`, `DB GATE PASS` (detalle en el `VALIDATION.md` del work item homónimo de la BD) |
 | Frontend | `npm run verify` | `TOTAL: 1410 SUCCESS`; cobertura realtime 95.06 % / 84.52 %; build de producción exit 0. Tras integrar `develop` (APP-04 y APP-06), 2026-11-03: `TOTAL: 1471 SUCCESS`, statements 91.6 %, lines 92.52 %, build exit 0 |
-| CI remoto | GitHub Actions y SonarCloud de los 3 repositorios | PENDIENTE: se ejecutan en los PR |
+| CI remoto (2026-11-03) | GitHub Actions y SonarCloud de los PR BD #79, backend #77, frontend #36 e Infra #9 | success en todos los checks: BD (Database Deployment & Quality Gate, SonarCloud), backend (Backend Quality Gate, ArchUnit, CodeQL, Trivy, Dependency Review, SonarCloud), frontend (build-test-verify, SonarCloud) e Infra (Validate official Infra contents); mergeados en `develop` |
 
 Limitaciones:
 
