@@ -14,8 +14,8 @@ Formulario del [protocolo de alineación contractual](../../integration/CONTRACT
 
 | Sistema | Repo/versión | Archivo/objeto | Hash/commit | Autoridad |
 |---|---|---|---|---|
-| DB | gestion-asistencia-db, rama `feature/HU112-HU128-HU143-HU157-consultas-transversales` | `usp_consultar_programas_creditos_facultad_paginado`, `usp_consultar_docentes_facultad_paginado`, `usp_buscar_asignaturas_paginado`, `usp_buscar_estudiantes_institucion_paginado`, `usp_consultar_historial_estudiante` | pendiente del PR | OWNER |
-| Backend | AsistenciasUCO, rama homónima | `ConsultasTransversalesJpaRepository`, `DecanoConsultasTransversalesController`, `AdminConsultasTransversalesController` | pendiente del PR | CONSUMER |
+| DB | gestion-asistencia-db `develop` | `usp_consultar_programas_creditos_facultad_paginado`, `usp_consultar_docentes_facultad_paginado`, `usp_buscar_asignaturas_paginado`, `usp_buscar_estudiantes_institucion_paginado`, `usp_consultar_historial_estudiante` | PR #79 (merge `74a84e4`) | OWNER |
+| Backend | AsistenciasUCO `develop` | `ConsultasTransversalesJpaRepository`, `DecanoConsultasTransversalesController`, `AdminConsultasTransversalesController` | PR #77 (merge `206dcd3a`) | CONSUMER |
 
 ## Matriz
 
@@ -66,4 +66,6 @@ Ninguno.
 
 ## Contrato congelado
 
-PENDIENTE DE PR (aprobación de John al abrir y mergear los PR).
+APPROVED
+
+Evidence of approval: PR integrados en `develop` por John el 2026-11-03 con CI remoto en verde; [VALIDATION](VALIDATION.md).
