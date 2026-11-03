@@ -7,7 +7,8 @@ import co.edu.uco.asistenciasuco.application.exception.validation.ValidationExce
 import jakarta.persistence.PersistenceException;
 
 /**
- * Traduce los codigos DBCODE de los SP de consulta de indicadores a errores de negocio con su HTTP: la DB decide el caso,
+ * Traduce los codigos DBCODE de los SP de consulta (indicadores, verificacion de correo y consultas transversales
+ * HU112/HU128/HU143/HU157) a errores de negocio con su HTTP: la DB decide el caso,
  * el backend solo lo clasifica. Los codigos no listados siguen siendo fallos tecnicos (500).
  */
 final class DbCodeTranslator {
@@ -39,6 +40,8 @@ final class DbCodeTranslator {
             case "VCE_005" -> new ConflictException("VCE_005", "El correo de este estudiante ya fue verificado.");
             case "PAG_001" -> new ValidationException("Los parametros de paginacion no son validos.");
             case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
+            // HU112/HU128/HU143/HU157: el SP de lectura exige el perfil del ejecutor.
+            case "SEC_001" -> new ForbiddenException("SEC_001", "No tiene el perfil requerido para esta consulta.");
             default -> exception;
         };
     }
