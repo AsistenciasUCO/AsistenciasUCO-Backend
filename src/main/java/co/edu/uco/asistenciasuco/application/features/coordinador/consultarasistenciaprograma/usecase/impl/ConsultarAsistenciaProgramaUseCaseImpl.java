@@ -3,17 +3,26 @@ package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasis
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.ConsultarAsistenciaProgramaUseCase;
+import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.domain.SesionGrupoHorarioDomain;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.SesionProcedenciaEntity;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.mapper.SesionProcedenciaMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.AsistenciaSesionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.GrupoProgramaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.Pagina;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort.SesionGrupoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.time.LocalDate;
+import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
+import java.util.function.Function;
+import java.util.stream.Collectors;
 
 /**
  * HU064/HU060/HU061. Exige un coordinador con programa (403 si no lo tiene) y valida paginacion y filtros; el
@@ -27,11 +36,14 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
 
     private final AsistenciaProgramaQueryPort queryPort;
     private final InstitutionalScopePort scopePort;
+    private final SesionProcedenciaQueryPort procedenciaPort;
 
     public ConsultarAsistenciaProgramaUseCaseImpl(final AsistenciaProgramaQueryPort queryPort,
-                                                  final InstitutionalScopePort scopePort) {
+                                                  final InstitutionalScopePort scopePort,
+                                                  final SesionProcedenciaQueryPort procedenciaPort) {
         this.queryPort = Objects.requireNonNull(queryPort, "AsistenciaProgramaQueryPort es obligatorio.");
         this.scopePort = Objects.requireNonNull(scopePort, "InstitutionalScopePort es obligatorio.");
+        this.procedenciaPort = Objects.requireNonNull(procedenciaPort, "SesionProcedenciaQueryPort es obligatorio.");
     }
 
     @Override
@@ -44,15 +56,44 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
     }
 
     @Override
-    public Pagina<SesionGrupoProjection> consultarSesionesGrupo(final UUID usuario, final UUID idGrupo,
-                                                                 final LocalDate desde, final LocalDate hasta,
-                                                                 final Integer pagina, final Integer tamano) {
+    public Pagina<SesionGrupoHorarioDomain> consultarSesionesGrupo(final UUID usuario, final UUID idGrupo,
+                                                                    final LocalDate desde, final LocalDate hasta,
+                                                                    final Integer pagina, final Integer tamano) {
         exigirCoordinador(usuario);
         exigirId(idGrupo, "El grupo es obligatorio.");
         if (!ObjectHelper.isNull(desde) && !ObjectHelper.isNull(hasta) && desde.isAfter(hasta)) {
             throw new ValidationException("La fecha desde no puede ser posterior a la fecha hasta.");
         }
-        return queryPort.consultarSesionesGrupo(usuario, idGrupo, desde, hasta, pagina(pagina), tamano(tamano));
+        final Pagina<SesionGrupoProjection> sesiones =
+                queryPort.consultarSesionesGrupo(usuario, idGrupo, desde, hasta, pagina(pagina), tamano(tamano));
+        return new Pagina<>(conHorario(idGrupo, sesiones), sesiones.total());
+    }
+
+    /**
+     * APP-04: la pagina ya viene aislada por programa (provider DB); la procedencia temporal solo se consulta si hay
+     * sesiones y solo se aplica a filas del mismo grupo e id. Sin procedencia CONFIRMADA no se ofrecen instantes.
+     */
+    private List<SesionGrupoHorarioDomain> conHorario(final UUID idGrupo,
+                                                      final Pagina<SesionGrupoProjection> sesiones) {
+        if (sesiones.elementos().isEmpty()) {
+            return List.of();
+        }
+        final Map<UUID, SesionProcedenciaEntity> procedencias = procedenciaPort.consultarSesionesPorGrupo(idGrupo)
+                .stream()
+                .map(SesionProcedenciaMapper::toEntity)
+                .filter(p -> idGrupo.equals(p.grupo()))
+                .collect(Collectors.toMap(SesionProcedenciaEntity::sesion, Function.identity(), (a, b) -> a));
+        return sesiones.elementos().stream().map(s -> conHorario(s, procedencias.get(s.id()))).toList();
+    }
+
+    private static SesionGrupoHorarioDomain conHorario(final SesionGrupoProjection s,
+                                                       final SesionProcedenciaEntity procedencia) {
+        final boolean conProcedencia = procedencia != null;
+        return new SesionGrupoHorarioDomain(s.id(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(), s.nombre(),
+                s.numero(), s.codigo(), s.numeroSemana(), s.fechaHoraInicio(), s.fechaHoraFin(),
+                conProcedencia ? procedencia.fechaHoraInicioUtc() : null,
+                conProcedencia ? procedencia.fechaHoraFinUtc() : null,
+                conProcedencia ? procedencia.estadoTemporal() : EstadoHorarioSesion.INDETERMINADA);
     }
 
     @Override

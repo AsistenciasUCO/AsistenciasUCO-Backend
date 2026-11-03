@@ -37,7 +37,8 @@ public final class ConsultarAsistenciaProgramaInteractor implements ConsultarAsi
                                                              final Integer pagina, final Integer tamano) {
         return aDTO(useCase.consultarSesionesGrupo(usuario, idGrupo, desde, hasta, pagina, tamano), pagina, tamano,
                 s -> new SesionGrupoDTO(s.id(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(), s.nombre(), s.numero(),
-                        s.codigo(), s.numeroSemana(), s.fechaHoraInicio(), s.fechaHoraFin()));
+                        s.codigo(), s.numeroSemana(), s.fechaHoraInicio(), s.fechaHoraFin(), s.fechaHoraInicioUtc(),
+                        s.fechaHoraFinUtc(), s.estadoTemporal().name()));
     }
 
     @Override
