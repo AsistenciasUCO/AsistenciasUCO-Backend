@@ -9,8 +9,10 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.springframework.http.MediaType;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
 
 import java.util.Optional;
@@ -20,8 +22,10 @@ import static org.hamcrest.Matchers.not;
 import static org.hamcrest.Matchers.containsString;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.multipart;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -44,6 +48,43 @@ class ArchivoControllerErrorHttpTest {
         mockMvc = standaloneSetup(controller)
                 .setControllerAdvice(new GlobalExceptionHandler(resolverMensajeUsuario))
                 .build();
+    }
+
+    @Test
+    void json_en_lugar_de_multipart_retorna_415_estandarizado() throws Exception {
+        mockMvc.perform(post("/api/v1/archivos/subir")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"archivo\":\"contenido\"}"))
+                .andExpect(status().isUnsupportedMediaType())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(415))
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"));
+
+        verifyNoInteractions(subirArchivoInputPort);
+    }
+
+    @Test
+    void multipart_sin_la_parte_archivo_retorna_validacion_requerida() throws Exception {
+        mockMvc.perform(multipart("/api/v1/archivos/subir"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("archivo"))
+                .andExpect(jsonPath("$.details[0].code").value("FIELD_REQUIRED"));
+
+        verifyNoInteractions(subirArchivoInputPort);
+    }
+
+    @Test
+    void multipart_exception_retorna_400_sin_exponer_detalle_del_parser() throws Exception {
+        final String parserDetail = "boundary-interno-parser-confidencial";
+        when(subirArchivoInputPort.execute(any())).thenThrow(new MultipartException(parserDetail));
+
+        mockMvc.perform(multipart("/api/v1/archivos/subir").file(pdf()))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.code").value("INVALID_REQUEST"))
+                .andExpect(content().string(not(containsString(parserDetail))));
     }
 
     @Test

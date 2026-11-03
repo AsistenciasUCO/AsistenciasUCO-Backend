@@ -33,6 +33,12 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## Correcciones de defectos — octubre 2026
 - [FIX-002 — reporte Excel de asistencia](FIX-002-reporte-asistencia-titularidad/PLAN.md): trabajo activo para validar rol y scope institucional antes de consultar o generar el XLSX; no altera OpenAPI, SQL ni el formato del reporte.
 - [FIX-001](FIX-001-sse-error-content-negotiation/PLAN.md): errores de `/api/v1/realtime/stream` con `Accept: text/event-stream` respondían 500 (403 esperado) o 400 sin cuerpo; ahora el `ApiErrorResponse` se escribe siempre en JSON. Hallado en el E2E SEC-BASELINE-002.
+
+## Corrección funcional APP-01 — 2026-11-02
+- [APP-01 — parámetros institucionales](APP-01-parametros-institucionales/PLAN.md): fase A elimina la falsa escritura y mantiene modo consulta; persistencia end-to-end NOT_READY por ausencia de contrato OpenAPI y contrato DB de escritura aprobado.
+
+## Corrección funcional APP-02 — 2026-11-02
+- [APP-02 — errores multipart](APP-02-multipart-error-handling/PLAN.md): normalización de solicitudes no multipart/multipart malformadas en `POST /api/v1/archivos/subir`; DoR READY, pruebas y validación en curso. No cambia el flujo válido de MinIO/ClamAV ni DB.
 ## P0-B2 — implementación y estabilización — 2026-10-20
 - [Higiene de logs](P0-B2-log-hygiene/PLAN.md): runner local corregido, rotación y retención aisladas; arranque real pendiente de servicios externos.
 - [Consolidación local](P0-B2-local-consolidation/PLAN.md): matriz de copias preservada; retiro de carpetas requiere autorización explícita.

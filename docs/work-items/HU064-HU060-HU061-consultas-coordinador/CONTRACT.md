@@ -20,6 +20,7 @@ Todos los endpoints: `GET`, rol `COORDINADOR` (regla existente `/api/v1/coordina
 
 - **Grupo:** `id, codigo, nombre, idAsignatura, nombreAsignatura, idDocente, capacidadMaxima, estudiantesActivos, cuposDisponibles, habilitado, inicioPeriodo, finPeriodo`.
 - **Sesión:** `id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio, fechaHoraFin`.
+  - APP-04 (2026-11-03, aditivo): `fechaHoraInicio`/`fechaHoraFin` conservan el wire v1 (`LocalDateTime` sin zona). Se agregan `fechaHoraInicioUtc`, `fechaHoraFinUtc` (RFC3339 con `Z`, hasta 7 decimales, mismo códec que `/api/v2/sesiones`) y `estadoTemporal` (`CONFIRMADA`/`INDETERMINADA`) leídos de `uv_sesion_v2`. Los instantes solo se informan si la procedencia es `CONFIRMADA`; en otro caso son `null` explícito. Ver `docs/work-items/APP-04-utc-zona-navegador/`.
 - **Asistencia:** `idDetalleAsistencia, idSesion, nombreSesion, idEstudiante, numeroIdentificacion, nombreCompleto, asistio, codigoRazonCausa, nombreRazonCausa, fechaHoraInicio, fechaHoraFin`.
 
 ## Errores

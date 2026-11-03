@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasist
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.ConsultarAsistenciaProgramaUseCase;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.impl.ConsultarAsistenciaProgramaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaProgramaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +15,9 @@ import org.springframework.context.annotation.Configuration;
 public class AsistenciaProgramaWiringConfiguration {
 
     @Bean ConsultarAsistenciaProgramaUseCase consultarAsistenciaProgramaUseCase(
-            final AsistenciaProgramaQueryPort queryPort, final InstitutionalScopePort scopePort) {
-        return new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, scopePort);
+            final AsistenciaProgramaQueryPort queryPort, final InstitutionalScopePort scopePort,
+            final SesionProcedenciaQueryPort procedenciaPort) {
+        return new ConsultarAsistenciaProgramaUseCaseImpl(queryPort, scopePort, procedenciaPort);
     }
 
     @Bean ConsultarAsistenciaProgramaInputPort consultarAsistenciaProgramaInputPort(
