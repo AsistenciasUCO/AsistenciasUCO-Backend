@@ -328,3 +328,7 @@ Work items funcionales fuera de la secuencia LB, integrados en `develop` con CI 
 
 - Estado: IN_PROGRESS. La descarga del reporte Excel debe validar el rol institucional activo y su scope antes de leer datos. Alcance y DoR READY: [work item FIX-002](../work-items/FIX-002-reporte-asistencia-titularidad/PLAN.md).
 - No cambia el contrato OpenAPI, la consulta SQL ni la estructura del XLSX.
+
+### APP-02 — manejo de errores multipart (2026-11-02)
+
+- Estado: IN_PROGRESS; DoR READY. `POST /api/v1/archivos/subir` debe traducir JSON, multipart malformado y falta de `archivo` a errores HTTP de cliente estandarizados. Se preservan las validaciones y el flujo válido de archivos. [Work item](../work-items/APP-02-multipart-error-handling/PLAN.md).

@@ -17,6 +17,7 @@ import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.BindException;
+import org.springframework.web.HttpMediaTypeNotSupportedException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
@@ -25,6 +26,8 @@ import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.HandlerMethodValidationException;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.multipart.MaxUploadSizeExceededException;
+import org.springframework.web.multipart.MultipartException;
+import org.springframework.web.multipart.support.MissingServletRequestPartException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.io.PrintWriter;
@@ -82,6 +85,41 @@ public final class GlobalExceptionHandler {
                 ApiFieldErrorCode.FIELD_REQUIRED.name(),
                 "El parametro '" + field + "' es obligatorio."
         )));
+    }
+
+    @ExceptionHandler(MissingServletRequestPartException.class)
+    public ResponseEntity<ApiErrorResponse> handleMissingRequestPart(
+            final MissingServletRequestPartException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.requestValidationError();
+        final String field = exception.getRequestPartName();
+        logFrameworkBadRequest(descriptor, exception, request, List.of(field));
+        return buildResponse(descriptor, request, List.of(new ApiFieldError(
+                field,
+                ApiFieldErrorCode.FIELD_REQUIRED.name(),
+                "El campo multipart '" + field + "' es obligatorio."
+        )));
+    }
+
+    @ExceptionHandler(HttpMediaTypeNotSupportedException.class)
+    public ResponseEntity<ApiErrorResponse> handleUnsupportedMediaType(
+            final HttpMediaTypeNotSupportedException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.unsupportedMediaType();
+        logFrameworkBadRequest(descriptor, exception, request);
+        return buildResponse(descriptor, request);
+    }
+
+    @ExceptionHandler(MultipartException.class)
+    public ResponseEntity<ApiErrorResponse> handleMalformedMultipart(
+            final MultipartException exception,
+            final HttpServletRequest request
+    ) {
+        final ApiErrorDescriptor descriptor = ApiErrorCatalog.malformedMultipart();
+        logFrameworkBadRequest(descriptor, exception, request);
+        return buildResponse(descriptor, request);
     }
 
     @ExceptionHandler({
