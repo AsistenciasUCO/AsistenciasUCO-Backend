@@ -29,8 +29,18 @@ last-reviewed: 2026-11-03
 | APP04-07 wire `fechaHoraInicioUtc = 2026-11-03T15:00:00.1234567Z`, v1 `2026-11-03T15:00:00.1234567` intacto | PASS |
 | APP04-08 INDETERMINADA → `null` explícito | PASS |
 
+## HTTP real y navegador (COORDINADOR)
+
+- Con autorización del usuario: backend local :8080 reiniciado con el jar de esta rama (`5ed28da`, `mvnw -DskipTests
+  package`), `start-backend-baseline.ps1 -Provider baseline`, `.env` local; SQL Server local existente. Health 200.
+- `GET /api/v1/coordinador/grupos/{grupo}/sesiones?pagina=1&tamano=10` → 200, 3 sesiones: v1
+  `fechaHoraInicio = 2026-08-17T13:00:00` sin cambios; `fechaHoraInicioUtc = 2026-08-17T13:00:00Z`,
+  `fechaHoraFinUtc = 2026-08-17T15:00:00Z`, `estadoTemporal = CONFIRMADA`; mismos instantes que la v2 del docente.
+- Frontend `fix/app04-utc-browser-timezone`: coordinador y docente ven 08:00–10:00 (Bogotá), 14:00/13:00 (Londres
+  verano/invierno) y 15:00/14:00 (Berlín). Detalle en la VALIDATION del frontend.
+
 ## No ejecutado
 
-- HTTP real contra SQL Server con el backend nuevo: NOT_RUN (el backend local en :8080 es el jar previo; no se
-  redesplegó). La consulta reutiliza `uv_sesion_v2` vía `SesionProcedenciaQueryPort`, ya validada en UTC v2.
-- Navegador COORDINADOR: NOT_RUN (requiere despliegue de esta rama y sesión manual del coordinador).
+- `-Pintegration`, y el caso INDETERMINADA contra datos reales (no hay sesiones sin procedencia en el grupo probado;
+  cubierto por pruebas unitarias y de controller).
+- Rollback local: para volver al jar previo, reconstruir `develop` y arrancar con el mismo script.
