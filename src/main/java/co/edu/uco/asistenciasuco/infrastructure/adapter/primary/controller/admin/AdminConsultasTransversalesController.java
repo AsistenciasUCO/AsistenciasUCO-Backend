@@ -1,0 +1,74 @@
+package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
+
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.RestController;
+
+import java.util.Objects;
+import java.util.UUID;
+
+/**
+ * HU143 (busqueda de asignaturas en toda la institucion) y HU157 (buscador de estudiantes y ficha unificada con
+ * historial) del administrador. Solo lectura; cubierto por {@code /api/v1/admin/**} (ADMINISTRADOR) de
+ * {@code SecurityConfig}. El SP exige el perfil y limita las filas a la institucion que administra.
+ */
+@RestController
+@RequestMapping("/api/v1/admin")
+public final class AdminConsultasTransversalesController {
+
+    private final ConsultasTransversalesInputPort inputPort;
+    private final AuthenticatedUserResolver authenticatedUserResolver;
+
+    public AdminConsultasTransversalesController(final ConsultasTransversalesInputPort inputPort,
+                                                 final AuthenticatedUserResolver authenticatedUserResolver) {
+        this.inputPort = Objects.requireNonNull(inputPort);
+        this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver);
+    }
+
+    @GetMapping("/asignaturas")
+    public ResponseEntity<ApiListResponse<AsignaturaInstitucionDTO>> buscarAsignaturas(
+            @RequestParam(name = "busqueda", required = false) final String busqueda,
+            @RequestParam(name = "idFacultad", required = false) final UUID idFacultad,
+            @RequestParam(name = "estaActiva", required = false) final Boolean estaActiva,
+            @RequestParam(name = "pagina", required = false) final Integer pagina,
+            @RequestParam(name = "tamano", required = false) final Integer tamano
+    ) {
+        return lista(inputPort.buscarAsignaturas(usuario(), busqueda, idFacultad, estaActiva, pagina, tamano));
+    }
+
+    @GetMapping("/estudiantes")
+    public ResponseEntity<ApiListResponse<EstudianteInstitucionDTO>> buscarEstudiantes(
+            @RequestParam(name = "busqueda", required = false) final String busqueda,
+            @RequestParam(name = "idFacultad", required = false) final UUID idFacultad,
+            @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
+            @RequestParam(name = "pagina", required = false) final Integer pagina,
+            @RequestParam(name = "tamano", required = false) final Integer tamano
+    ) {
+        return lista(inputPort.buscarEstudiantes(usuario(), busqueda, idFacultad, estaActivo, pagina, tamano));
+    }
+
+    @GetMapping("/estudiantes/{estudianteId}/historial")
+    public ResponseEntity<ApiDataResponse<FichaUnificadaDTO>> consultarHistorial(
+            @PathVariable("estudianteId") final UUID estudianteId) {
+        return ResponseEntity.ok(new ApiDataResponse<>(true, inputPort.consultarHistorial(usuario(), estudianteId)));
+    }
+
+    private UUID usuario() {
+        return authenticatedUserResolver.requireAuthenticatedUserId();
+    }
+
+    private static <T> ResponseEntity<ApiListResponse<T>> lista(final PaginaDTO<T> pagina) {
+        return ResponseEntity.ok(new ApiListResponse<>(true, pagina.elementos(), pagina.total()));
+    }
+}
