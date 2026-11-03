@@ -19,6 +19,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
+import static org.hamcrest.Matchers.nullValue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.ArgumentMatchers.isNull;
@@ -79,13 +80,45 @@ class CoordinadorAsistenciaProgramaControllerTest {
     void T_060_01_get_sesiones_del_grupo_con_rango() throws Exception {
         when(inputPort.consultarSesionesGrupo(ACTOR, GRUPO, LocalDate.of(2026, 2, 1), LocalDate.of(2026, 2, 28), null,
                 null)).thenReturn(new PaginaDTO<>(List.of(new SesionGrupoDTO(SESION, GRUPO, 1, "Grupo 1", "Sesion 1", 1,
-                "S-01", 2, LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0))), 1, 1, 10));
+                "S-01", 2, LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0), null, null,
+                "INDETERMINADA")), 1, 1, 10));
 
         mvc.perform(get("/api/v1/coordinador/grupos/{id}/sesiones", GRUPO)
                         .param("desde", "2026-02-01").param("hasta", "2026-02-28"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos[0].codigo").value("S-01"))
                 .andExpect(jsonPath("$.datos[0].numeroSemana").value(2));
+    }
+
+    @Test
+    void T_APP04_01_sesion_confirmada_agrega_instantes_utc_sin_alterar_el_wire_v1() throws Exception {
+        final LocalDateTime inicio = LocalDateTime.of(2026, 11, 3, 15, 0, 0, 123_456_700);
+        final LocalDateTime fin = LocalDateTime.of(2026, 11, 3, 17, 0);
+        when(inputPort.consultarSesionesGrupo(eq(ACTOR), eq(GRUPO), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(new PaginaDTO<>(List.of(new SesionGrupoDTO(SESION, GRUPO, 1, "Grupo 1", "Sesion 1", 1,
+                        "S-01", 2, inicio, fin, inicio, fin, "CONFIRMADA")), 1, 1, 10));
+
+        mvc.perform(get("/api/v1/coordinador/grupos/{id}/sesiones", GRUPO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicio").value("2026-11-03T15:00:00.1234567"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value("2026-11-03T15:00:00.1234567Z"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraFinUtc").value("2026-11-03T17:00:00Z"))
+                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("CONFIRMADA"));
+    }
+
+    @Test
+    void T_APP04_02_sesion_indeterminada_serializa_instantes_nulos_explicitos() throws Exception {
+        when(inputPort.consultarSesionesGrupo(eq(ACTOR), eq(GRUPO), isNull(), isNull(), isNull(), isNull()))
+                .thenReturn(new PaginaDTO<>(List.of(new SesionGrupoDTO(SESION, GRUPO, 1, "Grupo 1", "Sesion 1", 1,
+                        "S-01", 2, LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0), null, null,
+                        "INDETERMINADA")), 1, 1, 10));
+
+        mvc.perform(get("/api/v1/coordinador/grupos/{id}/sesiones", GRUPO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicio").value("2026-02-03T07:00:00"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value(nullValue()))
+                .andExpect(jsonPath("$.datos[0].fechaHoraFinUtc").value(nullValue()))
+                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("INDETERMINADA"));
     }
 
     @Test
