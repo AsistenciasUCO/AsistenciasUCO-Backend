@@ -53,7 +53,7 @@ public final class ArchivoController {
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
-    @PostMapping("/subir")
+    @PostMapping(value = "/subir", consumes = MediaType.MULTIPART_FORM_DATA_VALUE)
     public ResponseEntity<ApiDataResponse<Map<String, Object>>> subirArchivo(
             @RequestParam("archivo") final MultipartFile archivo
     ) {

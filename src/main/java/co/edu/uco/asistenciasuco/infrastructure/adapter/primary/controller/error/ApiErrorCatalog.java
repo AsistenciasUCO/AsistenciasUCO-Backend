@@ -51,6 +51,22 @@ final class ApiErrorCatalog {
         );
     }
 
+    static ApiErrorDescriptor unsupportedMediaType() {
+        return new ApiErrorDescriptor(
+                CommonErrorCode.INVALID_REQUEST.code(),
+                "El tipo de contenido de la solicitud no es compatible.",
+                HttpStatus.UNSUPPORTED_MEDIA_TYPE
+        );
+    }
+
+    static ApiErrorDescriptor malformedMultipart() {
+        return new ApiErrorDescriptor(
+                CommonErrorCode.INVALID_REQUEST.code(),
+                "El cuerpo multipart no tiene un formato valido.",
+                HttpStatus.BAD_REQUEST
+        );
+    }
+
     static ApiErrorDescriptor resourceNotFound() {
         return from(CommonErrorCode.RESOURCE_NOT_FOUND);
     }
