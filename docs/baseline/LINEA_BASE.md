@@ -323,8 +323,17 @@ Work items funcionales fuera de la secuencia LB, integrados en `develop` con CI 
 - [HU094/HU095 (ficha del docente y consolidado del directorio del coordinador)](../work-items/HU094-HU095-directorio-docentes-coordinador/CLOSURE.md) — rama `feature/HU094-HU095-directorio-docentes-coordinador` subida (PR #51 hacia `develop`, con `develop` integrado); PENDIENTE de reaprovisionar el PDP con 2 rutas y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
 - [HU008 (oferta de grupos del estudiante)](../work-items/HU008-oferta-grupos-estudiante/CLOSURE.md) — commits locales en `feature/HU008-oferta-grupos-estudiante`, sin subir; cambia la regla de matrícula (solo ESP inscribe en el programa); PENDIENTE de reaprovisionar el PDP con 1 ruta y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
 - [HU053/HU054/HU055 (solicitudes de ingreso a grupo)](../work-items/HU053-HU054-HU055-solicitudes-ingreso-grupo/CLOSURE.md) — PR por integrar (tabla nueva `SolicitudIngresoGrupo` aprobada por John); PENDIENTE de reaprovisionar el PDP con 4 rutas y de [MV-008](MANUAL_VALIDATION_LEDGER.md).
+- [HU112/HU128/HU143/HU157 (consultas del decano y del administrador)](../work-items/HU112-HU128-HU143-HU157-consultas-transversales/PLAN.md) — 2026-11-03, integrado en `develop` (BD PR #79, backend PR #77, frontend PR #36, Infra PR #9) con CI remoto en verde; `SecurityConfig` sin cambios, 7 rutas nuevas en `access-catalog.json`; PENDIENTE de reaprovisionar el PDP y de [MV-012](MANUAL_VALIDATION_LEDGER.md).
 
 ### Corrección de seguridad FIX-002 (2026-10-30)
 
 - Estado: IN_PROGRESS. La descarga del reporte Excel debe validar el rol institucional activo y su scope antes de leer datos. Alcance y DoR READY: [work item FIX-002](../work-items/FIX-002-reporte-asistencia-titularidad/PLAN.md).
 - No cambia el contrato OpenAPI, la consulta SQL ni la estructura del XLSX.
+
+### APP-01 — parámetros institucionales (2026-11-02)
+
+- Estado: IN_PROGRESS; fase A frontend de modo consulta READY. Persistencia end-to-end NOT_READY: OpenAPI no define la operación y DB no ofrece contrato de escritura identificado. La fase A retira la falsa confirmación; no se cambia API ni SQL. Work item: APP-01-parametros-institucionales.
+
+### APP-02 — manejo de errores multipart (2026-11-02)
+
+- Estado: IN_PROGRESS; DoR READY. `POST /api/v1/archivos/subir` debe traducir JSON, multipart malformado y falta de `archivo` a errores HTTP de cliente estandarizados. Se preservan las validaciones y el flujo válido de archivos. [Work item](../work-items/APP-02-multipart-error-handling/PLAN.md).

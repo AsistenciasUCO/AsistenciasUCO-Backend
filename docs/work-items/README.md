@@ -33,6 +33,12 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 ## Correcciones de defectos — octubre 2026
 - [FIX-002 — reporte Excel de asistencia](FIX-002-reporte-asistencia-titularidad/PLAN.md): trabajo activo para validar rol y scope institucional antes de consultar o generar el XLSX; no altera OpenAPI, SQL ni el formato del reporte.
 - [FIX-001](FIX-001-sse-error-content-negotiation/PLAN.md): errores de `/api/v1/realtime/stream` con `Accept: text/event-stream` respondían 500 (403 esperado) o 400 sin cuerpo; ahora el `ApiErrorResponse` se escribe siempre en JSON. Hallado en el E2E SEC-BASELINE-002.
+
+## Corrección funcional APP-01 — 2026-11-02
+- [APP-01 — parámetros institucionales](APP-01-parametros-institucionales/PLAN.md): fase A elimina la falsa escritura y mantiene modo consulta; persistencia end-to-end NOT_READY por ausencia de contrato OpenAPI y contrato DB de escritura aprobado.
+
+## Corrección funcional APP-02 — 2026-11-02
+- [APP-02 — errores multipart](APP-02-multipart-error-handling/PLAN.md): normalización de solicitudes no multipart/multipart malformadas en `POST /api/v1/archivos/subir`; DoR READY, pruebas y validación en curso. No cambia el flujo válido de MinIO/ClamAV ni DB.
 ## P0-B2 — implementación y estabilización — 2026-10-20
 - [Higiene de logs](P0-B2-log-hygiene/PLAN.md): runner local corregido, rotación y retención aisladas; arranque real pendiente de servicios externos.
 - [Consolidación local](P0-B2-local-consolidation/PLAN.md): matriz de copias preservada; retiro de carpetas requiere autorización explícita.
@@ -57,3 +63,4 @@ Ejemplo de work item técnico cerrado: [TECH-001](TECH-001-restaurar-gate-arquit
 - [HU094/HU095 (directorio docente del coordinador)](HU094-HU095-directorio-docentes-coordinador/CLOSURE.md): ficha del docente con historial de grupos y resumen de carga; contadores de activos, inactivos y por tipo de vinculación con filtro. PR #51 hacia `develop`; PENDIENTE de MV-008.
 - [HU008 (oferta de grupos del estudiante)](HU008-oferta-grupos-estudiante/CLOSURE.md): especificas de sus programas y transversales de su institución con cupos y "Solicitar ingreso"; regla: solo una ESP inscribe en el programa. Commits locales; PENDIENTE de MV-008.
 - [HU053/HU054/HU055 (solicitudes de ingreso)](HU053-HU054-HU055-solicitudes-ingreso-grupo/CLOSURE.md): el estudiante solicita, el docente acepta (con cupo) o deja en espera / rechaza con motivo, el estudiante retira. PR por integrar; PENDIENTE de MV-008.
+- [HU112/HU128/HU143/HU157 (consultas del decano y del administrador)](HU112-HU128-HU143-HU157-consultas-transversales/PLAN.md): tabla de programas y créditos, docentes de la facultad por programa, búsqueda de asignaturas (decano: su facultad; administrador: su institución) y ficha unificada del estudiante con historial. En `develop` (BD #79, backend #77, frontend #36, Infra #9; CI remoto en verde); PENDIENTE de reaprovisionar el PDP con 7 rutas y de MV-012.
