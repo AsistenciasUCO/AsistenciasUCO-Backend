@@ -70,6 +70,17 @@ class MessageUcoLabLiveIT {
     }
 
     @Test
+    void resuelve_un_mensaje_importado_en_bloque_desde_excel() {
+        requireLive();
+
+        final MessageCatalogPort port = adapter(new ApplicationContextRunnerHolder(), ENV);
+
+        assertEquals(Optional.of("Los nombres y apellidos son obligatorios."), port.findUserMessage("VAL_003"));
+        assertEquals(Optional.of("El identificador de correlación no está presente o está vacío."),
+                port.findUserMessage("CORR_001"));
+    }
+
+    @Test
     void aplica_los_argumentos_posicionales_al_texto_real() {
         requireLive();
 
