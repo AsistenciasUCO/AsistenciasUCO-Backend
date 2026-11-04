@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,11 +40,31 @@ class ConsultarAsignaturasDocenteUseCaseImplTest {
         when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
         when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
                 new AsignaturaDocenteProjection(asignatura, "Calculo", UUID.randomUUID(), "Grupo 1",
-                        UUID.randomUUID(), "Ingenieria", UUID.randomUUID(), "pregrado")));
+                        UUID.randomUUID(), "Ingenieria", UUID.randomUUID(), "pregrado", 7)));
 
         final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
 
         assertEquals(1, result.size());
         assertEquals(asignatura, result.getFirst().idAsignatura());
+    }
+    @Test
+    void execute_preserva_tipo_programa_y_conteo_real_sin_inventar_valores_nulos() {
+        final UUID actor = UUID.randomUUID();
+        final UUID docente = UUID.randomUUID();
+        final UUID tipo = UUID.randomUUID();
+        when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
+        when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
+                new AsignaturaDocenteProjection(UUID.randomUUID(), "Calculo", UUID.randomUUID(), "G1",
+                        UUID.randomUUID(), "Sistemas", tipo, "pregrado", 7),
+                new AsignaturaDocenteProjection(UUID.randomUUID(), "Fisica", UUID.randomUUID(), "G2",
+                        UUID.randomUUID(), "Sistemas", null, null, null)));
+
+        final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
+
+        assertEquals(tipo, result.get(0).idTipoPrograma());
+        assertEquals("pregrado", result.get(0).nombreTipoPrograma());
+        assertEquals(7, result.get(0).estudiantesActivos());
+        assertNull(result.get(1).idTipoPrograma());
+        assertNull(result.get(1).estudiantesActivos());
     }
 }

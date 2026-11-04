@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import jakarta.persistence.EntityManager;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -39,6 +40,13 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
             where p.id in :ids
             """;
 
+    /** APP-04: conteo real de matriculas activas, independiente del horario del docente. */
+    static final String HQL_ESTUDIANTES_ACTIVOS = """
+            select g.id, g.estudiantesActivos
+            from UvGrupoEntity g
+            where g.id in :idsGrupo
+            """;
+
     private final EntityManager entityManager;
 
     public AsignaturaDocenteJpaRepository(final EntityManager entityManager) {
@@ -55,9 +63,11 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
                             .setParameter("idDocente", idDocente)
                             .getResultList();
                     final Map<UUID, UvProgramaEntity> programas = programas(filas);
+                    final Map<UUID, Integer> activos = estudiantesActivos(filas);
                     return filas.stream()
                             .map(fila -> AcademicViewJpaProjectionMapper.toAsignaturaDocente(fila,
-                                    fila.idPrograma() == null ? null : programas.get(fila.idPrograma())))
+                                    fila.idPrograma() == null ? null : programas.get(fila.idPrograma()),
+                                    fila.idGrupo() == null ? null : activos.get(fila.idGrupo())))
                             .toList();
                 }
         );
@@ -73,5 +83,19 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
                 .setParameter("ids", ids)
                 .getResultList().stream()
                 .collect(Collectors.toMap(UvProgramaEntity::id, Function.identity(), (a, b) -> a));
+    }
+
+    private Map<UUID, Integer> estudiantesActivos(final List<UvDocenteEntity> filas) {
+        final List<UUID> idsGrupo = filas.stream().map(UvDocenteEntity::idGrupo).filter(Objects::nonNull).distinct().toList();
+        if (idsGrupo.isEmpty()) {
+            return Map.of();
+        }
+        final Map<UUID, Integer> activos = new HashMap<>();
+        for (final Object[] fila : entityManager.createQuery(HQL_ESTUDIANTES_ACTIVOS, Object[].class)
+                .setParameter("idsGrupo", idsGrupo)
+                .getResultList()) {
+            activos.put((UUID) fila[0], (Integer) fila[1]);
+        }
+        return activos;
     }
 }

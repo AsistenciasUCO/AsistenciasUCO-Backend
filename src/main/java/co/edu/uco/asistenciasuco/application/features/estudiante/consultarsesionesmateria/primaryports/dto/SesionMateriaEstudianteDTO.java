@@ -11,5 +11,7 @@ import java.util.UUID;
 public record SesionMateriaEstudianteDTO(UUID id, String nombre, Integer numero, String codigo, Integer numeroSemana,
                                          UUID idGrupo, String codigoGrupo, String nombreGrupo,
                                          LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin,
+                                         LocalDateTime fechaHoraInicioUtc, LocalDateTime fechaHoraFinUtc,
+                                         String estadoTemporal,
                                          String estadoAsistencia, String estadoSolicitudRevision, boolean reclamable) {
 }

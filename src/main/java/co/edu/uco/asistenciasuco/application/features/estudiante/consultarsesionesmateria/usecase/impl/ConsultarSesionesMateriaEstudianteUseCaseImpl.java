@@ -8,6 +8,10 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesion
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaSesionEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaSesionEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.SesionProcedenciaEntity;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.mapper.SesionProcedenciaMapper;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 
 import java.time.LocalDate;
@@ -34,13 +38,16 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
     private final InstitutionalScopePort scopePort;
     private final SesionMateriaEstudianteQueryPort queryPort;
     private final AsistenciaSesionEstudianteQueryPort asistenciaPort;
+    private final SesionProcedenciaQueryPort procedenciaPort;
 
     public ConsultarSesionesMateriaEstudianteUseCaseImpl(final InstitutionalScopePort scopePort,
                                                          final SesionMateriaEstudianteQueryPort queryPort,
-                                                         final AsistenciaSesionEstudianteQueryPort asistenciaPort) {
+                                                         final AsistenciaSesionEstudianteQueryPort asistenciaPort,
+                                                         final SesionProcedenciaQueryPort procedenciaPort) {
         this.scopePort = Objects.requireNonNull(scopePort);
         this.queryPort = Objects.requireNonNull(queryPort);
         this.asistenciaPort = Objects.requireNonNull(asistenciaPort);
+        this.procedenciaPort = Objects.requireNonNull(procedenciaPort, "SesionProcedenciaQueryPort es obligatorio.");
     }
 
     @Override public List<SesionMateriaEstudianteDomain> execute(final UUID actorUsuarioId, final UUID idAsignatura) {
@@ -50,16 +57,33 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         for (final var hecho : asistenciaPort.consultarAsistenciaSesiones(idEstudiante, idAsignatura)) {
             hechosPorSesion.computeIfAbsent(hecho.idSesion(), k -> new ArrayList<>()).add(hecho);
         }
-        return queryPort.consultarSesionesMateria(idEstudiante, idAsignatura).stream()
+        final List<SesionMateriaEstudianteProjection> sesiones = queryPort.consultarSesionesMateria(idEstudiante, idAsignatura);
+        final Map<UUID, SesionProcedenciaEntity> procedencias = procedencias(sesiones);
+        return sesiones.stream()
                 .map(sesion -> {
                     final var hechos = hechosPorSesion.getOrDefault(sesion.id(), List.of());
                     final EstadoAsistenciaSesion estado = resolverEstado(hechos);
                     final String estadoSolicitud = resolverEstadoSolicitud(hechos);
                     final boolean reclamable = estado == EstadoAsistenciaSesion.AUSENTE && estadoSolicitud == null;
                     return ConsultarSesionesMateriaEstudianteRepositoryMapper.toDomain(
-                            sesion, estado, estadoSolicitud, reclamable);
+                            sesion, procedencias.get(sesion.id()), estado, estadoSolicitud, reclamable);
                 })
                 .toList();
+    }
+
+    /**
+     * APP-04: misma regla que HU060 coordinador. Las sesiones ya vienen aisladas por estudiante/asignatura; la
+     * procedencia se consulta una vez por grupo y solo se aplica a filas del mismo grupo e id. Sin procedencia
+     * CONFIRMADA no se ofrecen instantes UTC (estadoTemporal INDETERMINADA).
+     */
+    private Map<UUID, SesionProcedenciaEntity> procedencias(final List<SesionMateriaEstudianteProjection> sesiones) {
+        final Map<UUID, SesionProcedenciaEntity> resultado = new HashMap<>();
+        sesiones.stream().map(SesionMateriaEstudianteProjection::idGrupo).filter(Objects::nonNull).distinct()
+                .forEach(idGrupo -> procedenciaPort.consultarSesionesPorGrupo(idGrupo).stream()
+                        .map(SesionProcedenciaMapper::toEntity)
+                        .filter(p -> idGrupo.equals(p.grupo()))
+                        .forEach(p -> resultado.putIfAbsent(p.sesion(), p)));
+        return resultado;
     }
 
     /** Usa el detalle de mayor codigo (la ultima escritura); sin detalle o con pareja no definida, no hay estado. */

@@ -33,6 +33,8 @@ class AsignaturaDocenteJpaRepositoryTest {
     private final TypedQuery<UvDocenteEntity> docentes = mock(TypedQuery.class);
     @SuppressWarnings("unchecked")
     private final TypedQuery<UvProgramaEntity> programas = mock(TypedQuery.class);
+    @SuppressWarnings("unchecked")
+    private final TypedQuery<Object[]> grupos = mock(TypedQuery.class);
     private final AsignaturaDocenteJpaRepository repository = new AsignaturaDocenteJpaRepository(entityManager);
 
     @Test
@@ -72,11 +74,63 @@ class AsignaturaDocenteJpaRepositoryTest {
         verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS), eq(UvProgramaEntity.class));
     }
 
+    @Test
+    void T_APP04_01_el_conteo_del_grupo_coexiste_con_el_tipo_de_programa() {
+        final UvDocenteEntity fila = fila(PROGRAMA);
+        final UUID grupo = UUID.randomUUID();
+        when(fila.idGrupo()).thenReturn(grupo);
+        final UvProgramaEntity programa = mock(UvProgramaEntity.class);
+        when(programa.id()).thenReturn(PROGRAMA);
+        when(programa.idTipoPrograma()).thenReturn(TIPO);
+        when(programa.nombreTipoPrograma()).thenReturn("pregrado");
+        prepararDocentes(List.of(fila));
+        when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS), eq(UvProgramaEntity.class)))
+                .thenReturn(programas);
+        when(programas.setParameter(anyString(), any())).thenReturn(programas);
+        when(programas.getResultList()).thenReturn(List.of(programa));
+        when(grupos.getResultList()).thenReturn(List.<Object[]>of(new Object[]{grupo, 7}));
+
+        final AsignaturaDocenteProjection resultado = repository.consultarAsignaturasDocente(DOCENTE).getFirst();
+
+        assertEquals(7, resultado.estudiantesActivos());
+        assertEquals(TIPO, resultado.idTipoPrograma());
+        assertEquals("pregrado", resultado.nombreTipoPrograma());
+        verify(grupos).setParameter(eq("idsGrupo"), eq(List.of(grupo)));
+    }
+
+    @Test
+    void T_APP04_02_sin_grupo_no_consulta_conteo_y_no_inventa_matriculas() {
+        final UvDocenteEntity fila = fila(null);
+        when(fila.idGrupo()).thenReturn(null);
+        prepararDocentes(List.of(fila));
+
+        final AsignaturaDocenteProjection resultado = repository.consultarAsignaturasDocente(DOCENTE).getFirst();
+
+        assertNull(resultado.estudiantesActivos());
+        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS),
+                eq(Object[].class));
+    }
+
+    @Test
+    void T_APP04_03_sin_filas_no_consulta_programas_ni_grupos() {
+        prepararDocentes(List.of());
+
+        assertEquals(List.of(), repository.consultarAsignaturasDocente(DOCENTE));
+        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS),
+                eq(Object[].class));
+        verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_PROGRAMAS),
+                eq(UvProgramaEntity.class));
+    }
+
     private void prepararDocentes(final List<UvDocenteEntity> filas) {
         when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_POR_DOCENTE), eq(UvDocenteEntity.class)))
                 .thenReturn(docentes);
         when(docentes.setParameter(anyString(), any())).thenReturn(docentes);
         when(docentes.getResultList()).thenReturn(filas);
+        when(entityManager.createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS), eq(Object[].class)))
+                .thenReturn(grupos);
+        when(grupos.setParameter(anyString(), any())).thenReturn(grupos);
+        when(grupos.getResultList()).thenReturn(List.of());
     }
 
     private static UvDocenteEntity fila(final UUID idPrograma) {

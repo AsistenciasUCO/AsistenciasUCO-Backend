@@ -62,10 +62,12 @@ public final class AcademicViewJpaProjectionMapper {
     }
 
     /** HU058: el tipo de programa (nivel formativo) sale de {@code uv_programa}; nulo si el grupo no tiene programa. */
-    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row, final UvProgramaEntity programa) {
+    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row, final UvProgramaEntity programa,
+                                                                  final Integer estudiantesActivos) {
         return new AsignaturaDocenteProjection(row.idAsignatura(), row.nombreAsignatura(), row.idGrupo(),
                 row.nombreGrupo(), row.idPrograma(), row.nombrePrograma(),
-                programa == null ? null : programa.idTipoPrograma(), programa == null ? null : programa.nombreTipoPrograma());
+                programa == null ? null : programa.idTipoPrograma(), programa == null ? null : programa.nombreTipoPrograma(),
+                estudiantesActivos);
     }
 
     public static MateriaEstudianteProjection toMateriaEstudiante(final MateriaEstudianteQueryRow row) {

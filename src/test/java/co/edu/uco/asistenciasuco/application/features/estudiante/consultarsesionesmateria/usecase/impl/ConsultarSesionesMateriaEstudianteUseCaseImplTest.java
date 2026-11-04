@@ -8,6 +8,9 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMater
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaSesionEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
 import org.junit.jupiter.api.Test;
 
 import java.time.LocalDate;
@@ -24,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -32,8 +36,9 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
     private final SesionMateriaEstudianteQueryPort queryPort = mock(SesionMateriaEstudianteQueryPort.class);
     private final AsistenciaSesionEstudianteQueryPort asistenciaPort = mock(AsistenciaSesionEstudianteQueryPort.class);
+    private final SesionProcedenciaQueryPort procedenciaPort = mock(SesionProcedenciaQueryPort.class);
     private final ConsultarSesionesMateriaEstudianteUseCaseImpl useCase =
-            new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort);
+            new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort, procedenciaPort);
 
     private final UUID actor = UUID.randomUUID();
     private final UUID estudiante = UUID.randomUUID();
@@ -226,5 +231,64 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
 
         assertEquals(LocalDateTime.of(2026, 8, 17, 13, 0), result.fechaHoraInicio());
         assertEquals(LocalDateTime.of(2026, 8, 17, 15, 0), result.fechaHoraFin());
+    }
+
+    // APP-04 (estudiante): los instantes UTC solo se exponen con procedencia CONFIRMADA, igual que HU060 coordinador.
+    private static SesionProcedenciaRepositoryProjection procedencia(final UUID sesion, final UUID grupo,
+                                                                    final String procedenciaTemporal) {
+        return new SesionProcedenciaRepositoryProjection(sesion, grupo, "Sesion", 1, "SES", 1, "1", "Grupo 001",
+                LocalDateTime.of(2026, 8, 17, 13, 0), LocalDateTime.of(2026, 8, 17, 15, 0), procedenciaTemporal);
+    }
+
+    @Test
+    void app04_sesion_con_procedencia_confirmada_expone_instantes_utc() {
+        final UUID grupo = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, grupo)), List.of());
+        when(procedenciaPort.consultarSesionesPorGrupo(grupo)).thenReturn(List.of(procedencia(sesion1, grupo, "UTC_V2")));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoHorarioSesion.CONFIRMADA, result.estadoTemporal());
+        assertEquals(LocalDateTime.of(2026, 8, 17, 13, 0), result.fechaHoraInicioUtc());
+        assertEquals(LocalDateTime.of(2026, 8, 17, 15, 0), result.fechaHoraFinUtc());
+        assertEquals(LocalDateTime.of(2026, 8, 17, 13, 0), result.fechaHoraInicio());
+    }
+
+    @Test
+    void app04_procedencia_indeterminada_o_ausente_no_ofrece_instantes() {
+        final UUID grupo = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, grupo), sesion(sesion2, 2, grupo)), List.of());
+        when(procedenciaPort.consultarSesionesPorGrupo(grupo)).thenReturn(List.of(procedencia(sesion1, grupo, null)));
+
+        final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
+
+        result.forEach(r -> {
+            assertEquals(EstadoHorarioSesion.INDETERMINADA, r.estadoTemporal());
+            assertNull(r.fechaHoraInicioUtc());
+            assertNull(r.fechaHoraFinUtc());
+        });
+    }
+
+    @Test
+    void app04_procedencia_de_otro_grupo_no_se_aplica_y_se_consulta_una_vez_por_grupo() {
+        final UUID grupoA = UUID.randomUUID();
+        final UUID grupoB = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, grupoA), sesion(sesion2, 2, grupoA)), List.of());
+        when(procedenciaPort.consultarSesionesPorGrupo(grupoA))
+                .thenReturn(List.of(procedencia(sesion1, grupoB, "UTC_V2"), procedencia(sesion2, grupoA, "UTC_V2")));
+
+        final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
+
+        assertEquals(EstadoHorarioSesion.INDETERMINADA, result.get(0).estadoTemporal());
+        assertEquals(EstadoHorarioSesion.CONFIRMADA, result.get(1).estadoTemporal());
+        verify(procedenciaPort, times(1)).consultarSesionesPorGrupo(grupoA);
+    }
+
+    @Test
+    void app04_sin_sesiones_no_consulta_procedencia() {
+        dado(List.of(), List.of());
+
+        assertTrue(useCase.execute(actor, asignatura).isEmpty());
+        verify(procedenciaPort, never()).consultarSesionesPorGrupo(any());
     }
 }
