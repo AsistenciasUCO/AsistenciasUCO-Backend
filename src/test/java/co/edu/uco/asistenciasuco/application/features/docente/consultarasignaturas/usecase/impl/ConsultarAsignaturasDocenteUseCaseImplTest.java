@@ -40,29 +40,31 @@ class ConsultarAsignaturasDocenteUseCaseImplTest {
         when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
         when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
                 new AsignaturaDocenteProjection(asignatura, "Calculo", UUID.randomUUID(), "Grupo 1",
-                        UUID.randomUUID(), "Ingenieria", 7)));
+                        UUID.randomUUID(), "Ingenieria", UUID.randomUUID(), "pregrado", 7)));
 
         final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
 
         assertEquals(1, result.size());
         assertEquals(asignatura, result.getFirst().idAsignatura());
     }
-
-    /** Integracion 2026-11-04: el portal docente mostraba 0 inscritos en grupos sin horario; el conteo viaja con la asignacion. */
     @Test
-    void execute_propaga_estudiantes_activos_del_grupo_y_conserva_desconocido_como_nulo() {
+    void execute_preserva_tipo_programa_y_conteo_real_sin_inventar_valores_nulos() {
         final UUID actor = UUID.randomUUID();
         final UUID docente = UUID.randomUUID();
+        final UUID tipo = UUID.randomUUID();
         when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
         when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
-                new AsignaturaDocenteProjection(UUID.randomUUID(), "Calculo", UUID.randomUUID(), "Grupo 1",
-                        UUID.randomUUID(), "Ingenieria", 7),
-                new AsignaturaDocenteProjection(UUID.randomUUID(), "Fisica", UUID.randomUUID(), "Grupo 2",
-                        UUID.randomUUID(), "Ingenieria", null)));
+                new AsignaturaDocenteProjection(UUID.randomUUID(), "Calculo", UUID.randomUUID(), "G1",
+                        UUID.randomUUID(), "Sistemas", tipo, "pregrado", 7),
+                new AsignaturaDocenteProjection(UUID.randomUUID(), "Fisica", UUID.randomUUID(), "G2",
+                        UUID.randomUUID(), "Sistemas", null, null, null)));
 
         final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
 
+        assertEquals(tipo, result.get(0).idTipoPrograma());
+        assertEquals("pregrado", result.get(0).nombreTipoPrograma());
         assertEquals(7, result.get(0).estudiantesActivos());
+        assertNull(result.get(1).idTipoPrograma());
         assertNull(result.get(1).estudiantesActivos());
     }
 }

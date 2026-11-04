@@ -2,12 +2,16 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admi
 
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
@@ -15,12 +19,14 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
 /**
- * HU143 (busqueda de asignaturas en toda la institucion) y HU157 (buscador de estudiantes y ficha unificada con
- * historial) del administrador. Solo lectura; cubierto por {@code /api/v1/admin/**} (ADMINISTRADOR) de
+ * HU143 (busqueda de asignaturas en toda la institucion), HU157 (buscador de estudiantes y ficha unificada con
+ * historial) y HU172 (rastro de auditoria) del administrador. Solo lectura; cubierto por {@code /api/v1/admin/**} (ADMINISTRADOR) de
  * {@code SecurityConfig}. El SP exige el perfil y limita las filas a la institucion que administra.
  */
 @RestController
@@ -62,6 +68,31 @@ public final class AdminConsultasTransversalesController {
     public ResponseEntity<ApiDataResponse<FichaUnificadaDTO>> consultarHistorial(
             @PathVariable("estudianteId") final UUID estudianteId) {
         return ResponseEntity.ok(new ApiDataResponse<>(true, inputPort.consultarHistorial(usuario(), estudianteId)));
+    }
+
+    /** HU155: estados del sistema de solo consulta (estados de solicitudes y del estudiante en el grupo). */
+    @GetMapping("/estados")
+    public ResponseEntity<ApiListResponse<EstadoSistemaDTO>> consultarEstadosSistema() {
+        final List<EstadoSistemaDTO> estados = inputPort.consultarEstadosSistema();
+        return ResponseEntity.ok(new ApiListResponse<>(true, estados, estados.size()));
+    }
+
+    /** HU172: rastro de auditoria; sin rango se consultan los ultimos 7 dias (maximo 90). */
+    @GetMapping("/auditoria")
+    public ResponseEntity<ApiListResponse<EventoAuditoriaDTO>> consultarAuditoria(
+            @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final OffsetDateTime desde,
+            @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final OffsetDateTime hasta,
+            @RequestParam(name = "accion", required = false) final String accion,
+            @RequestParam(name = "tipoRecurso", required = false) final String tipoRecurso,
+            @RequestParam(name = "idRecurso", required = false) final String idRecurso,
+            @RequestParam(name = "idUsuarioActor", required = false) final UUID idUsuarioActor,
+            @RequestParam(name = "resultado", required = false) final String resultado,
+            @RequestParam(name = "soloAsistencia", required = false) final Boolean soloAsistencia,
+            @RequestParam(name = "pagina", required = false) final Integer pagina,
+            @RequestParam(name = "tamano", required = false) final Integer tamano
+    ) {
+        return lista(inputPort.consultarAuditoria(usuario(), new FiltroAuditoriaDTO(desde, hasta, accion, tipoRecurso,
+                idRecurso, idUsuarioActor, resultado, soloAsistencia), pagina, tamano));
     }
 
     private UUID usuario() {

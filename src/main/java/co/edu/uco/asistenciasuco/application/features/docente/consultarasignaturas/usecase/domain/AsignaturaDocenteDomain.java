@@ -7,5 +7,5 @@ import java.util.UUID;
  */
 public record AsignaturaDocenteDomain(UUID idAsignatura, String nombreAsignatura, UUID idGrupo,
                                       String nombreGrupo, UUID idPrograma, String nombrePrograma,
-                                      Integer estudiantesActivos) {
+                                      UUID idTipoPrograma, String nombreTipoPrograma, Integer estudiantesActivos) {
 }

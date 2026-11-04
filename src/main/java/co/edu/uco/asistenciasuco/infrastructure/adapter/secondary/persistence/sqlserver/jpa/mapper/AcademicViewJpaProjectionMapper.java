@@ -16,6 +16,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsistenciaRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvDocenteEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvProgramaEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsignaturaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvAreaEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvCoordinadorEntity;
@@ -60,10 +61,13 @@ public final class AcademicViewJpaProjectionMapper {
                 row.valorDefecto(), flag(row.estaActivo()));
     }
 
-    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row,
+    /** HU058: el tipo de programa (nivel formativo) sale de {@code uv_programa}; nulo si el grupo no tiene programa. */
+    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row, final UvProgramaEntity programa,
                                                                   final Integer estudiantesActivos) {
         return new AsignaturaDocenteProjection(row.idAsignatura(), row.nombreAsignatura(), row.idGrupo(),
-                row.nombreGrupo(), row.idPrograma(), row.nombrePrograma(), estudiantesActivos);
+                row.nombreGrupo(), row.idPrograma(), row.nombrePrograma(),
+                programa == null ? null : programa.idTipoPrograma(), programa == null ? null : programa.nombreTipoPrograma(),
+                estudiantesActivos);
     }
 
     public static MateriaEstudianteProjection toMateriaEstudiante(final MateriaEstudianteQueryRow row) {

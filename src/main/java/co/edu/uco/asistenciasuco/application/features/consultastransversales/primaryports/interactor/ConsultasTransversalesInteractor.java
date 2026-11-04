@@ -2,7 +2,13 @@ package co.edu.uco.asistenciasuco.application.features.consultastransversales.pr
 
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ComponenteFormacionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ConsolidadoGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroConsolidadoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.MatriculaHistorialDTO;
@@ -10,7 +16,9 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ProgramaCreditosDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ResumenAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsulta;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.HistorialEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.Pagina;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ResumenAsistenciaProjection;
@@ -79,6 +87,48 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
         return new FichaUnificadaDTO(primera.idEstudiante(), primera.tipoIdentificacion(),
                 primera.numeroIdentificacion(), primera.nombreCompleto(), primera.correo(), primera.activo(),
                 filas.stream().map(ConsultasTransversalesInteractor::matricula).toList());
+    }
+
+    @Override
+    public PaginaDTO<ConsolidadoGrupoDTO> consultarConsolidadoAsistencia(final UUID usuario,
+                                                                         final FiltroConsolidadoDTO filtro,
+                                                                         final Integer pagina, final Integer tamano) {
+        final FiltroConsolidado consulta = filtro == null ? null : new FiltroConsolidado(filtro.idPeriodoAcademico(),
+                filtro.idPrograma(), filtro.idAsignatura(), filtro.idDocente());
+        return pagina(useCase.consultarConsolidadoAsistencia(usuario, consulta, pagina, tamano),
+                c -> new ConsolidadoGrupoDTO(c.idGrupo(), c.codigoGrupo(), c.nombreGrupo(), c.idPeriodoAcademico(),
+                        c.nombrePeriodoAcademico(), c.idPrograma(), c.nombrePrograma(), c.idAsignatura(),
+                        c.nombreAsignatura(), c.idDocente(), c.nombreDocente(), c.estudiantesActivos(),
+                        c.sesionesEjecutadas(), c.asistencias(), c.faltasSinJustaCausa(), c.excusas(),
+                        c.porcentajeAsistencia(), c.porcentajeInasistencia(), c.estudiantesRiesgo(),
+                        c.estudiantesPerdida()));
+    }
+
+    @Override
+    public PaginaDTO<EventoAuditoriaDTO> consultarAuditoria(final UUID usuario, final FiltroAuditoriaDTO filtro,
+                                                            final Integer pagina, final Integer tamano) {
+        final FiltroAuditoria consulta = filtro == null ? null : new FiltroAuditoria(filtro.desde(), filtro.hasta(),
+                filtro.accion(), filtro.tipoRecurso(), filtro.idRecurso(), filtro.idUsuarioActor(), filtro.resultado(),
+                !Boolean.FALSE.equals(filtro.soloAsistencia()));
+        return pagina(useCase.consultarAuditoria(usuario, consulta, pagina, tamano),
+                e -> new EventoAuditoriaDTO(e.id(), e.ocurridoEn(), e.idActor(), e.tipoActor(), e.nombreActor(),
+                        e.accion(), e.tipoRecurso(), e.idRecurso(), e.resultado(), e.idTraza(), e.metodoHttp(),
+                        e.ruta(), e.estadoHttp(), e.ipCliente(), e.codigoError(), e.metadatos(),
+                        e.accionAsistencia()));
+    }
+
+    @Override
+    public List<ComponenteFormacionDTO> consultarComponentes(final UUID usuario) {
+        return useCase.consultarComponentes(usuario).stream()
+                .map(c -> new ComponenteFormacionDTO(c.idComponente(), c.codigo(), c.nombre(), c.totalAsignaturas()))
+                .toList();
+    }
+
+    @Override
+    public List<EstadoSistemaDTO> consultarEstadosSistema() {
+        return useCase.consultarEstadosSistema().stream()
+                .map(e -> new EstadoSistemaDTO(e.catalogo(), e.id(), e.codigo(), e.nombre()))
+                .toList();
     }
 
     private static MatriculaHistorialDTO matricula(final HistorialEstudianteProjection h) {

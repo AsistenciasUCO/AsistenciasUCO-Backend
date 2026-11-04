@@ -1,10 +1,14 @@
 package co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
-/** DTO de salida de HU112 (programas y creditos), HU128 (docentes), HU143 (asignaturas) y HU157 (ficha unificada). */
+/**
+ * DTO de salida de HU112 (programas y creditos), HU128 (docentes), HU143 (asignaturas), HU157 (ficha unificada),
+ * HU061 (consolidado por grupo), HU172 (eventos de auditoria) y HU147 (componentes de formacion).
+ */
 public final class ConsultasTransversalesDTO {
 
     private ConsultasTransversalesDTO() {
@@ -51,5 +55,39 @@ public final class ConsultasTransversalesDTO {
     public record FichaUnificadaDTO(UUID idEstudiante, String tipoIdentificacion, String numeroIdentificacion,
                                     String nombreCompleto, String correo, boolean activo,
                                     List<MatriculaHistorialDTO> matriculas) {
+    }
+
+    /** Una fila por grupo; los porcentajes se calculan sobre sesiones ejecutadas x estudiantes activos. */
+    public record ConsolidadoGrupoDTO(UUID idGrupo, Integer codigoGrupo, String nombreGrupo, UUID idPeriodoAcademico,
+                                      String nombrePeriodoAcademico, UUID idPrograma, String nombrePrograma,
+                                      UUID idAsignatura, String nombreAsignatura, UUID idDocente,
+                                      String nombreDocente, int estudiantesActivos, int sesionesEjecutadas,
+                                      int asistencias, int faltasSinJustaCausa, int excusas,
+                                      BigDecimal porcentajeAsistencia, BigDecimal porcentajeInasistencia,
+                                      int estudiantesRiesgo, int estudiantesPerdida) {
+    }
+
+    public record EventoAuditoriaDTO(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,
+                                     String nombreActor, String accion, String tipoRecurso, String idRecurso,
+                                     String resultado, UUID idTraza, String metodoHttp, String ruta,
+                                     Integer estadoHttp, String ipCliente, String codigoError, String metadatos,
+                                     boolean accionAsistencia) {
+    }
+
+    /** Filtros opcionales de HU061. */
+    public record FiltroConsolidadoDTO(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
+    }
+
+    /** Filtros de HU172; {@code soloAsistencia} nulo equivale a true (solo acciones de asistencia). */
+    public record FiltroAuditoriaDTO(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,
+                                     String idRecurso, UUID idUsuarioActor, String resultado,
+                                     Boolean soloAsistencia) {
+    }
+
+    /** HU155: estado de un catalogo de negocio; {@code catalogo} es SOLICITUD o ESTUDIANTE_GRUPO. */
+    public record EstadoSistemaDTO(String catalogo, UUID id, String codigo, String nombre) {
+    }
+
+    public record ComponenteFormacionDTO(UUID idComponente, String codigo, String nombre, int totalAsignaturas) {
     }
 }
