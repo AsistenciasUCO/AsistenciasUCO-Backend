@@ -33,10 +33,9 @@ final class DbFailureClassifier {
     private static final String OPERATION_SINCRONIZAR_USUARIO = "sincronizarUsuario";
     private static final String OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
-    // P5/HU153 (2026-11-04): OP_* de AsignaturaJpaRepository y TipoIdentificacionCommandJpaRepository.
+    // P5 (2026-11-04): OP_* de AsignaturaJpaRepository.
     private static final String OPERATION_CREAR_ASIGNATURA = "crearAsignatura";
     private static final String OPERATION_ACTUALIZAR_ASIGNATURA = "actualizarAsignatura";
-    private static final String OPERATION_GUARDAR_TIPO_IDENTIFICACION = "guardarTipoIdentificacion";
 
     private DbFailureClassifier() {
     }
@@ -175,9 +174,8 @@ final class DbFailureClassifier {
     private static ErrorDefinition classifyGen001(final String operation) {
         if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)
                 || OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE.equals(operation)
-                // P5: area o componente inexistente al guardar una asignatura; HU153: tipo de documento inexistente.
-                || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)
-                || OPERATION_GUARDAR_TIPO_IDENTIFICACION.equals(operation)) {
+                // P5: area o componente inexistente al guardar una asignatura.
+                || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;

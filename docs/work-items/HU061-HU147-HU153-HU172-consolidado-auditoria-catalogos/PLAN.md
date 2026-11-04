@@ -8,6 +8,8 @@ last-reviewed: 2026-11-04
 
 # PLAN — HU061 / HU147 / HU153 / HU172 y P5: consolidado, auditoría y catálogos
 
+> **Actualización (2026-11-04):** por la regla de John de catálogos base de solo consulta, la escritura de HU153 (`POST`/`PUT /api/v1/admin/tipos-identificacion`) se retiró en [CAT-01](../CAT-01-catalogos-solo-consulta/PLAN.md). El resto de este work item sigue vigente.
+
 ## 1. Identidad y objetivo
 
 - **Historias de usuario** (títulos del HU-CATALOG de Infra):
