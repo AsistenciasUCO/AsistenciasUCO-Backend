@@ -21,7 +21,13 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     ERR_MOTIVO_REVISION_LONGITUD_INVALIDA("ERR_MOTIVO_REVISION_LONGITUD_INVALIDA", "El motivo de revision debe tener entre 10 y 300 caracteres.", ErrorKind.VALIDATION),
     ERR_ESTADO_ASISTENCIA_INVALIDO("ERR_ESTADO_ASISTENCIA_INVALIDO", "El estado de asistencia debe ser AN, SJC o EX.", ErrorKind.VALIDATION),
     ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO("ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO", "El usuario autenticado que ejecuta el registro de asistencias es obligatorio.", ErrorKind.VALIDATION),
-    ERR_DOCENTE_SIN_TITULARIDAD_SESION("ERR_DOCENTE_SIN_TITULARIDAD_SESION", "El docente autenticado no tiene titularidad sobre la sesion indicada.", ErrorKind.FORBIDDEN);
+    ERR_DOCENTE_SIN_TITULARIDAD_SESION("ERR_DOCENTE_SIN_TITULARIDAD_SESION", "El docente autenticado no tiene titularidad sobre la sesion indicada.", ErrorKind.FORBIDDEN),
+    // SES-04: resolucion del reclamo de inasistencia (DB: REV_001..REV_005).
+    ERR_ACCION_REVISION_INVALIDA("ERR_ACCION_REVISION_INVALIDA", "La accion sobre el reclamo debe ser APROBADA o RECHAZADA.", ErrorKind.VALIDATION),
+    ERR_RECLAMO_YA_RESUELTO("ERR_RECLAMO_YA_RESUELTO", "El reclamo ya fue resuelto con una decision distinta.", ErrorKind.CONFLICT),
+    ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE("ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE", "La asistencia del reclamo no es una inasistencia justificable.", ErrorKind.CONFLICT),
+    ERR_RECLAMO_SIN_DETALLE_ASISTENCIA("ERR_RECLAMO_SIN_DETALLE_ASISTENCIA", "El reclamo no tiene un registro de asistencia que se pueda justificar.", ErrorKind.CONFLICT),
+    ERR_RECLAMO_NO_EXISTE("ERR_RECLAMO_NO_EXISTE", "El reclamo indicado no existe.", ErrorKind.NOT_FOUND);
 
     private final String code;
     private final String defaultMessage;

@@ -6,9 +6,13 @@ import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioE
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.crosscutting.util.TextHelper;
 
+import java.util.Locale;
+import java.util.Set;
 import java.util.UUID;
 
 public final class ResolverSolicitudRevisionAsistenciaDomain {
+
+    private static final Set<String> ACCIONES_CONTRACTUALES = Set.of("APROBADA", "RECHAZADA");
 
     private final UUID solicitud;
     private final String accion;
@@ -31,8 +35,13 @@ public final class ResolverSolicitudRevisionAsistenciaDomain {
         if (TextHelper.isNullOrBlank(accionNormalizada)) {
             throw new ValidationException(AsistenciaErrorCode.ERR_ACCION_REVISION_REQUERIDA);
         }
+        // SES-04: solo APROBADA (justifica la inasistencia: EX, asistio = 0) o RECHAZADA (conserva la asistencia).
+        final String accionContractual = accionNormalizada.toUpperCase(Locale.ROOT);
+        if (!ACCIONES_CONTRACTUALES.contains(accionContractual)) {
+            throw new ValidationException(AsistenciaErrorCode.ERR_ACCION_REVISION_INVALIDA);
+        }
         this.solicitud = solicitud;
-        this.accion = accionNormalizada;
+        this.accion = accionContractual;
         this.respuestaDocente = TextHelper.trim(respuestaDocente);
         this.usuario = usuario;
     }
