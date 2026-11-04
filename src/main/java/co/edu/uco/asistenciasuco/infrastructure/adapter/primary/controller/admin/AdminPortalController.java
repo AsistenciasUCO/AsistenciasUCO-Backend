@@ -127,8 +127,6 @@ public final class AdminPortalController {
     }
     @PutMapping("/parametros/{id}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarParametro(@PathVariable final UUID id) { throw unavailable("actualizar parametro"); }
-    @GetMapping("/auditoria")
-    public ResponseEntity<ApiListResponse<Void>> consultarAuditoria() { throw unavailable("consultar auditoria"); }
 
     @PostMapping("/cierre-masivo")
     public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {

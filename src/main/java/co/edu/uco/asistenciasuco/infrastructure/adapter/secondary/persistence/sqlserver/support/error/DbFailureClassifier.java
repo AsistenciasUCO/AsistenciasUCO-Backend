@@ -33,6 +33,10 @@ final class DbFailureClassifier {
     private static final String OPERATION_SINCRONIZAR_USUARIO = "sincronizarUsuario";
     private static final String OPERATION_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
+    // P5/HU153 (2026-11-04): OP_* de AsignaturaJpaRepository y TipoIdentificacionCommandJpaRepository.
+    private static final String OPERATION_CREAR_ASIGNATURA = "crearAsignatura";
+    private static final String OPERATION_ACTUALIZAR_ASIGNATURA = "actualizarAsignatura";
+    private static final String OPERATION_GUARDAR_TIPO_IDENTIFICACION = "guardarTipoIdentificacion";
 
     private DbFailureClassifier() {
     }
@@ -54,6 +58,8 @@ final class DbFailureClassifier {
             case "ATT_001", "ATT_002", "ATT_003", "GEN_002", "RC_001", "SES_004", "PLA_001",
                  "VAL_001", "VAL_002", "VAL_003", "VAL_004", "VAL_005" -> CommonErrorCode.VALIDATION_ERROR;
             case "VAL_006" -> CommonErrorCode.CONFLICT;
+            // Asignaturas (decision de John 2026-11-04): creditos obligatorios y mayores que cero.
+            case "ASI_001" -> CommonErrorCode.VALIDATION_ERROR;
             // COO_001 (HU122): el coordinador coordina un programa activo; hay que reasignarlo o desactivar el programa.
             case "COO_001" -> CoordinadorErrorCode.COO_001;
             // GEN_001 es generico y por defecto queda tecnico; en la gestion del coordinador significa que el
@@ -168,7 +174,10 @@ final class DbFailureClassifier {
 
     private static ErrorDefinition classifyGen001(final String operation) {
         if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)
-                || OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE.equals(operation)) {
+                || OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE.equals(operation)
+                // P5: area o componente inexistente al guardar una asignatura; HU153: tipo de documento inexistente.
+                || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)
+                || OPERATION_GUARDAR_TIPO_IDENTIFICACION.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;

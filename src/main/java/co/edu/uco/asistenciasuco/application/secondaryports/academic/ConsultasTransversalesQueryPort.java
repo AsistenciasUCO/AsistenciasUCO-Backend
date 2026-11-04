@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.academic;
 
 import java.math.BigDecimal;
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -23,6 +24,42 @@ public interface ConsultasTransversalesQueryPort {
                                                               int pagina, int tamano);
 
     List<HistorialEstudianteProjection> consultarHistorial(UUID idUsuarioEjecutor, UUID idEstudiante);
+
+    /** HU061: consolidado por grupo (cohorte = periodo academico) en el ambito del coordinador, decano o administrador. */
+    Pagina<ConsolidadoGrupoProjection> consultarConsolidadoAsistencia(UUID idUsuarioEjecutor, FiltroConsolidado filtro,
+                                                                      int pagina, int tamano);
+
+    /** HU172: rastro de auditoria (solo administrador) en un rango UTC [desde, hasta). */
+    Pagina<EventoAuditoriaProjection> consultarAuditoria(UUID idUsuarioEjecutor, FiltroAuditoria filtro, int pagina,
+                                                         int tamano);
+
+    /** HU147: componentes de formacion (BAS, INS, ESP). */
+    List<ComponenteFormacionProjection> consultarComponentes(UUID idUsuarioEjecutor);
+
+    record FiltroConsolidado(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
+    }
+
+    record ConsolidadoGrupoProjection(UUID idGrupo, Integer codigoGrupo, String nombreGrupo, UUID idPeriodoAcademico,
+                                      String nombrePeriodoAcademico, UUID idPrograma, String nombrePrograma,
+                                      UUID idAsignatura, String nombreAsignatura, UUID idDocente, String nombreDocente,
+                                      int estudiantesActivos, int sesionesEjecutadas, int asistencias,
+                                      int faltasSinJustaCausa, int excusas, BigDecimal porcentajeAsistencia,
+                                      BigDecimal porcentajeInasistencia, int estudiantesRiesgo, int estudiantesPerdida) {
+    }
+
+    record FiltroAuditoria(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,
+                           String idRecurso, UUID idUsuarioActor, String resultado, boolean soloAsistencia) {
+    }
+
+    record EventoAuditoriaProjection(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,
+                                     String nombreActor, String accion, String tipoRecurso, String idRecurso,
+                                     String resultado, UUID idTraza, String metodoHttp, String ruta,
+                                     Integer estadoHttp, String ipCliente, String codigoError, String metadatos,
+                                     boolean accionAsistencia) {
+    }
+
+    record ComponenteFormacionProjection(UUID idComponente, String codigo, String nombre, int totalAsignaturas) {
+    }
 
     /** Filtros comunes: texto de busqueda, entidad padre (programa o facultad, segun la consulta) y estado. */
     record FiltroConsulta(String busqueda, UUID idPadre, Boolean estaActivo) {
