@@ -61,6 +61,9 @@ public final class DbExceptionTranslator {
             GrupoErrorCode.ERR_CRUCE_HORARIO_DOCENTE,
             GrupoErrorCode.ERR_MATRICULA_DUPLICADA,
             GrupoErrorCode.ERR_GRUPO_NO_HABILITADO,
+            AsistenciaErrorCode.ERR_RECLAMO_YA_RESUELTO,
+            AsistenciaErrorCode.ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE,
+            AsistenciaErrorCode.ERR_RECLAMO_SIN_DETALLE_ASISTENCIA,
             UsuarioErrorCode.ERR_USUARIO_INACTIVO,
             EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
@@ -71,9 +74,6 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
             DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
             DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
-            AsistenciaErrorCode.ERR_RECLAMO_YA_RESUELTO,
-            AsistenciaErrorCode.ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE,
-            AsistenciaErrorCode.ERR_RECLAMO_SIN_DETALLE_ASISTENCIA,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
