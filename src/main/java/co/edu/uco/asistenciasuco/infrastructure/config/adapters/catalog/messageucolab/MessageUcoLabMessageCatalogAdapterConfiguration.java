@@ -16,7 +16,6 @@ import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.context.annotation.Primary;
 
 /**
  * Composition Root del catalogo de mensajes sobre MessageUcoLab.
@@ -31,8 +30,10 @@ public class MessageUcoLabMessageCatalogAdapterConfiguration {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MessageUcoLabMessageCatalogAdapterConfiguration.class);
 
+    // Sin @Primary: los tres proveedores (azure, sqlserver, messageucolab) son mutuamente excluyentes por
+    // @ConditionalOnProperty, asi que en ejecucion solo existe un MessageCatalogPort. Un segundo @Primary (el de Azure ya lo
+    // tiene) hace que el analisis estatico (SonarCloud) vea los puntos de inyeccion como ambiguos.
     @Bean
-    @Primary
     public MessageCatalogPort messageUcoLabMessageCatalogPort(
             final MessageReader messageReader,
             final MessageUcoLabProviderProperties properties,
