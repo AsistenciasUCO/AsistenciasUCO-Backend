@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCat
 import co.edu.uco.asistenciasuco.application.secondaryports.vault.SecretVaultPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigMessageCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigParameterCatalogAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.messageucolab.MessageUcoLabMessageCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.vault.azure.AzureKeyVaultAdapter;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -107,5 +108,18 @@ class CompositeCatalogInvalidationAdapterTest {
         new CompositeCatalogInvalidationAdapter(null, azureMessages, null).invalidateAll();
 
         verify(azureMessages).invalidateAll();
+    }
+
+    @Test
+    void invalidacion_de_mensajes_delega_en_el_adaptador_messageucolab() {
+        final MessageUcoLabMessageCatalogAdapter messageUcoLab = Mockito.mock(MessageUcoLabMessageCatalogAdapter.class);
+        final CompositeCatalogInvalidationAdapter composite =
+                new CompositeCatalogInvalidationAdapter(otherParameters, messageUcoLab, otherVault);
+
+        composite.invalidateMessage("VAL_001");
+        composite.invalidateAll();
+
+        verify(messageUcoLab).invalidateMessage("VAL_001");
+        verify(messageUcoLab).invalidateAll();
     }
 }

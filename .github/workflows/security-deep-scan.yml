@@ -14,6 +14,11 @@ concurrency:
   group: deep-security-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
 
+# Credenciales de solo lectura para GitHub Packages (starter MessageUcoLab, repo del equipo de mensajeria).
+env:
+  MESSAGEUCOLAB_PACKAGES_USER: ${{ secrets.MESSAGEUCOLAB_PACKAGES_USER }}
+  MESSAGEUCOLAB_PACKAGES_TOKEN: ${{ secrets.MESSAGEUCOLAB_PACKAGES_TOKEN }}
+
 jobs:
   archunit:
     name: ArchUnit Architectural Guardrails
@@ -28,6 +33,9 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+          server-id: github
+          server-username: MESSAGEUCOLAB_PACKAGES_USER
+          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
       - name: Execute architectural rules only
         shell: bash
         run: |
@@ -65,6 +73,9 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+          server-id: github
+          server-username: MESSAGEUCOLAB_PACKAGES_USER
+          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
       - name: Warm Maven POM and dependency cache for Trivy
         shell: bash
         run: |
@@ -108,11 +119,18 @@ jobs:
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
+      - name: Prepare GitHub Packages credentials for the Docker build
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          printf '<settings><servers><server><id>github</id><username>%s</username><password>%s</password></server></servers></settings>' \
+            "$MESSAGEUCOLAB_PACKAGES_USER" "$MESSAGEUCOLAB_PACKAGES_TOKEN" > "$RUNNER_TEMP/m2-settings.xml"
       - name: Build production image from current source (Dockerfile executes clean verify)
         shell: bash
         run: |
           set -euo pipefail
-          docker build --tag asistencias-uco-security-scan:${{ github.sha }} .
+          docker build --secret id=m2settings,src="$RUNNER_TEMP/m2-settings.xml" --tag asistencias-uco-security-scan:${{ github.sha }} .
       - name: Verify runtime Docker identity is non-root
         shell: bash
         run: |

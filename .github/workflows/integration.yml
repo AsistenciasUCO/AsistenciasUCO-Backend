@@ -10,6 +10,11 @@ concurrency:
   group: backend-integration-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: false
 
+# Credenciales de solo lectura para GitHub Packages (starter MessageUcoLab, repo del equipo de mensajeria).
+env:
+  MESSAGEUCOLAB_PACKAGES_USER: ${{ secrets.MESSAGEUCOLAB_PACKAGES_USER }}
+  MESSAGEUCOLAB_PACKAGES_TOKEN: ${{ secrets.MESSAGEUCOLAB_PACKAGES_TOKEN }}
+
 jobs:
   integration:
     name: Backend Integration Gate
@@ -31,6 +36,9 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+          server-id: github
+          server-username: MESSAGEUCOLAB_PACKAGES_USER
+          server-password: MESSAGEUCOLAB_PACKAGES_TOKEN
 
       - name: Validate integration configuration
         shell: bash

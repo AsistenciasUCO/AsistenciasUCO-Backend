@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCat
 import co.edu.uco.asistenciasuco.application.secondaryports.vault.SecretVaultPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigMessageCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigParameterCatalogAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.messageucolab.MessageUcoLabMessageCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.vault.azure.AzureKeyVaultAdapter;
 
 /**
@@ -39,6 +40,8 @@ public class CompositeCatalogInvalidationAdapter implements CatalogInvalidationP
     public void invalidateMessage(final String code) {
         if (messageCatalogPort instanceof AzureAppConfigMessageCatalogAdapter adapter) {
             adapter.invalidateMessage(code);
+        } else if (messageCatalogPort instanceof MessageUcoLabMessageCatalogAdapter adapter) {
+            adapter.invalidateMessage(code);
         }
     }
 
@@ -55,6 +58,8 @@ public class CompositeCatalogInvalidationAdapter implements CatalogInvalidationP
             adapter.invalidateAll();
         }
         if (messageCatalogPort instanceof AzureAppConfigMessageCatalogAdapter adapter) {
+            adapter.invalidateAll();
+        } else if (messageCatalogPort instanceof MessageUcoLabMessageCatalogAdapter adapter) {
             adapter.invalidateAll();
         }
         if (secretVaultPort instanceof AzureKeyVaultAdapter adapter) {
