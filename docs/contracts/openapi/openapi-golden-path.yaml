@@ -403,6 +403,12 @@ paths:
         Business command batch. La operación es atómica: ante error no persiste registros
         parciales ni publica el evento. Partial success no existe. Idempotencia y tamaño máximo
         no están definidos; no se soporta Idempotency-Key.
+
+        SES-01: solo se acepta con la sesión activa, `fechaHoraInicioUtc <= ahora < fechaHoraFinUtc`,
+        con el reloj del servidor y procedencia temporal confirmada (UTC-D06). Sin tolerancia
+        posterior al cierre. Fuera de la ventana responde 409 sin modificar filas; la DB repite la
+        validación dentro de la transacción del lote. Las correcciones posteriores al cierre solo se
+        realizan por el flujo formal de reclamos.
       x-roles: [DOCENTE]
       x-idempotency: NOT_DEFINED
       x-atomicity: ALL_OR_NOTHING
@@ -449,6 +455,8 @@ paths:
           $ref: '#/components/responses/Forbidden'
         '404':
           $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/SesionFueraDeVentana'
         '500':
           $ref: '#/components/responses/InternalError'
   /api/v1/realtime/stream:
@@ -986,6 +994,26 @@ components:
             error: Not Found
             code: RESOURCE_NOT_FOUND
             message: El recurso solicitado no existe.
+            path: /api/v1/asistencias/lote
+            correlationId: 43ecb554-7527-45f5-8107-8ef896f63455
+    SesionFueraDeVentana:
+      description: |
+        SES-01: la sesión no está activa para el registro ordinario de asistencia. `code` distingue
+        `ERR_SESION_NO_INICIADA` (antes del inicio), `ERR_SESION_CERRADA` (en el fin exacto o después)
+        y `ERR_SESION_HORARIO_INDETERMINADO` (procedencia temporal no confirmada). No se modificó ninguna fila.
+      headers:
+        X-Correlation-Id:
+          $ref: '#/components/headers/CorrelationId'
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/ApiErrorResponse'
+          example:
+            timestamp: '2026-11-03T17:00:00Z'
+            status: 409
+            error: Conflict
+            code: ERR_SESION_CERRADA
+            message: La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.
             path: /api/v1/asistencias/lote
             correlationId: 43ecb554-7527-45f5-8107-8ef896f63455
     InternalError:

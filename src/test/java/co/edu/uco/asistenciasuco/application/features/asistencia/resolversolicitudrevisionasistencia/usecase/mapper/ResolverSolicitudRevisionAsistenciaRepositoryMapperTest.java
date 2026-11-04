@@ -24,7 +24,7 @@ class ResolverSolicitudRevisionAsistenciaRepositoryMapperTest {
         final UUID docenteId = UUID.randomUUID();
         final UUID solicitud = UUID.randomUUID();
         final ResolverSolicitudRevisionAsistenciaDomain domain =
-                new ResolverSolicitudRevisionAsistenciaDomain(solicitud, "APROBAR", "Aceptada", usuario);
+                new ResolverSolicitudRevisionAsistenciaDomain(solicitud, "APROBADA", "Aceptada", usuario);
 
         final var dto = ResolverSolicitudRevisionAsistenciaRepositoryMapper.toRepositoryDTO(domain, docenteId);
 

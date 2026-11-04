@@ -1,5 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia;
 
+import static org.mockito.Mockito.doThrow;
+import static org.mockito.ArgumentMatchers.any;
+import org.junit.jupiter.params.provider.EnumSource;
+import org.junit.jupiter.params.ParameterizedTest;
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.RegistrarAsistenciasSesionInputPort;
@@ -95,6 +101,21 @@ class AsistenciaControllerContractTest {
         assertEquals(STUDENT, captor.getValue().getRegistros().getFirst().getEstudiante());
         assertEquals("AN", captor.getValue().getRegistros().getFirst().getEstado());
         assertEquals(ACTOR, captor.getValue().getUsuarioEjecutor());
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = AsistenciaErrorCode.class,
+            names = {"ERR_SESION_NO_INICIADA", "ERR_SESION_CERRADA", "ERR_SESION_HORARIO_INDETERMINADO"})
+    void batchOutsideTheActiveSessionWindowReturnsConflictWithThePublicCode(final AsistenciaErrorCode code) throws Exception {
+        doThrow(new ConflictException(code)).when(registerBatch).execute(any());
+
+        mvc.perform(post("/api/v1/asistencias/lote").contentType("application/json")
+                        .content("""
+                                {"sesionId":"%s","registros":[{"estudianteId":"%s","estado":"AN"}]}
+                                """.formatted(SESSION, STUDENT)))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value(code.code()))
+                .andExpect(jsonPath("$.message").value(code.defaultMessage()));
     }
 
     @Test

@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasiste
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
@@ -23,6 +24,7 @@ import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 
+import java.time.Clock;
 import java.util.List;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -62,6 +64,9 @@ class AsistenciaCommandRealtimeIT {
     private SesionRepositoryPort sesionRepositoryPort;
 
     @Autowired
+    private SesionProcedenciaQueryPort sesionProcedenciaQueryPort;
+
+    @Autowired
     private InstitutionalScopePort institutionalScopePort;
 
     @Autowired
@@ -77,7 +82,7 @@ class AsistenciaCommandRealtimeIT {
     void prepararFixture() {
         realtimePublisherPort = mock(RealtimePublisherPort.class);
         useCase = new RegistrarAsistenciasSesionUseCaseImpl(
-                jpaRoutedPort, sesionRepositoryPort, institutionalScopePort, realtimePublisherPort);
+                jpaRoutedPort, sesionProcedenciaQueryPort, institutionalScopePort, realtimePublisherPort, Clock.systemUTC());
         CorrelationIdContext.set(UUID.randomUUID());
         fixture = new AttendanceCommandParityFixture(jdbcTemplate, sesionRepositoryPort);
         residualBefore = fixture.residualRowsWithPrefix();

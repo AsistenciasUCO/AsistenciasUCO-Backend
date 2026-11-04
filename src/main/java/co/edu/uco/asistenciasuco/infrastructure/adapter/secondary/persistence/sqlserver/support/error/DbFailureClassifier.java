@@ -94,6 +94,13 @@ final class DbFailureClassifier {
             // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
             case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);
+            // SES-04: resolucion del reclamo. Accion fuera del contrato 400; ya resuelto con otra decision, asistencia
+            // presente o sin detalle 409; solicitud inexistente 404.
+            case "REV_001" -> AsistenciaErrorCode.ERR_ACCION_REVISION_INVALIDA;
+            case "REV_002" -> AsistenciaErrorCode.ERR_RECLAMO_YA_RESUELTO;
+            case "REV_003" -> AsistenciaErrorCode.ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE;
+            case "REV_004" -> AsistenciaErrorCode.ERR_RECLAMO_SIN_DETALLE_ASISTENCIA;
+            case "REV_005" -> AsistenciaErrorCode.ERR_RECLAMO_NO_EXISTE;
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;
@@ -137,6 +144,11 @@ final class DbFailureClassifier {
             // Combinacion Programa/Facultad invalida enviada a la operacion.
             case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
+            // SES-01: ventana de registro de asistencia (lote y autonomo). La DB la repite bajo bloqueo con su reloj UTC:
+            // sesion no iniciada, cerrada (sin tolerancia) o con procedencia temporal indeterminada son conflictos de estado.
+            case "SES_007" -> AsistenciaErrorCode.ERR_SESION_NO_INICIADA;
+            case "SES_008" -> AsistenciaErrorCode.ERR_SESION_CERRADA;
+            case "SES_009" -> AsistenciaErrorCode.ERR_SESION_HORARIO_INDETERMINADO;
             // LB-004D (soporte de revision): ARC_001 es identico para soporte inexistente, ajeno, ya vinculado u
             // huerfano (404 sin distinguir casos); ARC_002 registro en conflicto; ARC_003 metadata invalida;
             // ARC_005 el estudiante no corresponde al ejecutor autenticado.
