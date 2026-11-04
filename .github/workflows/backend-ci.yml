@@ -168,12 +168,22 @@ jobs:
       # CONTAINER
       # ============================================================
 
+      - name: Prepare GitHub Packages credentials for the Docker build
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+
+          printf '<settings><servers><server><id>github</id><username>%s</username><password>%s</password></server></servers></settings>' \
+            "$MESSAGEUCOLAB_PACKAGES_USER" "$MESSAGEUCOLAB_PACKAGES_TOKEN" > "$RUNNER_TEMP/m2-settings.xml"
+
       - name: Build production Docker image
         shell: bash
         run: |
           set -euo pipefail
 
           docker build \
+            --secret id=m2settings,src="$RUNNER_TEMP/m2-settings.xml" \
             --tag asistencias-uco-backend:${{ github.sha }} \
             .
 

@@ -4,19 +4,22 @@
 # un JAR nuevo dentro del propio build de Docker. El stage final solo copia ese JAR recien
 # generado. Esto evita el riesgo de empaquetar silenciosamente un target/*.jar desactualizado que
 # ya no corresponda al codigo fuente (ver docs del backend sobre "JAR desactualizado").
+# El starter de MessageUcoLab vive en GitHub Packages (repositorio privado del equipo de mensajeria). Las credenciales
+# entran como secreto de BuildKit (docker build --secret id=m2settings,src=<settings.xml>) y no quedan en ninguna capa
+# de la imagen. El secreto es opcional (required=false): sin el, el build solo falla si realmente necesita el starter.
 FROM eclipse-temurin:25-jdk-alpine AS build
 WORKDIR /workspace
 
 COPY .mvn/ .mvn/
 COPY mvnw pom.xml ./
-RUN chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
+RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false chmod +x mvnw && ./mvnw -B -ntp dependency:go-offline
 
 COPY src/ src/
 COPY docs/contracts/openapi/openapi-golden-path.yaml docs/contracts/openapi/openapi-golden-path.yaml
 COPY docs/contracts/openapi/openapi-golden-path.sha256 docs/contracts/openapi/openapi-golden-path.sha256
 # AccessCatalogConsistencyTest contrasta Spring MVC y SecurityConfig con el catalogo de acceso compartido.
 COPY infra/security-baseline/access-catalog.json infra/security-baseline/access-catalog.json
-RUN ./mvnw -B -ntp clean verify
+RUN --mount=type=secret,id=m2settings,target=/root/.m2/settings.xml,required=false ./mvnw -B -ntp clean verify
 
 FROM eclipse-temurin:25-jre-alpine
 WORKDIR /app
