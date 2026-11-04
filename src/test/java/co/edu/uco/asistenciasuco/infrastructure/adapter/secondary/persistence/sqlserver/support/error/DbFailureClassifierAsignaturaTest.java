@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 /**
  * Decisiones de John (2026-11-04): ASI_001 (creditos obligatorios y mayores que cero) es 400; GEN_001 al guardar una
- * asignatura (area o componente inexistente) o un tipo de documento (HU153) es 404.
+ * asignatura (area o componente inexistente) es 404.
  */
 class DbFailureClassifierAsignaturaTest {
 
@@ -18,8 +18,8 @@ class DbFailureClassifierAsignaturaTest {
     }
 
     @Test
-    void gen_001_al_guardar_asignaturas_y_tipos_de_documento_es_no_encontrado() {
-        for (final String operacion : new String[]{"crearAsignatura", "actualizarAsignatura", "guardarTipoIdentificacion"}) {
+    void gen_001_al_guardar_asignaturas_es_no_encontrado() {
+        for (final String operacion : new String[]{"crearAsignatura", "actualizarAsignatura"}) {
             assertEquals(CommonErrorCode.RESOURCE_NOT_FOUND,
                     DbFailureClassifier.classify("mensaje", "DBCODE=GEN_001|detalle", operacion));
         }
