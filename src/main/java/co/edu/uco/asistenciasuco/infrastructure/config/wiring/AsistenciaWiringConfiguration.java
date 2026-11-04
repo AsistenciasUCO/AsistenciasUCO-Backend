@@ -26,10 +26,12 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl.SolicitarRevisionAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+
+import java.time.Clock;
 
 @Configuration(proxyBeanMethods = false)
 public class AsistenciaWiringConfiguration {
@@ -67,15 +69,17 @@ public class AsistenciaWiringConfiguration {
     @Bean
     public RegistrarAsistenciasSesionUseCase registrarAsistenciasSesionUseCase(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final SesionRepositoryPort sesionRepositoryPort,
+            final SesionProcedenciaQueryPort sesionProcedenciaQueryPort,
             final InstitutionalScopePort institutionalScopePort,
             final RealtimePublisherPort realtimePublisherPort
     ) {
+        // SES-01: el reloj autoritativo de la ventana de registro es el del servidor en UTC.
         return new RegistrarAsistenciasSesionUseCaseImpl(
                 asistenciaRepositoryPort,
-                sesionRepositoryPort,
+                sesionProcedenciaQueryPort,
                 institutionalScopePort,
-                realtimePublisherPort
+                realtimePublisherPort,
+                Clock.systemUTC()
         );
     }
 

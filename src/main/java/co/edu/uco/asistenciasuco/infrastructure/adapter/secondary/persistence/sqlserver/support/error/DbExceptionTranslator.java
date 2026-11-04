@@ -70,6 +70,9 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
             DocenteErrorCode.ERR_DOCENTE_YA_VINCULADO_PROGRAMA,
             DocenteErrorCode.ERR_DOCENTE_SIN_VINCULO_ACTIVO,
+            AsistenciaErrorCode.ERR_SESION_NO_INICIADA,
+            AsistenciaErrorCode.ERR_SESION_CERRADA,
+            AsistenciaErrorCode.ERR_SESION_HORARIO_INDETERMINADO,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(

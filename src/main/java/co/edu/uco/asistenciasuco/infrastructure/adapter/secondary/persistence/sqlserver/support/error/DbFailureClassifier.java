@@ -137,6 +137,11 @@ final class DbFailureClassifier {
             // Combinacion Programa/Facultad invalida enviada a la operacion.
             case "ERR_PROGRAMA_FACULTAD_INCONSISTENTE" -> CommonErrorCode.VALIDATION_ERROR;
             case "SES_003" -> DatabaseErrorCode.FEATURE_UNAVAILABLE;
+            // SES-01: ventana de registro de asistencia (lote y autonomo). La DB la repite bajo bloqueo con su reloj UTC:
+            // sesion no iniciada, cerrada (sin tolerancia) o con procedencia temporal indeterminada son conflictos de estado.
+            case "SES_007" -> AsistenciaErrorCode.ERR_SESION_NO_INICIADA;
+            case "SES_008" -> AsistenciaErrorCode.ERR_SESION_CERRADA;
+            case "SES_009" -> AsistenciaErrorCode.ERR_SESION_HORARIO_INDETERMINADO;
             // LB-004D (soporte de revision): ARC_001 es identico para soporte inexistente, ajeno, ya vinculado u
             // huerfano (404 sin distinguir casos); ARC_002 registro en conflicto; ARC_003 metadata invalida;
             // ARC_005 el estudiante no corresponde al ejecutor autenticado.
