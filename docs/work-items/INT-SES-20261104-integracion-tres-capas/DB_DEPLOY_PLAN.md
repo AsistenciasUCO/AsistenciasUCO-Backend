@@ -43,7 +43,21 @@ Fuente: `git show d82ad2f:<ruta>` (no el working tree). 16 archivos, una transac
 - Autorización: responsable del proyecto (2026-11-04) sobre PRs ya fusionados por el owner DB.
 - Verificación: 253/257 módulos iguales a develop; restan exactamente los 5 objetos del paquete B; grants y mensajes OK.
 
-## Paquete B — PENDIENTE DE APROBACIÓN DEL OWNER DB
+## Paquete B — APLICADO 2026-11-04 03:35 (-05:00)
+
+- **Aprobación:** John Duque (owner DB) autorizó la integración con la condición expresa de no romper el estándar DB;
+  **comunicada por el usuario** (responsable del proyecto) el 2026-11-04. No hay enlace documental de esa aprobación en
+  los PR #81/#82/#83 (sin reviews en GitHub): queda pendiente su constancia formal en el repositorio DB.
+- Precondiciones verificadas: develop DB = `11d7d50` limpio; `freeze-manifest.ps1 -Mode Verify` →
+  `FREEZE_MANIFEST_OK entries=10 post_freeze_superseded=4`; todas las dependencias de los 5 objetos existían en la base.
+- Backup `COPY_ONLY, CHECKSUM` + `RESTORE VERIFYONLY`: `gestionasistenciadb_pre_alignB_20261104_033521.bak`
+  (contenedor y `%USERPROFILE%\AsistenciasUCO-backups\20261104\`).
+- Aplicación: 6 archivos de `11d7d50` en una transacción → COMMIT.
+- Verificación: **258/258 módulos funcionalmente idénticos a develop** (19 difieren solo en comentarios REC4);
+  `SES_007–009` y `REV_001–005` en ambos catálogos; runtime: GRANT en los 3 SP públicos, DENY en
+  `usp_precargar_sesiones_grupo_interno`, sin permiso (denegado por defecto) en `usp_validar_sesion_ventana_registro_interno`.
+
+### Contenido del paquete B (referencia)
 
 Fuente `11d7d50`: `usp_validar_sesion_ventana_registro_interno` (nuevo), `usp_precargar_sesiones_grupo_interno`
 (guardia `@fechaDesde <= @fechaFin`), `usp_registrar_asistencias_sesion`, `usp_registrar_asistencia_estudiante_autonomo`
@@ -63,7 +77,7 @@ El script rechaza `-Package B -Mode Apply` sin `-ApprovedBy`.
 2. Tras COMMIT: detener el backend y `RESTORE DATABASE gestionasistenciadb FROM DISK = N'/var/opt/mssql/data/<bak>' WITH REPLACE`
    (el .bak sigue dentro del contenedor y tiene copia en `AsistenciasUCO-backups`). Nunca `down -v` ni recrear el contenedor.
 
-## Consecuencia mientras B esté pendiente
+## Consecuencia mientras B estuvo pendiente (histórico)
 
 - SES-01: el backend valida la ventana con `Clock.systemUTC()` y responde 409 antes de llamar a la DB; falta la segunda
   barrera transaccional en SQL (`SES_007/008/009`). La API directa queda protegida por el backend, no por la DB.
