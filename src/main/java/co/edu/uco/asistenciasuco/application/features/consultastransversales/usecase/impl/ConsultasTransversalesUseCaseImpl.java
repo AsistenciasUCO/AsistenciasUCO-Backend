@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTr
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.AsignaturaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ConsolidadoGrupoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EventoAuditoriaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
@@ -116,6 +117,11 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     @Override
     public List<ComponenteFormacionProjection> consultarComponentes(final UUID usuario) {
         return queryPort.consultarComponentes(exigirUsuario(usuario));
+    }
+
+    @Override
+    public List<EstadoSistemaProjection> consultarEstadosSistema() {
+        return queryPort.consultarEstadosSistema();
     }
 
     /**

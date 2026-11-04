@@ -36,6 +36,15 @@ public interface ConsultasTransversalesQueryPort {
     /** HU147: componentes de formacion (BAS, INS, ESP). */
     List<ComponenteFormacionProjection> consultarComponentes(UUID idUsuarioEjecutor);
 
+    /**
+     * HU155: estados de negocio de solo consulta (catalogos base cargados por seed): {@code SOLICITUD} (uv_estado) y
+     * {@code ESTUDIANTE_GRUPO} (uv_estado_estudiante_grupo).
+     */
+    List<EstadoSistemaProjection> consultarEstadosSistema();
+
+    record EstadoSistemaProjection(String catalogo, UUID id, String codigo, String nombre) {
+    }
+
     record FiltroConsolidado(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
     }
 

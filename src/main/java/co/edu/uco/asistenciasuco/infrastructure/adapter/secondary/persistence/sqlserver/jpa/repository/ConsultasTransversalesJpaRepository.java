@@ -107,6 +107,13 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @idUsuarioEjecutor = :idUsuarioEjecutor,
                  @idCorrelacion = :idCorrelacion
             """;
+    /** HU155: lectura directa de las vistas de catalogo (sin SP: no hay ambito ni escritura). */
+    static final String SQL_ESTADOS = """
+            SELECT catalogo = 'SOLICITUD', e.id, e.codigo, e.nombre FROM dbo.uv_estado e
+            UNION ALL
+            SELECT catalogo = 'ESTUDIANTE_GRUPO', g.id, g.codigo, g.nombre FROM dbo.uv_estado_estudiante_grupo g
+            ORDER BY catalogo DESC, nombre
+            """;
     private static final DateTimeFormatter FORMATO_DATETIMEOFFSET = new DateTimeFormatterBuilder()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
             .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).optionalEnd()
@@ -215,6 +222,16 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                 .map(f -> new ComponenteFormacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]),
                         cero(f[3])))
                 .toList();
+    }
+
+    @Override
+    public List<EstadoSistemaProjection> consultarEstadosSistema() {
+        return JpaQueryExecutor.execute("consultarEstadosSistema", "No fue posible consultar los estados del sistema.",
+                () -> ((List<?>) entityManager.createNativeQuery(SQL_ESTADOS).getResultList()).stream()
+                        .map(Object[].class::cast)
+                        .map(f -> new EstadoSistemaProjection(texto(f[0]), NativeRowValues.uuid(f[1]), texto(f[2]),
+                                texto(f[3])))
+                        .toList());
     }
 
     private static HistorialEstudianteProjection historial(final Object[] f) {

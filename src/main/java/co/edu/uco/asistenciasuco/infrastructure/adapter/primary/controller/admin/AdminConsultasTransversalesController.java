@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admi
 
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
@@ -19,6 +20,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.time.OffsetDateTime;
+import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -66,6 +68,13 @@ public final class AdminConsultasTransversalesController {
     public ResponseEntity<ApiDataResponse<FichaUnificadaDTO>> consultarHistorial(
             @PathVariable("estudianteId") final UUID estudianteId) {
         return ResponseEntity.ok(new ApiDataResponse<>(true, inputPort.consultarHistorial(usuario(), estudianteId)));
+    }
+
+    /** HU155: estados del sistema de solo consulta (estados de solicitudes y del estudiante en el grupo). */
+    @GetMapping("/estados")
+    public ResponseEntity<ApiListResponse<EstadoSistemaDTO>> consultarEstadosSistema() {
+        final List<EstadoSistemaDTO> estados = inputPort.consultarEstadosSistema();
+        return ResponseEntity.ok(new ApiListResponse<>(true, estados, estados.size()));
     }
 
     /** HU172: rastro de auditoria; sin rango se consultan los ultimos 7 dias (maximo 90). */

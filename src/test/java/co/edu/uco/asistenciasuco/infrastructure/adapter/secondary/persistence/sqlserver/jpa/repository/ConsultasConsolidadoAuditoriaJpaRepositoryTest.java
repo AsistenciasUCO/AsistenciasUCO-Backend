@@ -137,4 +137,17 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
     private static List<Object> filas(final Object[]... filas) {
         return new ArrayList<>(List.of((Object[]) filas));
     }
+
+    @Test
+    void T_155_PAT_01_estados_lee_las_dos_vistas_de_catalogo() {
+        when(query.getResultList()).thenReturn(filas(new Object[]{"SOLICITUD", ID.toString(), "P", "pendiente"},
+                new Object[]{"ESTUDIANTE_GRUPO", ID, "A ", "activo"}));
+
+        final var estados = repository.consultarEstadosSistema();
+
+        verify(entityManager).createNativeQuery(contains("dbo.uv_estado_estudiante_grupo"));
+        assertEquals(2, estados.size());
+        assertEquals(ID, estados.getFirst().id());
+        assertEquals("A", estados.get(1).codigo());
+    }
 }

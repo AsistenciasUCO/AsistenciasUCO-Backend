@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admi
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
@@ -99,5 +100,17 @@ class AdminConsultasTransversalesControllerTest {
                 .thenThrow(new ForbiddenException("SEC_001", "No tiene el perfil requerido para esta consulta."));
 
         mvc.perform(get("/api/v1/admin/estudiantes/{id}/historial", ID)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void T_155_02_get_estados_del_sistema() throws Exception {
+        when(inputPort.consultarEstadosSistema()).thenReturn(List.of(
+                new EstadoSistemaDTO("SOLICITUD", ID, "P", "pendiente"),
+                new EstadoSistemaDTO("ESTUDIANTE_GRUPO", ID, "A", "activo")));
+
+        mvc.perform(get("/api/v1/admin/estados"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.datos[1].catalogo").value("ESTUDIANTE_GRUPO"));
     }
 }
