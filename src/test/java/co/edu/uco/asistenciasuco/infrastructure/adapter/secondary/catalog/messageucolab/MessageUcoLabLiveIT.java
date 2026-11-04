@@ -120,7 +120,7 @@ class MessageUcoLabLiveIT {
         }
 
         assertEquals(List.of(), discrepancias);
-        assertTrue(verificados >= 76, "se esperaban al menos 76 mensajes verificados y fueron " + verificados);
+        assertTrue(verificados >= 140, "se esperaban al menos 140 mensajes verificados y fueron " + verificados);
     }
 
     @Test
