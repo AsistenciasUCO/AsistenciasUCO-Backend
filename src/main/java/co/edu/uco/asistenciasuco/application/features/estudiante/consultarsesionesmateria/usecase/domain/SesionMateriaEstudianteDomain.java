@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -11,6 +13,8 @@ import java.util.UUID;
 public record SesionMateriaEstudianteDomain(UUID id, String nombre, Integer numero, String codigo, Integer numeroSemana,
                                             UUID idGrupo, String codigoGrupo, String nombreGrupo,
                                             LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin,
+                                            LocalDateTime fechaHoraInicioUtc, LocalDateTime fechaHoraFinUtc,
+                                            EstadoHorarioSesion estadoTemporal,
                                             EstadoAsistenciaSesion estadoAsistencia, String estadoSolicitudRevision,
                                             boolean reclamable) {
 }

@@ -3,5 +3,6 @@ package co.edu.uco.asistenciasuco.application.features.docente.consultarasignatu
 import java.util.UUID;
 
 public record AsignaturaDocenteDTO(UUID idAsignatura, String nombreAsignatura, UUID idGrupo,
-                                   String nombreGrupo, UUID idPrograma, String nombrePrograma) {
+                                   String nombreGrupo, UUID idPrograma, String nombrePrograma,
+                                   Integer estudiantesActivos) {
 }

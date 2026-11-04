@@ -123,8 +123,8 @@ class ViewEntityProjectionMappingTest {
     void docente_proyecta_asignacion_academica_y_asignatura() {
         final UvDocenteEntity docente = HydratedViewRow.of(UvDocenteEntity.class, docenteColumns());
 
-        assertEquals(new AsignaturaDocenteProjection(C, "Calculo", D, "G1", B, "Sistemas"),
-                AcademicViewJpaProjectionMapper.toAsignaturaDocente(docente));
+        assertEquals(new AsignaturaDocenteProjection(C, "Calculo", D, "G1", B, "Sistemas", 7),
+                AcademicViewJpaProjectionMapper.toAsignaturaDocente(docente, 7));
 
         final DocenteAsignacionAcademicaRepositoryProjection asignacion =
                 CoreViewJpaProjectionMapper.toDocenteAsignacion(docente);

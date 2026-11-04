@@ -11,7 +11,8 @@ public final class ConsultarSesionesMateriaEstudianteMapper {
     public static SesionMateriaEstudianteDTO toDTO(final SesionMateriaEstudianteDomain domain) {
         return new SesionMateriaEstudianteDTO(domain.id(), domain.nombre(), domain.numero(), domain.codigo(),
                 domain.numeroSemana(), domain.idGrupo(), domain.codigoGrupo(), domain.nombreGrupo(),
-                domain.fechaHoraInicio(), domain.fechaHoraFin(), domain.estadoAsistencia().name(),
+                domain.fechaHoraInicio(), domain.fechaHoraFin(), domain.fechaHoraInicioUtc(), domain.fechaHoraFinUtc(),
+                domain.estadoTemporal().name(), domain.estadoAsistencia().name(),
                 domain.estadoSolicitudRevision(), domain.reclamable());
     }
 }

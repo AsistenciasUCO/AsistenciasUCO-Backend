@@ -10,6 +10,6 @@ public final class ConsultarAsignaturasDocenteMapper {
 
     public static AsignaturaDocenteDTO toDTO(final AsignaturaDocenteDomain domain) {
         return new AsignaturaDocenteDTO(domain.idAsignatura(), domain.nombreAsignatura(), domain.idGrupo(),
-                domain.nombreGrupo(), domain.idPrograma(), domain.nombrePrograma());
+                domain.nombreGrupo(), domain.idPrograma(), domain.nombrePrograma(), domain.estudiantesActivos());
     }
 }

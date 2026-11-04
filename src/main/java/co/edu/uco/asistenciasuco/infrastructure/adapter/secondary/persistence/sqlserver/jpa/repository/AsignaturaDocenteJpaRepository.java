@@ -9,7 +9,9 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import jakarta.persistence.EntityManager;
 
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Objects;
 import java.util.UUID;
 
@@ -24,6 +26,13 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
             order by d.nombreAsignatura, d.nombreGrupo
             """;
 
+    /** Conteo de estudiantes activos del grupo desde la vista autorizada {@code uv_grupo} (mismo dato que el coordinador). */
+    static final String HQL_ESTUDIANTES_ACTIVOS = """
+            select g.id, g.estudiantesActivos
+            from UvGrupoEntity g
+            where g.id in :idsGrupo
+            """;
+
     private final EntityManager entityManager;
 
     public AsignaturaDocenteJpaRepository(final EntityManager entityManager) {
@@ -35,11 +44,30 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
         return JpaQueryExecutor.execute(
                 "consultarAsignaturasDocente",
                 "No fue posible consultar las asignaturas del docente desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_DOCENTE, UvDocenteEntity.class)
-                        .setParameter("idDocente", idDocente)
-                        .getResultList().stream()
-                        .map(AcademicViewJpaProjectionMapper::toAsignaturaDocente)
-                        .toList()
+                () -> {
+                    final List<UvDocenteEntity> filas = entityManager.createQuery(HQL_POR_DOCENTE, UvDocenteEntity.class)
+                            .setParameter("idDocente", idDocente)
+                            .getResultList();
+                    final Map<UUID, Integer> activos = estudiantesActivos(filas);
+                    return filas.stream()
+                            .map(fila -> AcademicViewJpaProjectionMapper.toAsignaturaDocente(fila,
+                                    fila.idGrupo() == null ? null : activos.get(fila.idGrupo())))
+                            .toList();
+                }
         );
+    }
+
+    private Map<UUID, Integer> estudiantesActivos(final List<UvDocenteEntity> filas) {
+        final List<UUID> idsGrupo = filas.stream().map(UvDocenteEntity::idGrupo).filter(Objects::nonNull).distinct().toList();
+        final Map<UUID, Integer> activos = new HashMap<>();
+        if (idsGrupo.isEmpty()) {
+            return activos;
+        }
+        for (final Object[] fila : entityManager.createQuery(HQL_ESTUDIANTES_ACTIVOS, Object[].class)
+                .setParameter("idsGrupo", idsGrupo)
+                .getResultList()) {
+            activos.put((UUID) fila[0], (Integer) fila[1]);
+        }
+        return activos;
     }
 }

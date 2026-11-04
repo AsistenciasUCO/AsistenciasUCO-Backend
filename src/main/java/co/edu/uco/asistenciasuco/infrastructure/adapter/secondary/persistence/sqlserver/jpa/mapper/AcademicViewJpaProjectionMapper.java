@@ -60,9 +60,10 @@ public final class AcademicViewJpaProjectionMapper {
                 row.valorDefecto(), flag(row.estaActivo()));
     }
 
-    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row) {
+    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row,
+                                                                  final Integer estudiantesActivos) {
         return new AsignaturaDocenteProjection(row.idAsignatura(), row.nombreAsignatura(), row.idGrupo(),
-                row.nombreGrupo(), row.idPrograma(), row.nombrePrograma());
+                row.nombreGrupo(), row.idPrograma(), row.nombrePrograma(), estudiantesActivos);
     }
 
     public static MateriaEstudianteProjection toMateriaEstudiante(final MateriaEstudianteQueryRow row) {

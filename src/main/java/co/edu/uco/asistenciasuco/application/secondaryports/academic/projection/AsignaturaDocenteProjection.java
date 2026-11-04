@@ -8,6 +8,7 @@ public record AsignaturaDocenteProjection(
         UUID idGrupo,
         String nombreGrupo,
         UUID idPrograma,
-        String nombrePrograma
+        String nombrePrograma,
+        Integer estudiantesActivos
 ) {
 }

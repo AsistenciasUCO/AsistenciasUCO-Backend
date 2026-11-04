@@ -12,6 +12,7 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.when;
@@ -39,11 +40,29 @@ class ConsultarAsignaturasDocenteUseCaseImplTest {
         when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
         when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
                 new AsignaturaDocenteProjection(asignatura, "Calculo", UUID.randomUUID(), "Grupo 1",
-                        UUID.randomUUID(), "Ingenieria")));
+                        UUID.randomUUID(), "Ingenieria", 7)));
 
         final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
 
         assertEquals(1, result.size());
         assertEquals(asignatura, result.getFirst().idAsignatura());
+    }
+
+    /** Integracion 2026-11-04: el portal docente mostraba 0 inscritos en grupos sin horario; el conteo viaja con la asignacion. */
+    @Test
+    void execute_propaga_estudiantes_activos_del_grupo_y_conserva_desconocido_como_nulo() {
+        final UUID actor = UUID.randomUUID();
+        final UUID docente = UUID.randomUUID();
+        when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
+        when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
+                new AsignaturaDocenteProjection(UUID.randomUUID(), "Calculo", UUID.randomUUID(), "Grupo 1",
+                        UUID.randomUUID(), "Ingenieria", 7),
+                new AsignaturaDocenteProjection(UUID.randomUUID(), "Fisica", UUID.randomUUID(), "Grupo 2",
+                        UUID.randomUUID(), "Ingenieria", null)));
+
+        final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
+
+        assertEquals(7, result.get(0).estudiantesActivos());
+        assertNull(result.get(1).estudiantesActivos());
     }
 }
