@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.application.features.consultastransversales.us
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.AsignaturaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ConsolidadoGrupoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EventoAuditoriaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
@@ -40,4 +41,7 @@ public interface ConsultasTransversalesUseCase {
                                                          Integer tamano);
 
     List<ComponenteFormacionProjection> consultarComponentes(UUID usuario);
+
+    /** HU155: estados del sistema (solo consulta; el rol ADMINISTRADOR lo exige SecurityConfig). */
+    List<EstadoSistemaProjection> consultarEstadosSistema();
 }

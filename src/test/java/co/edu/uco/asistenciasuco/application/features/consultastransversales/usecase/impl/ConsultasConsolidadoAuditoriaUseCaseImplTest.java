@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.Pagina;
@@ -130,5 +131,13 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
         assertEquals(componentes, useCase.consultarComponentes(USUARIO));
         assertThrows(ForbiddenException.class, () -> useCase.consultarComponentes(null));
         assertThrows(ForbiddenException.class, () -> useCase.consultarAuditoria(null, null, null, null));
+    }
+
+    @Test
+    void T_155_UC_01_estados_del_sistema_delega_en_el_puerto() {
+        final List<EstadoSistemaProjection> estados = List.of(new EstadoSistemaProjection("SOLICITUD", ID, "P", "pendiente"));
+        when(port.consultarEstadosSistema()).thenReturn(estados);
+
+        assertEquals(estados, useCase.consultarEstadosSistema());
     }
 }

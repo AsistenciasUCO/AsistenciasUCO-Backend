@@ -228,7 +228,8 @@ class DocentePortalControllerTest {
     @Test
     void consultarAsignaturas_usa_actor_autenticado() throws Exception {
         when(asignaturas.execute(ACTOR)).thenReturn(List.of(new AsignaturaDocenteDTO(
-                UUID.randomUUID(), "Calculo", UUID.randomUUID(), "Grupo 1", UUID.randomUUID(), "Ingenieria")));
+                UUID.randomUUID(), "Calculo", UUID.randomUUID(), "Grupo 1", UUID.randomUUID(), "Ingenieria",
+                UUID.randomUUID(), "pregrado")));
 
         mvc.perform(get("/api/v1/docente/asignaturas"))
                 .andExpect(status().isOk())

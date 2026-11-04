@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ComponenteFormacionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ConsolidadoGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroConsolidadoDTO;
@@ -120,6 +121,13 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
     public List<ComponenteFormacionDTO> consultarComponentes(final UUID usuario) {
         return useCase.consultarComponentes(usuario).stream()
                 .map(c -> new ComponenteFormacionDTO(c.idComponente(), c.codigo(), c.nombre(), c.totalAsignaturas()))
+                .toList();
+    }
+
+    @Override
+    public List<EstadoSistemaDTO> consultarEstadosSistema() {
+        return useCase.consultarEstadosSistema().stream()
+                .map(e -> new EstadoSistemaDTO(e.catalogo(), e.id(), e.codigo(), e.nombre()))
                 .toList();
     }
 

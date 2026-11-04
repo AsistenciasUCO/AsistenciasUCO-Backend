@@ -39,7 +39,7 @@ class ConsultarAsignaturasDocenteUseCaseImplTest {
         when(scopePort.findDocenteIdByUsuario(actor)).thenReturn(Optional.of(docente));
         when(queryPort.consultarAsignaturasDocente(docente)).thenReturn(List.of(
                 new AsignaturaDocenteProjection(asignatura, "Calculo", UUID.randomUUID(), "Grupo 1",
-                        UUID.randomUUID(), "Ingenieria")));
+                        UUID.randomUUID(), "Ingenieria", UUID.randomUUID(), "pregrado")));
 
         final List<AsignaturaDocenteDomain> result = useCase.execute(actor);
 

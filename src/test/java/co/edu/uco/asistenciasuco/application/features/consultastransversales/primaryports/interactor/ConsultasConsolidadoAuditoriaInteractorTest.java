@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ConsolidadoGrupoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EventoAuditoriaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
@@ -72,5 +73,17 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
 
         assertEquals("INS", componente.codigo());
         assertEquals(3, componente.totalAsignaturas());
+    }
+
+    @Test
+    void T_155_INT_01_estados_mapea_catalogo_codigo_y_nombre() {
+        when(useCase.consultarEstadosSistema()).thenReturn(List.of(
+                new EstadoSistemaProjection("ESTUDIANTE_GRUPO", ID, "CI", "cancelado por inasistencia")));
+
+        final var estado = interactor.consultarEstadosSistema().getFirst();
+
+        assertEquals("ESTUDIANTE_GRUPO", estado.catalogo());
+        assertEquals("CI", estado.codigo());
+        assertEquals("cancelado por inasistencia", estado.nombre());
     }
 }

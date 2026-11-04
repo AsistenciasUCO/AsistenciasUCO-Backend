@@ -26,6 +26,7 @@
     {"method": "POST", "path": "/api/v1/admin/espacios-fisicos", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "PUT", "path": "/api/v1/admin/espacios-fisicos/{id}", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "PATCH", "path": "/api/v1/admin/espacios-fisicos/{id}/estado", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
+    {"method": "GET", "path": "/api/v1/admin/estados", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU155: estados de solicitudes y del estudiante en el grupo; catalogos base de solo consulta (regla de John 2026-11-04)."},
     {"method": "GET", "path": "/api/v1/admin/estudiantes", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU157: estudiantes de la institucion del administrador; el ambito lo fuerza el procedimiento almacenado."},
     {"method": "GET", "path": "/api/v1/admin/estudiantes/{estudianteId}/historial", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "HU157: estudiantes de la institucion del administrador; el ambito lo fuerza el procedimiento almacenado."},
     {"method": "GET", "path": "/api/v1/admin/facultades", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},

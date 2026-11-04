@@ -84,6 +84,10 @@ public final class ConsultasTransversalesDTO {
                                      Boolean soloAsistencia) {
     }
 
+    /** HU155: estado de un catalogo de negocio; {@code catalogo} es SOLICITUD o ESTUDIANTE_GRUPO. */
+    public record EstadoSistemaDTO(String catalogo, UUID id, String codigo, String nombre) {
+    }
+
     public record ComponenteFormacionDTO(UUID idComponente, String codigo, String nombre, int totalAsignaturas) {
     }
 }
