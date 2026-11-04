@@ -152,6 +152,36 @@ app:
       cache-ttl: ${MESSAGEUCOLAB_CACHE_TTL:5m}   # 0 desactiva; el gateway limita a 120 peticiones/min por IP
       fallback: ${MESSAGEUCOLAB_FALLBACK:azure}   # azure | none
       code-prefix: ${MESSAGEUCOLAB_CODE_PREFIX:MSG_}
+      # Codigos canonicos de mas de 10 caracteres -> codigo corto de MessageUcoLab (el nombre canonico va en el titulo).
+      # Generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py; la prueba MessageUcoLabCatalogoTest lo valida.
+      code-aliases:
+        "[ERR_CORRELACION_REQUERIDA]": ERR001
+        "[ERR_USUARIO_NO_EXISTE]": ERR002
+        "[ERR_UNICIDAD_CORREO]": ERR003
+        "[ERR_UNICIDAD_DOCUMENTO]": ERR004
+        "[ERR_ESTUDIANTE_NO_EXISTE]": ERR005
+        "[ERR_MATRICULA_DUPLICADA]": ERR006
+        "[ERR_ESTUDIANTE_NO_PERTENECE_SESION]": ERR007
+        "[ERR_DOCENTE_NO_EXISTE]": ERR008
+        "[ERR_DOCENTE_NO_TITULAR_GRUPO]": ERR009
+        "[ERR_PROGRAMA_GRUPO_NO_ENCONTRADO]": ERR010
+        "[ERR_GRUPO_NO_EXISTE]": ERR011
+        "[ERR_GRUPO_NO_HABILITADO]": ERR012
+        "[ERR_CUPO_SUPERADO]": ERR013
+        "[ERR_CAPACIDAD_GRUPO_INVALIDA]": ERR014
+        "[ERR_CUPO_INFERIOR_OCUPACION]": ERR015
+        "[ERR_CRUCE_HORARIO_ESTUDIANTE]": ERR016
+        "[ERR_CRUCE_HORARIO_DOCENTE]": ERR017
+        "[ERR_SESION_NO_EXISTE]": ERR018
+        "[ERR_TOKEN_VERIFICACION_INVALIDO]": ERR019
+        "[ERR_PROGRAMA_FACULTAD_INCONSISTENTE]": ERR020
+        "[ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA]": ERR021
+        "[ERR_INESPERADO_REGISTRO_ESTUDIANTE]": ERR022
+        "[ERR_INESPERADO_REGISTRO_DOCENTE]": ERR023
+        "[ERR_INESPERADO_REGISTRO_ASISTENCIA]": ERR024
+        "[SUC_REGISTRO_ESTUDIANTE_GRUPO]": SUC001
+        "[SUC_REGISTRO_DOCENTE_GRUPO]": SUC002
+        "[SUC_REGISTRO_ASISTENCIA]": SUC003
     # Azure Key Vault y App Configuration (autenticacion por DefaultAzureCredential con Azure CLI)
     azure-keyvault:
       endpoint: ${AZURE_KEYVAULT_ENDPOINT:https://kv-asist-dev-21245.vault.azure.net/}

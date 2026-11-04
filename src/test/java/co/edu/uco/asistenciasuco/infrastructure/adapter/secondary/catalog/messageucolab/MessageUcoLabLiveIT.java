@@ -14,11 +14,11 @@ import java.nio.charset.StandardCharsets;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Map;
 import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assumptions.assumeTrue;
 
 /**
@@ -26,7 +26,8 @@ import static org.junit.jupiter.api.Assumptions.assumeTrue;
  * existan {@code MESSAGEUCOLAB_LIVE_APPLICATION_ID} y {@code MESSAGEUCOLAB_LIVE_ENVIRONMENT_ID} (y opcionalmente
  * {@code MESSAGEUCOLAB_LIVE_URL}, por defecto {@code http://localhost:8000}).
  *
- * <p>Requiere en el ambiente indicado los mensajes MSG_GEN001, MSG_GEN003 y MSG_VAL001, y que MSG_VAL005 no exista.
+ * <p>Requiere en el ambiente indicado el catalogo de usuario completo importado desde el Excel (los mensajes de mas de 100
+ * caracteres solo si el componente ya admite mas).
  * Un mock no certifica el componente externo; esta prueba si. Un {@code NOT_RUN} no es {@code PASS}.</p>
  */
 class MessageUcoLabLiveIT {
@@ -51,7 +52,7 @@ class MessageUcoLabLiveIT {
                             "messageucolab.environment-id=" + environmentId)
                     .run(context -> holder[0] = new MessageUcoLabMessageCatalogAdapter(
                             context.getBean(MessageReader.class),
-                            new MessageUcoLabCodeMapper("MSG_", Map.of()),
+                            new MessageUcoLabCodeMapper("MSG_", MessageUcoLabCatalogoTest.aliasesDeApplicationYml()),
                             Duration.ofSeconds(10),
                             Duration.ZERO,
                             null));
@@ -87,31 +88,39 @@ class MessageUcoLabLiveIT {
 
     /**
      * Garantiza el ORIGEN: el adaptador de estas pruebas se construye sin contingencia, de modo que un acierto solo
-     * puede venir de MessageUcoLab (Azure no puede enmascarar un mensaje ausente ni distinto).
+     * puede venir de MessageUcoLab (Azure no puede enmascarar un mensaje ausente ni distinto). Usa los codigos
+     * canonicos y los alias reales de application.yml, asi que prueba tambien el mapeo de los 27 codigos largos.
+     * Los mensajes que superan el limite de contenido del componente ({@code MESSAGEUCOLAB_LIVE_CONTENT_LIMIT}, 100
+     * por defecto) no pueden estar cargados y se excluyen.
      */
     @Test
-    void todos_los_mensajes_cortos_cargados_se_sirven_desde_messageucolab_con_el_texto_exacto_del_seed() throws Exception {
+    void todo_el_catalogo_que_cabe_se_sirve_desde_messageucolab_con_el_texto_exacto_del_seed() throws Exception {
         requireLive();
 
+        final int limite = Integer.parseInt(System.getenv().getOrDefault("MESSAGEUCOLAB_LIVE_CONTENT_LIMIT", "100"));
         final MessageCatalogPort port = adapter(new ApplicationContextRunnerHolder(), ENV);
         final List<String> lines;
-        try (var in = getClass().getResourceAsStream("/messageucolab/mensajes-cortos-cargados.psv")) {
+        try (var in = getClass().getResourceAsStream("/messageucolab/catalogo-mensajes-usuario.psv")) {
             lines = new BufferedReader(new InputStreamReader(in, StandardCharsets.UTF_8)).lines()
                     .filter(l -> !l.isBlank() && !l.startsWith("#")).toList();
         }
-        assertEquals(48, lines.size());
 
         final List<String> discrepancias = new ArrayList<>();
+        int verificados = 0;
         for (final String line : lines) {
-            final int sep = line.indexOf('|');
-            final String code = line.substring(0, sep);
-            final Optional<String> actual = port.findUserMessage(code);
-            if (!Optional.of(line.substring(sep + 1)).equals(actual)) {
-                discrepancias.add(code + " -> " + actual.orElse("<vacio>"));
+            final String[] c = line.split("\\|", 6);
+            if (c[5].length() > limite) {
+                continue;
+            }
+            verificados++;
+            final Optional<String> actual = port.findUserMessage(c[0]);
+            if (!Optional.of(c[5]).equals(actual)) {
+                discrepancias.add(c[0] + " -> " + actual.orElse("<vacio>"));
             }
         }
 
         assertEquals(List.of(), discrepancias);
+        assertTrue(verificados >= 76, "se esperaban al menos 76 mensajes verificados y fueron " + verificados);
     }
 
     @Test
@@ -129,8 +138,8 @@ class MessageUcoLabLiveIT {
 
         final MessageCatalogPort port = adapter(new ApplicationContextRunnerHolder(), ENV);
 
-        assertEquals(Optional.empty(), port.findUserMessage("VAL_005"));
-        assertEquals("VAL_005", port.getUserMessage("VAL_005"));
+        assertEquals(Optional.empty(), port.findUserMessage("NOEXISTE9"));
+        assertEquals("NOEXISTE9", port.getUserMessage("NOEXISTE9"));
     }
 
     @Test
@@ -148,6 +157,6 @@ class MessageUcoLabLiveIT {
 
         final MessageCatalogPort port = adapter(new ApplicationContextRunnerHolder(), ENV);
 
-        assertEquals(Optional.empty(), port.findUserMessage("ERR_CRUCE_HORARIO_DOCENTE"));
+        assertEquals(Optional.empty(), port.findUserMessage("ERR_CODIGO_LARGO_QUE_NO_ESTA_EN_EL_CATALOGO"));
     }
 }

@@ -1,0 +1,79 @@
+# canonico|codigo remoto|tipo|categoria|titulo|contenido -- generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py desde 04_mensaje.sql
+CORR_001|CORR001|Funcional|Error|CORR_001 - El identificador de correlación no…|El identificador de correlación no está presente o está vacío.
+ERR_CORRELACION_REQUERIDA|ERR001|Funcional|Error|ERR_CORRELACION_REQUERIDA - El codigo de…|El codigo de correlacion es requerido.
+GEN_001|GEN001|Funcional|Error|GEN_001 - El … especificado no existe en el…|El {} especificado no existe en el sistema.
+GEN_002|GEN002|Funcional|Error|GEN_002 - El … no puede estar vacío o no está…|El {} no puede estar vacío o no está presente.
+GEN_003|GEN003|Funcional|Error|GEN_003 - Ya existe un … registrado con este ….|Ya existe un {} registrado con este {}.
+GEN_004|GEN004|Funcional|Confirmación|GEN_004 - … registrado(a) exitosamente.|{} registrado(a) exitosamente.
+GEN_005|GEN005|Funcional|Confirmación|GEN_005 - … actualizado(a) exitosamente.|{} actualizado(a) exitosamente.
+VAL_001|VAL001|Funcional|Error|VAL_001 - El número de identificación es…|El número de identificación es obligatorio.
+VAL_002|VAL002|Funcional|Error|VAL_002 - El número de identificación debe tener…|El número de identificación debe tener entre {} y {} dígitos.
+VAL_003|VAL003|Funcional|Error|VAL_003 - Los nombres y apellidos son…|Los nombres y apellidos son obligatorios.
+VAL_004|VAL004|Funcional|Error|VAL_004 - El campo … contiene caracteres no…|El campo {} contiene caracteres no permitidos.
+VAL_005|VAL005|Funcional|Error|VAL_005 - El correo electrónico es obligatorio y…|El correo electrónico es obligatorio y debe tener un formato válido.
+VAL_006|VAL006|Funcional|Error|VAL_006 - La dirección de correo electrónico ya…|La dirección de correo electrónico ya se encuentra registrada.
+VAL_007|VAL007|Funcional|Error|VAL_007 - La contraseña no cumple con los…|La contraseña no cumple con los requisitos mínimos de seguridad.
+USU_001|USU001|Funcional|Error|USU_001 - El usuario especificado no existe en…|El usuario especificado no existe en el sistema.
+ERR_USUARIO_NO_EXISTE|ERR002|Funcional|Error|ERR_USUARIO_NO_EXISTE - El usuario especificado…|El usuario especificado no existe.
+USU_002|USU002|Funcional|Error|USU_002 - El usuario especificado se encuentra…|El usuario especificado se encuentra inactivo en la plataforma.
+ERR_UNICIDAD_CORREO|ERR003|Funcional|Error|ERR_UNICIDAD_CORREO - El correo electronico ya…|El correo electronico ya se encuentra registrado.
+ERR_UNICIDAD_DOCUMENTO|ERR004|Funcional|Error|ERR_UNICIDAD_DOCUMENTO - El numero de documento…|El numero de documento ya esta registrado para este tipo de identificacion.
+EST_001|EST001|Funcional|Error|EST_001 - El estudiante especificado no existe…|El estudiante especificado no existe en el sistema.
+ERR_ESTUDIANTE_NO_EXISTE|ERR005|Funcional|Error|ERR_ESTUDIANTE_NO_EXISTE - El estudiante…|El estudiante especificado no existe.
+EST_002|EST002|Funcional|Error|EST_002 - El estudiante ya se encuentra…|El estudiante ya se encuentra matriculado o registrado en este grupo.
+ERR_MATRICULA_DUPLICADA|ERR006|Funcional|Error|ERR_MATRICULA_DUPLICADA - Usted ya se encuentra…|Usted ya se encuentra registrado o matriculado en este grupo.
+EST_003|EST003|Funcional|Error|EST_003 - El estudiante ya pertenece a este…|El estudiante ya pertenece a este programa académico.
+EST_004|EST004|Funcional|Error|EST_004 - El estudiante no pertenece al grupo de…|El estudiante no pertenece al grupo de la sesion seleccionada.
+ERR_ESTUDIANTE_NO_PERTENECE_SESION|ERR007|Funcional|Error|ERR_ESTUDIANTE_NO_PERTENECE_SESION|El estudiante no pertenece al grupo de la sesion seleccionada.
+DOC_001|DOC001|Funcional|Error|DOC_001 - El docente especificado no existe o se…|El docente especificado no existe o se encuentra inactivo.
+ERR_DOCENTE_NO_EXISTE|ERR008|Funcional|Error|ERR_DOCENTE_NO_EXISTE - El docente especificado…|El docente especificado no existe o esta inactivo.
+ERR_DOCENTE_NO_TITULAR_GRUPO|ERR009|Funcional|Error|ERR_DOCENTE_NO_TITULAR_GRUPO - El docente…|El docente indicado no es el titular del grupo seleccionado.
+PROG_001|PROG001|Funcional|Error|PROG_001 - El programa académico especificado no…|El programa académico especificado no existe en el sistema.
+FAC_001|FAC001|Funcional|Error|FAC_001 - La facultad especificada no existe en…|La facultad especificada no existe en el sistema.
+TPR_001|TPR001|Funcional|Error|TPR_001 - El tipo de programa especificado no…|El tipo de programa especificado no existe en el sistema.
+ARE_001|ARE001|Funcional|Error|ARE_001 - El área de conocimiento especificada…|El área de conocimiento especificada no existe en el sistema.
+TPR_002|TPR002|Funcional|Error|TPR_002 - Ya existe un tipo de programa con el…|Ya existe un tipo de programa con el mismo código o nombre.
+ARE_002|ARE002|Funcional|Error|ARE_002 - Ya existe un área de conocimiento con…|Ya existe un área de conocimiento con el mismo código o nombre.
+DEC_001|DEC001|Funcional|Error|DEC_001 - El decano especificado no existe en el…|El decano especificado no existe en el sistema.
+FAC_002|FAC002|Funcional|Error|FAC_002 - El decano seleccionado ya es titular…|El decano seleccionado ya es titular de otra facultad activa.
+COO_001|COO001|Funcional|Error|COO_001 - No se puede desactivar al coordinador…|No se puede desactivar al coordinador mientras tenga un programa activo a cargo. Reasigne o desactive el programa primero.
+ERR_PROGRAMA_GRUPO_NO_ENCONTRADO|ERR010|Funcional|Error|ERR_PROGRAMA_GRUPO_NO_ENCONTRADO|No se encontro un programa academico asociado a este grupo.
+GRUP_001|GRUP001|Funcional|Error|GRUP_001 - El grupo seleccionado no existe o no…|El grupo seleccionado no existe o no se encuentra habilitado.
+ERR_GRUPO_NO_EXISTE|ERR011|Funcional|Error|ERR_GRUPO_NO_EXISTE - El grupo seleccionado no…|El grupo seleccionado no existe o no esta habilitado.
+ERR_GRUPO_NO_HABILITADO|ERR012|Funcional|Error|ERR_GRUPO_NO_HABILITADO - El grupo seleccionado…|El grupo seleccionado no se encuentra habilitado para matricula.
+GRUP_002|GRUP002|Funcional|Error|GRUP_002 - El grupo ha alcanzado o superado la…|El grupo ha alcanzado o superado la capacidad máxima de estudiantes permitida.
+ERR_CUPO_SUPERADO|ERR013|Funcional|Error|ERR_CUPO_SUPERADO - El grupo ha superado la…|El grupo ha superado la capacidad maxima de estudiantes permitida.
+ERR_CAPACIDAD_GRUPO_INVALIDA|ERR014|Técnico|Error|ERR_CAPACIDAD_GRUPO_INVALIDA - No fue posible…|No fue posible determinar una capacidad máxima válida para el grupo.
+ERR_CUPO_INFERIOR_OCUPACION|ERR015|Funcional|Error|ERR_CUPO_INFERIOR_OCUPACION - La capacidad del…|La capacidad del grupo no puede ser menor al número actual de estudiantes activos.
+GRUP_003|GRUP003|Funcional|Error|GRUP_003 - No se encontró un programa académico…|No se encontró un programa académico asociado a este grupo.
+HOR_001|HOR001|Funcional|Error|HOR_001 - No es posible realizar el registro…|No es posible realizar el registro. Existe un cruce de horario con otra asignatura.
+ERR_CRUCE_HORARIO_ESTUDIANTE|ERR016|Funcional|Error|ERR_CRUCE_HORARIO_ESTUDIANTE - No es posible…|No es posible realizar el registro. Existe un cruce de horario con otra asignatura.
+HOR_002|HOR002|Funcional|Error|HOR_002 - Existe un cruce de horario para el…|Existe un cruce de horario para el docente: ya tiene el grupo {} en la misma franja ({}).
+ERR_CRUCE_HORARIO_DOCENTE|ERR017|Funcional|Error|ERR_CRUCE_HORARIO_DOCENTE - Existe un cruce de…|Existe un cruce de horario para el docente en la misma franja horaria.
+HOR_003|HOR003|Funcional|Error|HOR_003 - Las franjas del horario del grupo no…|Las franjas del horario del grupo no pueden cruzarse: {} se cruza con {}.
+HOR_004|HOR004|Funcional|Error|HOR_004 - El horario del grupo no es válido: ….|El horario del grupo no es válido: {}.
+HOR_005|HOR005|Funcional|Error|HOR_005 - El grupo ya tiene un horario definido…|El grupo ya tiene un horario definido. Para cambiarlo, solicita la aprobación del coordinador.
+SES_001|SES001|Funcional|Error|SES_001 - La sesión de clase especificada no…|La sesión de clase especificada no existe o no se encuentra activa.
+ERR_SESION_NO_EXISTE|ERR018|Funcional|Error|ERR_SESION_NO_EXISTE - La sesion de clase no…|La sesion de clase no existe o no esta abierta.
+SES_002|SES002|Funcional|Error|SES_002 - El código de verificación de…|El código de verificación de asistencia es incorrecto o ha expirado.
+SES_003|SES003|Funcional|Error|SES_003 - El cierre de sesión no está soportado…|El cierre de sesión no está soportado por el contrato vigente de base de datos.
+SES_004|SES004|Funcional|Error|SES_004 - La fecha y hora de fin de sesión debe…|La fecha y hora de fin de sesión debe ser posterior a la fecha y hora de inicio.
+SES_005|SES005|Funcional|Error|SES_005 - El horario institucional incluye una…|El horario institucional incluye una hora local inexistente por cambio de horario; no se generaron sesiones.
+SES_006|SES006|Funcional|Error|SES_006 - La sesión no coincide con el…|La sesión no coincide con el manifiesto de clasificación aprobado; no se modificó.
+ERR_TOKEN_VERIFICACION_INVALIDO|ERR019|Funcional|Error|ERR_TOKEN_VERIFICACION_INVALIDO|El codigo de verificacion de asistencia es incorrecto o ha expirado.
+INST_001|INST001|Funcional|Error|INST_001 - El estudiante, programa y facultad…|El estudiante, programa y facultad deben pertenecer a la misma institución.
+ERR_PROGRAMA_FACULTAD_INCONSISTENTE|ERR020|Funcional|Error|ERR_PROGRAMA_FACULTAD_INCONSISTENTE|El programa académico indicado no pertenece a la facultad especificada.
+RC_001|RC001|Funcional|Error|RC_001 - El estado de asistencia … no…|El estado de asistencia {} no corresponde a una razón de causa válida.
+ATT_001|ATT001|Funcional|Error|ATT_001 - El payload JSON de asistencia no…|El payload JSON de asistencia no cumple el contrato requerido.
+ATT_002|ATT002|Funcional|Error|ATT_002 - El lote de asistencia no puede estar…|El lote de asistencia no puede estar vacío.
+ATT_003|ATT003|Funcional|Error|ATT_003 - El estudiante … aparece más de una vez…|El estudiante {} aparece más de una vez en el lote de asistencia.
+SEC_001|SEC001|Funcional|Error|SEC_001 - No tiene permisos suficientes para…|No tiene permisos suficientes para realizar esta operación.
+SEC_002|SEC002|Funcional|Error|SEC_002 - No tiene autorización sobre el recurso…|No tiene autorización sobre el recurso solicitado.
+ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA|ERR021|Funcional|Error|ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA|La gestión de solicitudes de matrícula aún no se encuentra disponible.
+SYS_001|SYS001|Técnico|Error|SYS_001 - Ocurrió un error inesperado al…|Ocurrió un error inesperado al procesar la solicitud.
+ERR_INESPERADO_REGISTRO_ESTUDIANTE|ERR022|Técnico|Error|ERR_INESPERADO_REGISTRO_ESTUDIANTE|Hubo un error inesperado al procesar el registro completo del estudiante.
+ERR_INESPERADO_REGISTRO_DOCENTE|ERR023|Técnico|Error|ERR_INESPERADO_REGISTRO_DOCENTE|Hubo un error inesperado al procesar el registro completo del docente.
+ERR_INESPERADO_REGISTRO_ASISTENCIA|ERR024|Técnico|Error|ERR_INESPERADO_REGISTRO_ASISTENCIA|Hubo un error inesperado al registrar la asistencia del estudiante.
+SUC_REGISTRO_ESTUDIANTE_GRUPO|SUC001|Funcional|Confirmación|SUC_REGISTRO_ESTUDIANTE_GRUPO - Se ha registrado…|Se ha registrado el estudiante en el grupo de forma satisfactoria.
+SUC_REGISTRO_DOCENTE_GRUPO|SUC002|Funcional|Confirmación|SUC_REGISTRO_DOCENTE_GRUPO - Se ha registrado el…|Se ha registrado el docente en el grupo de forma satisfactoria.
+SUC_REGISTRO_ASISTENCIA|SUC003|Funcional|Confirmación|SUC_REGISTRO_ASISTENCIA - Asistencia registrada…|Asistencia registrada de forma satisfactoria.
