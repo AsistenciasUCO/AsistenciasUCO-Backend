@@ -1,4 +1,4 @@
-# canonico|codigo remoto|tipo|categoria|titulo|contenido -- generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py desde 04_mensaje.sql
+# canonico|codigo remoto|tipo|categoria|titulo|contenido -- generado por AsistenciasUCO-Infra/components/messages/build-message-catalog.py desde los seeds de mensajes de usuario
 CORR_001|CORR001|Funcional|Error|CORR_001 - El identificador de correlación no…|El identificador de correlación no está presente o está vacío.
 ERR_CORRELACION_REQUERIDA|ERR001|Funcional|Error|ERR_CORRELACION_REQUERIDA - El codigo de…|El codigo de correlacion es requerido.
 GEN_001|GEN001|Funcional|Error|GEN_001 - El … especificado no existe en el…|El {} especificado no existe en el sistema.
@@ -69,6 +69,9 @@ ATT_002|ATT002|Funcional|Error|ATT_002 - El lote de asistencia no puede estar…
 ATT_003|ATT003|Funcional|Error|ATT_003 - El estudiante … aparece más de una vez…|El estudiante {} aparece más de una vez en el lote de asistencia.
 SEC_001|SEC001|Funcional|Error|SEC_001 - No tiene permisos suficientes para…|No tiene permisos suficientes para realizar esta operación.
 SEC_002|SEC002|Funcional|Error|SEC_002 - No tiene autorización sobre el recurso…|No tiene autorización sobre el recurso solicitado.
+NTF_001|NTF001|Funcional|Error|NTF_001 - Los datos de la notificación no son…|Los datos de la notificación no son válidos.
+NTF_002|NTF002|Funcional|Error|NTF_002 - La notificación especificada no existe…|La notificación especificada no existe en el sistema.
+NTF_003|NTF003|Funcional|Error|NTF_003 - La notificación ya no está reservada…|La notificación ya no está reservada por este proceso.
 ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA|ERR021|Funcional|Error|ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA|La gestión de solicitudes de matrícula aún no se encuentra disponible.
 SYS_001|SYS001|Técnico|Error|SYS_001 - Ocurrió un error inesperado al…|Ocurrió un error inesperado al procesar la solicitud.
 ERR_INESPERADO_REGISTRO_ESTUDIANTE|ERR022|Técnico|Error|ERR_INESPERADO_REGISTRO_ESTUDIANTE|Hubo un error inesperado al procesar el registro completo del estudiante.
@@ -77,3 +80,66 @@ ERR_INESPERADO_REGISTRO_ASISTENCIA|ERR024|Técnico|Error|ERR_INESPERADO_REGISTRO
 SUC_REGISTRO_ESTUDIANTE_GRUPO|SUC001|Funcional|Confirmación|SUC_REGISTRO_ESTUDIANTE_GRUPO - Se ha registrado…|Se ha registrado el estudiante en el grupo de forma satisfactoria.
 SUC_REGISTRO_DOCENTE_GRUPO|SUC002|Funcional|Confirmación|SUC_REGISTRO_DOCENTE_GRUPO - Se ha registrado el…|Se ha registrado el docente en el grupo de forma satisfactoria.
 SUC_REGISTRO_ASISTENCIA|SUC003|Funcional|Confirmación|SUC_REGISTRO_ASISTENCIA - Asistencia registrada…|Asistencia registrada de forma satisfactoria.
+ARC_001|ARC001|Funcional|Error|ARC_001 - El soporte indicado no esta disponible…|El soporte indicado no esta disponible para esta solicitud.
+ARC_002|ARC002|Funcional|Error|ARC_002 - No fue posible registrar el soporte.|No fue posible registrar el soporte.
+ARC_003|ARC003|Funcional|Error|ARC_003 - Los datos del soporte no son validos.|Los datos del soporte no son validos.
+ARC_005|ARC005|Funcional|Error|ARC_005 - El estudiante indicado no corresponde…|El estudiante indicado no corresponde al usuario autenticado.
+DOC_002|DOC002|Funcional|Error|DOC_002 - El usuario ya se encuentra registrado…|El usuario ya se encuentra registrado como docente.
+DOC_003|DOC003|Funcional|Error|DOC_003 - Ya existe una persona registrada con…|Ya existe una persona registrada con ese documento o correo. Use la opción "Vincular docente existente".
+DOC_004|DOC004|Funcional|Error|DOC_004 - El tipo de vinculación indicado no…|El tipo de vinculación indicado no existe o está inactivo.
+DOC_005|DOC005|Funcional|Error|DOC_005 - Debe indicar un docente existente o…|Debe indicar un docente existente o los datos de un docente nuevo, pero no ambos.
+DOC_006|DOC006|Funcional|Error|DOC_006 - El docente ya está vinculado a este…|El docente ya está vinculado a este programa.
+DOC_007|DOC007|Funcional|Error|DOC_007 - La búsqueda de candidatos requiere al…|La búsqueda de candidatos requiere al menos 3 caracteres.
+DOC_008|DOC008|Funcional|Error|DOC_008 - El docente no está vinculado a este…|El docente no está vinculado a este programa.
+DOC_009|DOC009|Funcional|Error|DOC_009 - El docente no tiene una vinculación…|El docente no tiene una vinculación activa con el programa.
+IAM_001|IAM001|Técnico|Error|IAM_001 - El registro se guardó, pero la cuenta…|El registro se guardó, pero la cuenta de acceso no pudo crearse en este momento. Intente de nuevo.
+PER_001|PER001|Funcional|Error|PER_001 - El período académico indicado no existe.|El período académico indicado no existe.
+PER_002|PER002|Funcional|Error|PER_002 - La fecha de inicio del período debe…|La fecha de inicio del período debe ser anterior a la fecha de fin.
+PER_003|PER003|Funcional|Error|PER_003 - Ya existe un período académico con ese…|Ya existe un período académico con ese nombre en la institución.
+PER_004|PER004|Funcional|Error|PER_004 - El período académico tiene grupos o…|El período académico tiene grupos o sesiones asociados y no se puede eliminar.
+PER_005|PER005|Funcional|Error|PER_005 - No tiene una institución activa…|No tiene una institución activa asignada como administrador para gestionar períodos académicos.
+PER_006|PER006|Funcional|Confirmación|PER_006 - Período académico eliminado…|Período académico eliminado exitosamente.
+PLA_002|PLA002|Funcional|Error|PLA_002 - El plan de estudios indicado no existe.|El plan de estudios indicado no existe.
+PLA_003|PLA003|Funcional|Error|PLA_003 - El plan de estudios ya tiene el número…|El plan de estudios ya tiene el número máximo de semestres.
+PLA_004|PLA004|Funcional|Error|PLA_004 - El semestre indicado no pertenece al…|El semestre indicado no pertenece al plan de estudios.
+PLA_005|PLA005|Funcional|Error|PLA_005 - Solo se puede quitar el último…|Solo se puede quitar el último semestre del plan de estudios.
+PLA_006|PLA006|Funcional|Error|PLA_006 - El semestre tiene asignaturas…|El semestre tiene asignaturas asociadas. Reubíquelas o elimínelas primero.
+PROG_002|PROG002|Funcional|Error|PROG_002 - Ya existe un programa académico con…|Ya existe un programa académico con el identificador indicado.
+PROG_003|PROG003|Funcional|Error|PROG_003 - Ya existe un programa académico con…|Ya existe un programa académico con ese nombre en la facultad.
+PROG_004|PROG004|Funcional|Error|PROG_004 - El tipo de programa indicado no…|El tipo de programa indicado no existe o está inactivo.
+PROG_005|PROG005|Funcional|Error|PROG_005 - El coordinador seleccionado no está…|El coordinador seleccionado no está disponible: no existe, está inactivo o ya tiene un programa asignado.
+PROG_006|PROG006|Funcional|Error|PROG_006 - La modalidad o la jornada indicada no…|La modalidad o la jornada indicada no existe o está inactiva.
+PROG_007|PROG007|Funcional|Error|PROG_007 - No se puede desactivar el programa…|No se puede desactivar el programa porque tiene grupos activos en el período vigente.
+PROG_008|PROG008|Funcional|Error|PROG_008 - No se puede activar el programa…|No se puede activar el programa porque su facultad está inactiva.
+PAG_001|PAG001|Funcional|Error|PAG_001 - Los parámetros de paginación no son…|Los parámetros de paginación no son válidos.
+KPI_001|KPI001|Funcional|Error|KPI_001 - No tiene un programa académico a su…|No tiene un programa académico a su cargo para consultar estos indicadores.
+KPI_002|KPI002|Funcional|Error|KPI_002 - No fue posible calcular los…|No fue posible calcular los indicadores porque falta la configuración de umbrales de asistencia.
+KPI_003|KPI003|Funcional|Error|KPI_003 - No tiene una facultad a su cargo para…|No tiene una facultad a su cargo para consultar estos indicadores.
+KPI_004|KPI004|Funcional|Error|KPI_004 - No tiene una institución a su cargo…|No tiene una institución a su cargo para consultar estos indicadores.
+RET_001|RET001|Funcional|Error|RET_001 - El grupo indicado no existe o no es un…|El grupo indicado no existe o no es un grupo a su cargo.
+RET_002|RET002|Funcional|Error|RET_002 - El estudiante no tiene una matrícula…|El estudiante no tiene una matrícula activa en este grupo.
+RET_003|RET003|Funcional|Error|RET_003 - El período académico del grupo ya…|El período académico del grupo ya terminó; no se puede retirar al estudiante.
+RET_004|RET004|Funcional|Error|RET_004 - El motivo del retiro es obligatorio y…|El motivo del retiro es obligatorio y no puede superar 500 caracteres.
+RET_005|RET005|Funcional|Confirmación|RET_005 - El estudiante fue retirado del grupo.|El estudiante fue retirado del grupo.
+SIG_001|SIG001|Funcional|Error|SIG_001 - Solo un estudiante puede solicitar el…|Solo un estudiante puede solicitar el ingreso a un grupo.
+SIG_002|SIG002|Funcional|Error|SIG_002 - El grupo indicado no existe.|El grupo indicado no existe.
+SIG_003|SIG003|Funcional|Error|SIG_003 - El período académico del grupo ya…|El período académico del grupo ya terminó.
+SIG_004|SIG004|Funcional|Error|SIG_004 - El estudiante ya está matriculado en…|El estudiante ya está matriculado en este grupo.
+SIG_005|SIG005|Funcional|Error|SIG_005 - Ya existe una solicitud abierta para…|Ya existe una solicitud abierta para este grupo.
+SIG_006|SIG006|Funcional|Confirmación|SIG_006 - La solicitud de ingreso al grupo fue…|La solicitud de ingreso al grupo fue registrada.
+SIG_007|SIG007|Funcional|Error|SIG_007 - La solicitud indicada no existe o no…|La solicitud indicada no existe o no está a su cargo.
+SIG_008|SIG008|Funcional|Error|SIG_008 - La solicitud ya fue resuelta o retirada.|La solicitud ya fue resuelta o retirada.
+SIG_009|SIG009|Funcional|Error|SIG_009 - La acción indicada no es válida; use…|La acción indicada no es válida; use ACEPTAR o RECHAZAR.
+SIG_010|SIG010|Funcional|Error|SIG_010 - El motivo del rechazo es obligatorio y…|El motivo del rechazo es obligatorio y no puede superar 500 caracteres.
+SIG_011|SIG011|Funcional|Confirmación|SIG_011 - La solicitud fue aceptada y el…|La solicitud fue aceptada y el estudiante quedó matriculado en el grupo.
+SIG_012|SIG012|Funcional|Confirmación|SIG_012 - El grupo no tiene cupo: la solicitud…|El grupo no tiene cupo: la solicitud quedó en lista de espera.
+SIG_013|SIG013|Funcional|Error|SIG_013 - El grupo sigue sin cupo; la solicitud…|El grupo sigue sin cupo; la solicitud permanece en lista de espera.
+SIG_014|SIG014|Funcional|Confirmación|SIG_014 - La solicitud fue rechazada.|La solicitud fue rechazada.
+SIG_015|SIG015|Funcional|Confirmación|SIG_015 - La solicitud fue retirada.|La solicitud fue retirada.
+VCE_001|VCE001|Funcional|Error|VCE_001 - El correo del estudiante debe ser…|El correo del estudiante debe ser institucional y terminar en {}.
+VCE_002|VCE002|Funcional|Error|VCE_002 - El enlace de verificación no es válido…|El enlace de verificación no es válido o ya venció.
+VCE_003|VCE003|Funcional|Error|VCE_003 - Debe esperar unos minutos antes de…|Debe esperar unos minutos antes de volver a enviar el enlace de verificación.
+VCE_004|VCE004|Funcional|Error|VCE_004 - El estudiante no pertenece a un grupo…|El estudiante no pertenece a un grupo a su cargo.
+VCE_005|VCE005|Funcional|Error|VCE_005 - El correo de este estudiante ya fue…|El correo de este estudiante ya fue verificado.
+VCE_006|VCE006|Funcional|Confirmación|VCE_006 - Su correo fue verificado. Ya puede…|Su correo fue verificado. Ya puede iniciar sesión.
+VCE_007|VCE007|Funcional|Error|VCE_007 - El usuario no existe o no está activo.|El usuario no existe o no está activo.

@@ -58,8 +58,8 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_78_codigos_de_usuario_del_seed() throws Exception {
-        assertEquals(78, catalogo().size());
+    void el_catalogo_trae_los_144_codigos_de_usuario_de_los_seeds() throws Exception {
+        assertEquals(144, catalogo().size());
     }
 
     @Test
