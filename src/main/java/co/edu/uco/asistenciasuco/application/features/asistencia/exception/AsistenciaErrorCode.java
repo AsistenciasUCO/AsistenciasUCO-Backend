@@ -21,7 +21,11 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     ERR_MOTIVO_REVISION_LONGITUD_INVALIDA("ERR_MOTIVO_REVISION_LONGITUD_INVALIDA", "El motivo de revision debe tener entre 10 y 300 caracteres.", ErrorKind.VALIDATION),
     ERR_ESTADO_ASISTENCIA_INVALIDO("ERR_ESTADO_ASISTENCIA_INVALIDO", "El estado de asistencia debe ser AN, SJC o EX.", ErrorKind.VALIDATION),
     ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO("ERR_USUARIO_EJECUTOR_ASISTENCIA_REQUERIDO", "El usuario autenticado que ejecuta el registro de asistencias es obligatorio.", ErrorKind.VALIDATION),
-    ERR_DOCENTE_SIN_TITULARIDAD_SESION("ERR_DOCENTE_SIN_TITULARIDAD_SESION", "El docente autenticado no tiene titularidad sobre la sesion indicada.", ErrorKind.FORBIDDEN);
+    ERR_DOCENTE_SIN_TITULARIDAD_SESION("ERR_DOCENTE_SIN_TITULARIDAD_SESION", "El docente autenticado no tiene titularidad sobre la sesion indicada.", ErrorKind.FORBIDDEN),
+    // SES-01: ventana de registro ordinario [inicio, fin) contra el reloj del servidor; DB: SES_007 / SES_008 / SES_009.
+    ERR_SESION_NO_INICIADA("ERR_SESION_NO_INICIADA", "La sesion aun no ha iniciado; la asistencia solo se registra durante la sesion.", ErrorKind.CONFLICT),
+    ERR_SESION_CERRADA("ERR_SESION_CERRADA", "La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.", ErrorKind.CONFLICT),
+    ERR_SESION_HORARIO_INDETERMINADO("ERR_SESION_HORARIO_INDETERMINADO", "El horario de la sesion no esta confirmado; no es posible registrar asistencia.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

@@ -1,11 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.ContratoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearSesionRepositoryDTO;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.security.SecureRandom;
 import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -101,9 +103,10 @@ final class AttendanceCommandParityFixture {
 
     private UUID newSession(final String tag) {
         final String nombreUnico = IT_PREFIX + tag + UUID.randomUUID().toString().substring(0, 12);
-        final LocalDateTime inicio = LocalDateTime.now().minusHours(1);
+        // SES-01: el registro ordinario exige la sesion activa con procedencia UTC confirmada (contrato v2).
+        final LocalDateTime inicio = LocalDateTime.now(ZoneOffset.UTC).minusHours(1);
         sesionRepositoryPort.crearSesion(new CrearSesionRepositoryDTO(
-                grupoId, nombreUnico, inicio, inicio.plusHours(2), docenteUsuarioId));
+                grupoId, nombreUnico, inicio, inicio.plusHours(2), docenteUsuarioId, ContratoHorarioSesion.UTC_CONFIRMADO_V2));
         final List<UUID> encontrada = jdbcTemplate.query(
                 "SELECT id FROM dbo.Sesion WHERE grupo = ? AND nombre = ?",
                 (rs, n) -> UUID.fromString(String.valueOf(rs.getObject("id"))),
