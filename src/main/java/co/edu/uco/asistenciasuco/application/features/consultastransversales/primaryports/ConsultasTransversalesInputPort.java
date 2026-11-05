@@ -30,6 +30,11 @@ public interface ConsultasTransversalesInputPort {
     PaginaDTO<DocenteFacultadDTO> consultarDocentes(UUID usuario, String busqueda, UUID idPrograma, Boolean estaActivo,
                                                     Integer pagina, Integer tamano);
 
+    /** HU136: directorio de docentes de la institucion del administrador. */
+    PaginaDTO<DocenteFacultadDTO> consultarDocentesInstitucion(UUID usuario, String busqueda, UUID idFacultad, UUID idPrograma,
+                                                               Boolean estaActivo, String estadoVinculo, Integer pagina,
+                                                               Integer tamano);
+
     PaginaDTO<AsignaturaInstitucionDTO> buscarAsignaturas(UUID usuario, String busqueda, UUID idFacultad,
                                                           Boolean estaActiva, Integer pagina, Integer tamano);
 

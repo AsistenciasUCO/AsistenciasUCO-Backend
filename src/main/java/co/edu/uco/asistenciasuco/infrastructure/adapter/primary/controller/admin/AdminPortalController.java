@@ -142,12 +142,7 @@ public final class AdminPortalController {
         final var data = consultarInstitucionesInputPort.execute();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @PostMapping("/instituciones")
-    public ResponseEntity<ApiDataResponse<Void>> crearInstitucion() { throw unavailable("crear institucion"); }
-    @PutMapping("/instituciones/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarInstitucion(@PathVariable final UUID id) { throw unavailable("actualizar institucion"); }
-    @PatchMapping("/instituciones/{id}/toggle-estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoInstitucion(@PathVariable final UUID id) { throw unavailable("cambiar estado de institucion"); }
+    // HU161/HU162/HU164 descartadas (decision de John 2026-11-05): Institucion es un catalogo de solo consulta.
 
     @GetMapping("/facultades")
     public ResponseEntity<ApiListResponse<FacultadDTO>> consultarFacultades() {

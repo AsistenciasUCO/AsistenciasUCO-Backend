@@ -48,7 +48,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @tamanoPagina = :tamanoPagina,
                  @idPrograma = :idPadre,
                  @busqueda = :busqueda,
-                 @estaActivo = :estaActivo
+                 @estaActivo = :estaActivo,
+                 @idFacultad = :idFacultad,
+                 @estadoVinculo = :estadoVinculo
             """;
     static final String SQL_ASIGNATURAS = """
             EXEC dbo.usp_buscar_asignaturas_paginado
@@ -145,12 +147,15 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
 
     @Override
     public Pagina<DocenteFacultadProjection> consultarDocentes(final UUID idUsuarioEjecutor,
-                                                               final FiltroConsulta filtro, final int pagina,
+                                                               final FiltroConsulta filtro, final UUID idFacultad,
+                                                               final String estadoVinculo, final int pagina,
                                                                final int tamano) {
-        return pagina("consultarDocentesFacultad", "No fue posible consultar los docentes de la facultad.",
-                SQL_DOCENTES, idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 9,
+        return pagina("consultarDocentesFacultad", "No fue posible consultar los docentes.",
+                SQL_DOCENTES, idUsuarioEjecutor,
+                q -> filtrar(paginar(q, pagina, tamano), filtro).setParameter("idFacultad", idFacultad)
+                        .setParameter("estadoVinculo", estadoVinculo), 9,
                 f -> new DocenteFacultadProjection(NativeRowValues.uuid(f[0]), texto(f[2]), texto(f[3]), texto(f[4]),
-                        verdadero(f[5]), texto(f[6]), cero(f[7]), cero(f[8])));
+                        verdadero(f[5]), texto(f[6]), cero(f[7]), cero(f[8]), f.length <= 10 || verdadero(f[10])));
     }
 
     @Override

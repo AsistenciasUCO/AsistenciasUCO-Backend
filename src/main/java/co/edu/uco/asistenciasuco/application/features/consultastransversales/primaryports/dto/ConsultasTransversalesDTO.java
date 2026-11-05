@@ -23,9 +23,16 @@ public final class ConsultasTransversalesDTO {
                                       int totalSemestres, int totalAsignaturas, int totalCreditos) {
     }
 
+    /** HU128/HU136: {@code tieneVinculoActivo} es falso para un docente retirado de todos sus programas. */
     public record DocenteFacultadDTO(UUID idDocente, String numeroIdentificacion, String nombreCompleto,
                                      String correo, boolean activo, String programas, int totalProgramas,
-                                     int totalGrupos) {
+                                     int totalGrupos, boolean tieneVinculoActivo) {
+
+        public DocenteFacultadDTO(final UUID idDocente, final String numeroIdentificacion, final String nombreCompleto,
+                                  final String correo, final boolean activo, final String programas,
+                                  final int totalProgramas, final int totalGrupos) {
+            this(idDocente, numeroIdentificacion, nombreCompleto, correo, activo, programas, totalProgramas, totalGrupos, true);
+        }
     }
 
     public record AsignaturaInstitucionDTO(UUID idAsignatura, String codigo, String nombre, Integer creditos,

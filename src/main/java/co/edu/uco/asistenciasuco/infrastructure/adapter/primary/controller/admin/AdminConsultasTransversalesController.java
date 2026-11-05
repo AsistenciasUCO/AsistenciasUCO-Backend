@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admi
 
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
@@ -51,6 +52,21 @@ public final class AdminConsultasTransversalesController {
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
         return lista(inputPort.buscarAsignaturas(usuario(), busqueda, idFacultad, estaActiva, pagina, tamano));
+    }
+
+    /** HU136: docentes de la institucion del administrador (solo consulta). */
+    @GetMapping("/docentes")
+    public ResponseEntity<ApiListResponse<DocenteFacultadDTO>> consultarDocentes(
+            @RequestParam(name = "busqueda", required = false) final String busqueda,
+            @RequestParam(name = "idFacultad", required = false) final UUID idFacultad,
+            @RequestParam(name = "idPrograma", required = false) final UUID idPrograma,
+            @RequestParam(name = "estaActivo", required = false) final Boolean estaActivo,
+            @RequestParam(name = "estadoVinculo", required = false) final String estadoVinculo,
+            @RequestParam(name = "pagina", required = false) final Integer pagina,
+            @RequestParam(name = "tamano", required = false) final Integer tamano
+    ) {
+        return lista(inputPort.consultarDocentesInstitucion(usuario(), busqueda, idFacultad, idPrograma, estaActivo,
+                estadoVinculo, pagina, tamano));
     }
 
     @GetMapping("/estudiantes")

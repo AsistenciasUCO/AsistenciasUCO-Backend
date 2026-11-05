@@ -23,6 +23,10 @@ public interface ConsultasTransversalesUseCase {
     Pagina<ProgramaCreditosProjection> consultarProgramasCreditos(UUID usuario, String busqueda, Boolean estaActivo,
                                                                   Integer pagina, Integer tamano);
 
+    /** HU136: docentes de la institucion del administrador, filtrables por facultad y programa. */
+    Pagina<DocenteFacultadProjection> consultarDocentesInstitucion(UUID usuario, FiltroConsulta filtro, UUID idFacultad,
+                                                                  String estadoVinculo, Integer pagina, Integer tamano);
+
     Pagina<DocenteFacultadProjection> consultarDocentes(UUID usuario, FiltroConsulta filtro, Integer pagina,
                                                         Integer tamano);
 

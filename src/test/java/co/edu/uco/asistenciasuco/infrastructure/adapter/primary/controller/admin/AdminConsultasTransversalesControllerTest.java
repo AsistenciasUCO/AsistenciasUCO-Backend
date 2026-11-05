@@ -113,4 +113,18 @@ class AdminConsultasTransversalesControllerTest {
                 .andExpect(jsonPath("$.total").value(2))
                 .andExpect(jsonPath("$.datos[1].catalogo").value("ESTUDIANTE_GRUPO"));
     }
+
+    @Test
+    void T_136_01_get_docentes_de_la_institucion_con_filtros() throws Exception {
+        when(inputPort.consultarDocentesInstitucion(ACTOR, "ana", ID, ID, true, "SIN_VINCULO", 2, 10)).thenReturn(new PaginaDTO<>(
+                List.of(new co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO(
+                        ID, "101", "Ana Ruiz", "ana@uco.edu.co", true, "Sistemas", 1, 3)), 1));
+
+        mvc.perform(get("/api/v1/admin/docentes").param("busqueda", "ana").param("idFacultad", ID.toString())
+                        .param("idPrograma", ID.toString()).param("estaActivo", "true").param("estadoVinculo", "SIN_VINCULO")
+                        .param("pagina", "2").param("tamano", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.datos[0].programas").value("Sistemas"));
+    }
 }
