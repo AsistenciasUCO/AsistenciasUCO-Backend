@@ -41,13 +41,16 @@ class ActualizarDocenteProgramaUseCaseImplTest {
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
     private final DocenteProgramaCommandPort commandPort = mock(DocenteProgramaCommandPort.class);
     private final DocenteProgramaQueryPort queryPort = mock(DocenteProgramaQueryPort.class);
-    private final ActualizarDocenteProgramaUseCaseImpl useCase = new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort);
+    private final co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService sincronizacion =
+            mock(co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService.class);
+    private final ActualizarDocenteProgramaUseCaseImpl useCase = new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort, sincronizacion);
 
     @Test
     void constructor_rechaza_dependencias_nulas() {
-        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(null, commandPort, queryPort));
-        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(scopePort, null, queryPort));
-        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, null));
+        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(null, commandPort, queryPort, sincronizacion));
+        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(scopePort, null, queryPort, sincronizacion));
+        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, null, sincronizacion));
+        assertThrows(NullPointerException.class, () -> new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort, null));
     }
 
     @Test
@@ -114,5 +117,27 @@ class ActualizarDocenteProgramaUseCaseImplTest {
         return new DocenteProgramaProjection(UUID.randomUUID(), DOCENTE, UUID.randomUUID(), "CC", 1017555444, "Nuevo", null,
                 "Cambiado", null, "Nuevo Cambiado", "x@uco.edu.co", TIPO, "PLA", "Planta",
                 Instant.parse("2026-10-22T10:00:00Z"), 0, true);
+    }
+
+    @Test
+    void T_159_092_sin_documento_no_sincroniza_y_con_documento_sincroniza_el_username() {
+        when(scopePort.findProgramaIdByCoordinadorUsuario(ACTOR)).thenReturn(Optional.of(PROGRAMA));
+        when(queryPort.consultar(eq(ACTOR), any())).thenReturn(new DocentesProgramaPagina(List.of(fila()), 1));
+
+        useCase.execute(dominio());
+        verifyNoInteractions(sincronizacion);
+
+        final UUID tipoDocumento = UUID.randomUUID();
+        useCase.execute(new co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.domain.ActualizarDocenteProgramaDomain(
+                ACTOR, DOCENTE, null, null, null, null, null, tipoDocumento, 915900041, "Cedula mal digitada"));
+
+        final ArgumentCaptor<ActualizarDocenteProgramaCommand> comando = ArgumentCaptor.forClass(ActualizarDocenteProgramaCommand.class);
+        org.mockito.Mockito.verify(commandPort, org.mockito.Mockito.times(2)).actualizar(comando.capture());
+        assertEquals(915900041, comando.getValue().documento().numeroIdentificacion());
+        assertEquals("Cedula mal digitada", comando.getValue().documento().motivo());
+        final ArgumentCaptor<co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.ActualizarCuentaIdentidadDTO> cuenta =
+                ArgumentCaptor.forClass(co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.ActualizarCuentaIdentidadDTO.class);
+        verify(sincronizacion).actualizarDatos(any(), cuenta.capture());
+        assertEquals("915900041", cuenta.getValue().username());
     }
 }

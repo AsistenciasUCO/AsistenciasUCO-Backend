@@ -197,6 +197,38 @@ class KeycloakIdentityProviderAdapterGestionCuentaTest {
         assertThrows(NullPointerException.class, () -> adapter.actualizarDatosCuenta(EXTERNAL_ID, null));
     }
 
+    @Test
+    void HU159_actualizar_datos_con_documento_corregido_envia_el_username_y_lo_verifica() {
+        server.stubNoContent("PUT", USER_PATH, 204);
+        server.stubJson("GET", USER_PATH, 200, "{\"id\":\"" + EXTERNAL_ID + "\",\"username\":\"915900011\",\"email\":\"ana@uco.edu.co\"}");
+
+        adapter.actualizarDatosCuenta(EXTERNAL_ID, new ActualizarCuentaIdentidadDTO("ana@uco.edu.co", "Ana", "Gomez", " 915900011 "));
+
+        final String body = server.lastRequestBody("PUT", USER_PATH).replace(" ", "");
+        assertTrue(body.contains("\"username\":\"915900011\""));
+        assertFalse(body.contains("credentials"));
+        assertTrue(server.wasCalled("GET", USER_PATH));
+    }
+
+    @Test
+    void HU159_si_keycloak_no_aplica_el_username_la_actualizacion_falla_para_registrar_el_desfase() {
+        server.stubNoContent("PUT", USER_PATH, 204);
+        server.stubJson("GET", USER_PATH, 200, "{\"id\":\"" + EXTERNAL_ID + "\",\"username\":\"111\",\"email\":\"ana@uco.edu.co\"}");
+
+        assertThrows(IdentityProviderPort.IdentityProviderException.class,
+                () -> adapter.actualizarDatosCuenta(EXTERNAL_ID, new ActualizarCuentaIdentidadDTO("ana@uco.edu.co", "Ana", "Gomez", "915900011")));
+    }
+
+    @Test
+    void HU159_username_en_blanco_se_trata_como_sin_cambio_de_documento() {
+        server.stubNoContent("PUT", USER_PATH, 204);
+
+        adapter.actualizarDatosCuenta(EXTERNAL_ID, new ActualizarCuentaIdentidadDTO("ana@uco.edu.co", "Ana", "Gomez", "  "));
+
+        assertFalse(server.lastRequestBody("PUT", USER_PATH).contains("username"));
+        assertFalse(server.wasCalled("GET", USER_PATH));
+    }
+
     // ---------------------------------------------------------------- retirarRol
 
     @Test

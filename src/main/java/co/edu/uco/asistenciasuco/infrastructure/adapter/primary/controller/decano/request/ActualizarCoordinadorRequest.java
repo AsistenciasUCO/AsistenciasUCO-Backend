@@ -1,9 +1,12 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.request.CorreccionDocumentoRequest;
+
 /**
- * Cuerpo de {@code PUT /api/v1/decano/coordinadores/{id}} (HU121). No incluye documento ni tipo de documento.
+ * Cuerpo de {@code PUT /api/v1/decano/coordinadores/{id}} (HU121). HU159 (2026-11-05): el tipo y el numero de
+ * documento son opcionales (ausentes = no cambian) y, si cambian, exigen motivo.
  */
-public final class ActualizarCoordinadorRequest {
+public final class ActualizarCoordinadorRequest extends CorreccionDocumentoRequest {
     private String primerNombre;
     private String segundoNombre;
     private String primerApellido;

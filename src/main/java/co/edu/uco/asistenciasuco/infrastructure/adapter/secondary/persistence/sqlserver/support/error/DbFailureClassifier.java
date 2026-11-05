@@ -35,6 +35,7 @@ final class DbFailureClassifier {
     private static final String OPERATION_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
     // P5 (2026-11-04): OP_* de AsignaturaJpaRepository.
     private static final String OPERATION_CREAR_ASIGNATURA = "crearAsignatura";
+    private static final String OPERATION_CORREGIR_IDENTIDAD = "corregirIdentidadUsuario";
     private static final String OPERATION_ACTUALIZAR_ASIGNATURA = "actualizarAsignatura";
 
     private DbFailureClassifier() {
@@ -84,6 +85,10 @@ final class DbFailureClassifier {
             case "RET_001", "RET_002" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "RET_003" -> CommonErrorCode.CONFLICT;
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
+            // HU159: correccion de identidad. Motivo invalido es validacion; la correccion de documento apagada por
+            // parametro (IDENTIDAD.PERMITIR_CORREGIR_DOCUMENTO) es una regla de negocio en conflicto.
+            case "IDE_001" -> CommonErrorCode.VALIDATION_ERROR;
+            case "IDE_003" -> CommonErrorCode.CONFLICT;
             // IDENT-001: correo institucional y verificacion. VCE_001/VCE_002 son entradas invalidas (400, VCE_002 identico para
             // cualquier token invalido); VCE_005 ya verificado es conflicto; VCE_007 usuario inexistente o inactivo es no encontrado.
             case "VCE_001" -> VerificacionCorreoErrorCode.VCE_001;
@@ -175,7 +180,9 @@ final class DbFailureClassifier {
         if (OPERATION_ACTUALIZAR_COORDINADOR.equals(operation) || OPERATION_CAMBIAR_ESTADO_COORDINADOR.equals(operation)
                 || OPERATION_CONSULTAR_HISTORIAL_GRUPOS_DOCENTE.equals(operation)
                 // P5: area o componente inexistente al guardar una asignatura.
-                || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)) {
+                || OPERATION_CREAR_ASIGNATURA.equals(operation) || OPERATION_ACTUALIZAR_ASIGNATURA.equals(operation)
+                // HU159: el estudiante o el decano no existe o esta fuera de la jerarquia del ejecutor.
+                || OPERATION_CORREGIR_IDENTIDAD.equals(operation)) {
             return CommonErrorCode.RESOURCE_NOT_FOUND;
         }
         return DatabaseErrorCode.ERR_DB_UNCLASSIFIED;

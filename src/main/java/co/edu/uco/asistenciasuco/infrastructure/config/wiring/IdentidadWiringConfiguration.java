@@ -1,6 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta.AccesoCuentaService;
+import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.CorreccionIdentidadService;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.CorreccionIdentidadCommandPort;
 import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.AccessProfilePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.ExternalIdentityLinkPort;
@@ -42,5 +46,17 @@ public class IdentidadWiringConfiguration {
     ) {
         return new AccesoCuentaService(institutionalScopePort, identityProviderPort, accessProfilePort,
                 usuarioSincronizacionIdentidadPort, externalIdentityLinkPort);
+    }
+
+    /** HU159: correccion de identidad de estudiantes (coordinador) y decanos (administrador). */
+    @Bean
+    CorreccionIdentidadService correccionIdentidadService(
+            final CorreccionIdentidadCommandPort correccionIdentidadCommandPort,
+            final SincronizarCuentaInstitucionalService sincronizarCuentaInstitucionalService,
+            final MessageCatalogPort messageCatalogPort,
+            final ParameterCatalogPort parameterCatalogPort
+    ) {
+        return new CorreccionIdentidadService(correccionIdentidadCommandPort, sincronizarCuentaInstitucionalService,
+                messageCatalogPort, parameterCatalogPort);
     }
 }

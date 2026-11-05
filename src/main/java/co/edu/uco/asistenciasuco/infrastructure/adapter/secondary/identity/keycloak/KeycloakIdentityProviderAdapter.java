@@ -248,13 +248,29 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
         final String externalId = requireValidExternalUserId(idExterno, "externalUserId es obligatorio para actualizar la cuenta.");
         Objects.requireNonNull(datos, "Los datos para actualizar la cuenta son obligatorios");
         final String adminToken = obtenerAdminToken();
-        // Sin username ni credenciales: el documento no se edita y no existen flujos de cambio de contrasena.
-        actualizarUsuario(adminToken, externalId,
-                new UserUpdateRequest(datos.correo(), datos.primerNombre(), datos.primerApellido(), true), "actualizar");
+        // Sin credenciales: no existen flujos de cambio de contrasena. HU159: el username (documento) solo se envia si
+        // cambio, y se verifica leyendo la cuenta (el proveedor puede ignorarlo segun la configuracion del realm).
+        final String username = datos.username() == null || datos.username().isBlank() ? null : datos.username().trim();
+        actualizarUsuario(adminToken, externalId, username == null
+                ? new UserUpdateRequest(datos.correo(), datos.primerNombre(), datos.primerApellido(), true)
+                : new UserUpdateWithUsernameRequest(username, datos.correo(), datos.primerNombre(), datos.primerApellido(), true),
+                "actualizar");
+        if (username != null) {
+            verificarUsername(adminToken, externalId, username);
+        }
         LOGGER.atInfo()
                 .addKeyValue("operation", "IDENTITY_UPDATE_ACCOUNT")
                 .addKeyValue("externalUserId", externalId)
                 .log("Datos de la cuenta actualizados en Keycloak.");
+    }
+
+    private void verificarUsername(final String adminToken, final String externalId, final String esperado) {
+        final HttpResponse<String> response = send(authorizedRequestBuilder(
+                adminUrl("/users/" + externalId), adminToken).GET().build());
+        final UserSearchResult cuenta = response.statusCode() == 200 ? readJson(response.body(), UserSearchResult.class) : null;
+        if (cuenta == null || cuenta.username() == null || !cuenta.username().equalsIgnoreCase(esperado)) {
+            throw new IdentityProviderException("Keycloak no aplico el nuevo nombre de usuario (documento corregido).");
+        }
     }
 
     @Override
@@ -836,6 +852,10 @@ public final class KeycloakIdentityProviderAdapter implements IdentityProviderPo
     }
 
     private record UserUpdateRequest(String email, String firstName, String lastName, boolean emailVerified) {
+    }
+
+    private record UserUpdateWithUsernameRequest(String username, String email, String firstName, String lastName,
+                                                 boolean emailVerified) {
     }
 
     private record UserResolution(String externalId, boolean newlyCreated) {

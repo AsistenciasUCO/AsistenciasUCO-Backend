@@ -10,6 +10,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.Coordinador
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.ActualizarCuentaIdentidadDTO;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
@@ -18,7 +19,8 @@ import java.util.Objects;
 import java.util.UUID;
 
 /**
- * HU121: el decano edita nombres, apellidos y correo de un coordinador de su facultad.
+ * HU121: el decano edita nombres, apellidos y correo de un coordinador de su facultad. HU159 (2026-11-05): tambien
+ * corrige el tipo y el numero de documento (opcional, con motivo) y sincroniza el nombre de usuario de la cuenta.
  *
  * <p>Orden: primero la base de datos (fuente de verdad, con RBAC y ambito forzados dentro del SP) y despues la
  * cuenta de identidad. Si el proveedor falla, el cambio ya esta en DB: se responde con advertencia {@code IAM_002}.</p>
@@ -52,13 +54,17 @@ public final class ActualizarCoordinadorUseCaseImpl implements ActualizarCoordin
         final UUID facultad = scopePort.findFacultadIdByDecanoUsuario(domain.usuario())
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver la facultad del decano autenticado."));
 
+        final CorreccionDocumentoDTO documento = new CorreccionDocumentoDTO(
+                domain.idTipoIdentificacion(), domain.numeroIdentificacion(), domain.motivo());
         final ResultadoGestionCoordinadorProjection resultado = commandPort.actualizarCoordinador(
                 domain.idCoordinador(), domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(),
-                domain.segundoApellido(), domain.correo(), facultad, domain.usuario());
+                domain.segundoApellido(), domain.correo(), facultad, domain.usuario(), documento);
 
+        // HU159: si se corrigio el documento, tambien cambia el nombre de usuario de la cuenta de identidad.
         final ResultadoSincronizacion sincronizacionResultado = sincronizacion.actualizarDatos(
                 resultado.idUsuario(),
-                new ActualizarCuentaIdentidadDTO(domain.correo(), domain.primerNombre(), domain.primerApellido()));
+                new ActualizarCuentaIdentidadDTO(domain.correo(), domain.primerNombre(), domain.primerApellido(),
+                        documento.nuevoUsername()));
 
         return sincronizacionResultado == ResultadoSincronizacion.PENDIENTE
                 ? new ResultadoGestionCoordinadorDomain(domain.idCoordinador(), true,

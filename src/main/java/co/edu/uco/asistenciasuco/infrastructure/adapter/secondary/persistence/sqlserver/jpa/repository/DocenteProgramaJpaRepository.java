@@ -57,7 +57,10 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
                  @primerApellido = :primerApellido,
                  @segundoApellido = :segundoApellido,
                  @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion,
+                 @numeroIdentificacion = :numeroIdentificacion,
+                 @motivo = :motivo
             """;
 
     static final String SQL_CAMBIAR_ESTADO = """
@@ -139,6 +142,7 @@ public class DocenteProgramaJpaRepository implements DocenteProgramaCommandPort,
         parametros.put("segundoApellido", command.segundoApellido());
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", command.usuarioEjecutor());
+        CorreccionDocumentoParametros.agregar(parametros, command.documento());
         procedureExecutor.execute(OP_ACTUALIZAR, SQL_ACTUALIZAR, parametros, correlationId);
     }
 

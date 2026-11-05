@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.Coordinador
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvCoordinadorEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseErrorCode;
@@ -51,7 +52,10 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
                  @correo = :correo,
                  @idFacultad = :idFacultad,
                  @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idTipoIdIdentificacion = :idTipoIdIdentificacion,
+                 @numeroIdentificacion = :numeroIdentificacion,
+                 @motivo = :motivo
             """;
 
     static final String SQL_CAMBIAR_ESTADO_COORDINADOR = """
@@ -108,7 +112,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
     public ResultadoGestionCoordinadorProjection actualizarCoordinador(
             final UUID idCoordinador, final String primerNombre, final String segundoNombre,
             final String primerApellido, final String segundoApellido, final String correo,
-            final UUID idFacultad, final UUID usuarioEjecutor) {
+            final UUID idFacultad, final UUID usuarioEjecutor, final CorreccionDocumentoDTO documento) {
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
@@ -121,6 +125,7 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         parametros.put("idFacultad", idFacultad);
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        CorreccionDocumentoParametros.agregar(parametros, documento);
 
         final ProcedureRow fila = procedureExecutor.executeWithExtras(
                 OP_ACTUALIZAR_COORDINADOR, SQL_ACTUALIZAR_COORDINADOR, parametros, correlationId, 1);
