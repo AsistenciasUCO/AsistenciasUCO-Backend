@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.AsignaturaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.CategoriaJustificacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ConsolidadoGrupoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
@@ -44,4 +45,7 @@ public interface ConsultasTransversalesUseCase {
 
     /** HU155: estados del sistema (solo consulta; el rol ADMINISTRADOR lo exige SecurityConfig). */
     List<EstadoSistemaProjection> consultarEstadosSistema();
+
+    /** HU005/HU016: categorias de justificacion (solo consulta; cualquier usuario autenticado). */
+    List<CategoriaJustificacionProjection> consultarCategoriasJustificacion();
 }

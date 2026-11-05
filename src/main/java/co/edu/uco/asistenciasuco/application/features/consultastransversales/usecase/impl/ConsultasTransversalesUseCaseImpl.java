@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.use
 import co.edu.uco.asistenciasuco.application.features.decano.common.rule.ConsultaPaginadaRules;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.AsignaturaProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.CategoriaJustificacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ConsolidadoGrupoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
@@ -122,6 +123,11 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
     @Override
     public List<EstadoSistemaProjection> consultarEstadosSistema() {
         return queryPort.consultarEstadosSistema();
+    }
+
+    @Override
+    public List<CategoriaJustificacionProjection> consultarCategoriasJustificacion() {
+        return queryPort.consultarCategoriasJustificacion();
     }
 
     /**

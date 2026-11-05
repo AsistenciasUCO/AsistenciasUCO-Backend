@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports;
 
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.CategoriaJustificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ComponenteFormacionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ConsolidadoGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO;
@@ -46,4 +47,6 @@ public interface ConsultasTransversalesInputPort {
     List<ComponenteFormacionDTO> consultarComponentes(UUID usuario);
 
     List<EstadoSistemaDTO> consultarEstadosSistema();
+
+    List<CategoriaJustificacionDTO> consultarCategoriasJustificacion();
 }
