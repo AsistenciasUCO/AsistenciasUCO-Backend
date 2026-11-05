@@ -20,7 +20,8 @@ public final class ActualizarCoordinadorMapper {
             throw new CrosscuttingException("El DTO para actualizar coordinador es obligatorio.");
         }
         return new ActualizarCoordinadorDomain(dto.idCoordinador(), dto.primerNombre(), dto.segundoNombre(),
-                dto.primerApellido(), dto.segundoApellido(), dto.correo(), dto.usuario());
+                dto.primerApellido(), dto.segundoApellido(), dto.correo(), dto.usuario(),
+                dto.idTipoIdentificacion(), dto.numeroIdentificacion(), dto.motivo());
     }
 
     public static ResultadoGestionCoordinadorDTO toDTO(final ResultadoGestionCoordinadorDomain domain) {

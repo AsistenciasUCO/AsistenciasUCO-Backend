@@ -154,7 +154,10 @@ public final class CoordinadorDocentesController {
                 trim(request.getPrimerNombre()),
                 trim(request.getSegundoNombre()),
                 trim(request.getPrimerApellido()),
-                trim(request.getSegundoApellido())));
+                trim(request.getSegundoApellido()),
+                request.getIdTipoIdentificacion(),
+                request.getNumeroIdentificacion(),
+                trim(request.getMotivo())));
         return ResponseEntity.ok(new ApiDataResponse<>(true, resultado));
     }
 

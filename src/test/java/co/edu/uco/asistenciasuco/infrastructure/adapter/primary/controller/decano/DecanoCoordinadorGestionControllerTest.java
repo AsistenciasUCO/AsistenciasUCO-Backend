@@ -213,4 +213,25 @@ class DecanoCoordinadorGestionControllerTest {
         assertFalse(portalTienePatch);
         verifyNoInteractions(cambiarEstado);
     }
+
+    @Test
+    void HU159_actualizar_con_documento_exige_motivo_y_lo_envia_al_caso_de_uso() throws Exception {
+        final UUID tipo = UUID.randomUUID();
+        final String sinMotivo = "{\"primerNombre\":\"Ana\",\"primerApellido\":\"Perez\",\"correo\":\"ana@uco.edu.co\","
+                + "\"idTipoIdentificacion\":\"" + tipo + "\",\"numeroIdentificacion\":915900021}";
+        mvc.perform(put(RUTA + COORDINADOR).contentType("application/json").content(sinMotivo))
+                .andExpect(status().isBadRequest());
+
+        when(actualizar.execute(any(ActualizarCoordinadorDTO.class)))
+                .thenReturn(new ResultadoGestionCoordinadorDTO(COORDINADOR, "OK", null));
+        mvc.perform(put(RUTA + COORDINADOR).contentType("application/json")
+                        .content(sinMotivo.replace("}", ",\"motivo\":\"Digitacion\"}")))
+                .andExpect(status().isOk());
+
+        final ArgumentCaptor<ActualizarCoordinadorDTO> captor = ArgumentCaptor.forClass(ActualizarCoordinadorDTO.class);
+        verify(actualizar).execute(captor.capture());
+        assertEquals(tipo, captor.getValue().idTipoIdentificacion());
+        assertEquals(915900021, captor.getValue().numeroIdentificacion());
+        assertEquals("Digitacion", captor.getValue().motivo());
+    }
 }

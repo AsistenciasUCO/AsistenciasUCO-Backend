@@ -21,6 +21,7 @@ public final class ActualizarDocenteProgramaInteractor implements ActualizarDoce
     public DocenteProgramaDTO execute(final ActualizarDocenteProgramaDTO dto) {
         return DocenteProgramaMapper.toDTO(useCase.execute(new ActualizarDocenteProgramaDomain(
                 dto.actorUsuarioId(), dto.idDocente(), dto.idTipoVinculacion(), dto.primerNombre(),
-                dto.segundoNombre(), dto.primerApellido(), dto.segundoApellido())));
+                dto.segundoNombre(), dto.primerApellido(), dto.segundoApellido(),
+                dto.idTipoIdentificacion(), dto.numeroIdentificacion(), dto.motivo())));
     }
 }

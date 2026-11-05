@@ -9,6 +9,15 @@ public record ActualizarCoordinadorDTO(
         String primerApellido,
         String segundoApellido,
         String correo,
-        UUID usuario
+        UUID usuario,
+        UUID idTipoIdentificacion,
+        Integer numeroIdentificacion,
+        String motivo
 ) {
+
+    /** Edicion sin correccion de documento (contrato original de HU121). */
+    public ActualizarCoordinadorDTO(final UUID idCoordinador, final String primerNombre, final String segundoNombre,
+            final String primerApellido, final String segundoApellido, final String correo, final UUID usuario) {
+        this(idCoordinador, primerNombre, segundoNombre, primerApellido, segundoApellido, correo, usuario, null, null, null);
+    }
 }

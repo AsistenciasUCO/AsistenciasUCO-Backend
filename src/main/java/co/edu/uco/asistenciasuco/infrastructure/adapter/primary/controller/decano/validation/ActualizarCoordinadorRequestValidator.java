@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
 import co.edu.uco.asistenciasuco.crosscutting.validation.Validator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano.request.ActualizarCoordinadorRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.validation.CorreccionDocumentoValidation;
 
 /**
  * Validacion de forma de {@code PUT /api/v1/decano/coordinadores/{id}}. Las reglas de negocio (unicidad del correo,
@@ -35,6 +36,7 @@ public final class ActualizarCoordinadorRequestValidator implements Validator<Ac
             builder.addIf(request.getCorreo().trim().length() > MAX_CORREO, "correo",
                     ValidationErrorType.INVALID_LENGTH, "El correo electronico no puede superar " + MAX_CORREO + " caracteres.");
         }
+        CorreccionDocumentoValidation.validar(builder, request, false);
         return builder.build();
     }
 
