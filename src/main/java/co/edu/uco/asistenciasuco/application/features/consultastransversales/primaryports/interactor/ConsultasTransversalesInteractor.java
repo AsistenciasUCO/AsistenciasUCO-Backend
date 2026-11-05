@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.application.features.consultastransversales.pr
 
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.CategoriaJustificacionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ComponenteFormacionDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ConsolidadoGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO;
@@ -128,6 +129,13 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
     public List<EstadoSistemaDTO> consultarEstadosSistema() {
         return useCase.consultarEstadosSistema().stream()
                 .map(e -> new EstadoSistemaDTO(e.catalogo(), e.id(), e.codigo(), e.nombre()))
+                .toList();
+    }
+
+    @Override
+    public List<CategoriaJustificacionDTO> consultarCategoriasJustificacion() {
+        return useCase.consultarCategoriasJustificacion().stream()
+                .map(c -> new CategoriaJustificacionDTO(c.id(), c.codigo(), c.nombre(), c.descripcion()))
                 .toList();
     }
 

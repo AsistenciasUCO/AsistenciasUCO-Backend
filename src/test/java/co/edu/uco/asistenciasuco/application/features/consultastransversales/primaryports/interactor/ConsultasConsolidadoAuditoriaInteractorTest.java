@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ConsolidadoGrupoProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.CategoriaJustificacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EventoAuditoriaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
@@ -85,5 +86,18 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
         assertEquals("ESTUDIANTE_GRUPO", estado.catalogo());
         assertEquals("CI", estado.codigo());
         assertEquals("cancelado por inasistencia", estado.nombre());
+    }
+
+    @Test
+    void T_005_INT_01_categorias_mapea_codigo_nombre_y_descripcion() {
+        when(useCase.consultarCategoriasJustificacion()).thenReturn(List.of(
+                new CategoriaJustificacionProjection(ID, "FMA", "Fuerza Mayor", "Hecho imprevisible")));
+
+        final var categoria = interactor.consultarCategoriasJustificacion().getFirst();
+
+        assertEquals(ID, categoria.id());
+        assertEquals("FMA", categoria.codigo());
+        assertEquals("Fuerza Mayor", categoria.nombre());
+        assertEquals("Hecho imprevisible", categoria.descripcion());
     }
 }

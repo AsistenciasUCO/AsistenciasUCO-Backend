@@ -88,6 +88,10 @@ public final class ConsultasTransversalesDTO {
     public record EstadoSistemaDTO(String catalogo, UUID id, String codigo, String nombre) {
     }
 
+    /** HU005/HU016: categoria de justificacion; el formulario de reclamo envia {@code nombre} como categoria. */
+    public record CategoriaJustificacionDTO(UUID id, String codigo, String nombre, String descripcion) {
+    }
+
     public record ComponenteFormacionDTO(UUID idComponente, String codigo, String nombre, int totalAsignaturas) {
     }
 }

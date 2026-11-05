@@ -45,6 +45,12 @@ public interface ConsultasTransversalesQueryPort {
     record EstadoSistemaProjection(String catalogo, UUID id, String codigo, String nombre) {
     }
 
+    /** HU005/HU016: categorias de justificacion de una inasistencia (catalogo base de solo consulta). */
+    List<CategoriaJustificacionProjection> consultarCategoriasJustificacion();
+
+    record CategoriaJustificacionProjection(UUID id, String codigo, String nombre, String descripcion) {
+    }
+
     record FiltroConsolidado(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
     }
 

@@ -114,6 +114,10 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
             SELECT catalogo = 'ESTUDIANTE_GRUPO', g.id, g.codigo, g.nombre FROM dbo.uv_estado_estudiante_grupo g
             ORDER BY catalogo DESC, nombre
             """;
+    /** HU005/HU016: lectura directa de la vista del catalogo (sin SP: no hay ambito ni escritura). */
+    static final String SQL_CATEGORIAS_JUSTIFICACION = """
+            SELECT c.id, c.codigo, c.nombre, c.descripcion FROM dbo.uv_categoria_justificacion c ORDER BY c.nombre
+            """;
     private static final DateTimeFormatter FORMATO_DATETIMEOFFSET = new DateTimeFormatterBuilder()
             .appendPattern("yyyy-MM-dd HH:mm:ss")
             .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).optionalEnd()
@@ -230,6 +234,17 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                 () -> ((List<?>) entityManager.createNativeQuery(SQL_ESTADOS).getResultList()).stream()
                         .map(Object[].class::cast)
                         .map(f -> new EstadoSistemaProjection(texto(f[0]), NativeRowValues.uuid(f[1]), texto(f[2]),
+                                texto(f[3])))
+                        .toList());
+    }
+
+    @Override
+    public List<CategoriaJustificacionProjection> consultarCategoriasJustificacion() {
+        return JpaQueryExecutor.execute("consultarCategoriasJustificacion",
+                "No fue posible consultar las categorias de justificacion.",
+                () -> ((List<?>) entityManager.createNativeQuery(SQL_CATEGORIAS_JUSTIFICACION).getResultList()).stream()
+                        .map(Object[].class::cast)
+                        .map(f -> new CategoriaJustificacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]),
                                 texto(f[3])))
                         .toList());
     }

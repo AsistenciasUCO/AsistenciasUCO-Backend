@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ComponenteFormacionProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.CategoriaJustificacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.EstadoSistemaProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
@@ -139,5 +140,14 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
         when(port.consultarEstadosSistema()).thenReturn(estados);
 
         assertEquals(estados, useCase.consultarEstadosSistema());
+    }
+
+    @Test
+    void T_005_UC_01_categorias_de_justificacion_delega_en_el_puerto() {
+        final List<CategoriaJustificacionProjection> categorias = List.of(
+                new CategoriaJustificacionProjection(ID, "LAB", "Laboral", "Obligacion laboral"));
+        when(port.consultarCategoriasJustificacion()).thenReturn(categorias);
+
+        assertEquals(categorias, useCase.consultarCategoriasJustificacion());
     }
 }

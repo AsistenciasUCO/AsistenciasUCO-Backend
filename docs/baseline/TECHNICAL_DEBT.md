@@ -896,6 +896,7 @@ GOLDEN PATH EFFECT:         NONE
 - **Evidencia:** definición del SP v2 (parámetro declarado y sin uso) y DDL de `SolicitudRevisionAsistencia`.
 - **Motivo para no resolver ahora:** requiere DDL y un cambio en un SP del manifiesto LB-004D. Decisión del owner D1 = B (2026-10-21).
 - **Resolución esperada:** columna nullable o FK a un catálogo de categorías, persistida por el SP v2 y expuesta en el detalle; abordarla junto con HU005/HU014.
+- **Avance (2026-11-05):** HU005/HU016 creó el catálogo `CategoriaJustificacion` (6 categorías, solo consulta) y el formulario ya lo usa. Falta la FK y la persistencia en el SP v2: el diseño está en `docs/work-items/HU005-HU016-categorias-justificacion/DISENO_CAMBIO_COORDINADO.md` del repo de BD, junto con el plazo de HU026B y el soporte obligatorio por categoría.
 - **Bloquea línea base:** no. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/PLAN.md).
 
 ## TD-061
