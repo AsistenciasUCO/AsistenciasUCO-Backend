@@ -136,9 +136,9 @@ class EstudiantePortalControllerTest {
     void endpoints_no_implementados_lanzan_featureUnavailable() {
         final List<Executable> operations = List.of(
                 controller::crearReclamo,
-                () -> controller.eliminarReclamo(MATERIA),
-                controller::matricularGrupo
+                () -> controller.eliminarReclamo(MATERIA)
         );
+        // HU176B (CONTRACT §3.5): POST /estudiante/matricular-grupo sale de 501; ver EstudianteMatriculaQrControllerTest.
 
         for (final var operation : operations) {
             assertEquals("FEATURE_UNAVAILABLE",
