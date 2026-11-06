@@ -78,6 +78,18 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
             group by sp.idPlanEstudio
             """;
 
+    /**
+     * Certificacion F3: asignaturas de la malla de cada plan y suma de sus creditos (misma regla que
+     * {@code usp_consultar_programas_creditos_facultad_paginado}). Los planes sin asignaturas no aparecen y quedan en 0.
+     */
+    static final String HQL_TOTALES_MALLA = """
+            select sp.idPlanEstudio, count(a.id), sum(a.credito)
+            from UvAsignaturaEntity a, UvSemestrePlanEstudioEntity sp
+            where sp.id = a.idSemestrePlanEstudio
+              and sp.idPlanEstudio in :idsPlan
+            group by sp.idPlanEstudio
+            """;
+
     static final String OP_REGISTRAR_O_ACTUALIZAR_PLAN = "registrarOActualizarPlanEstudio";
     static final String OP_CAMBIAR_ESTADO_PLAN = "cambiarEstadoPlanEstudio";
     static final String OP_AGREGAR_SEMESTRE_PLAN = "agregarSemestrePlanEstudio";
@@ -153,10 +165,32 @@ public class PlanEstudioJpaRepository implements PlanEstudioQueryPort, PlanEstud
     // PRIVATE HELPERS
 
     private List<PlanEstudioProjection> conTotalSemestres(final List<UvPlanEstudioEntity> planes) {
-        final Map<UUID, Integer> totales = consultarTotalSemestres(planes.stream().map(UvPlanEstudioEntity::id).toList());
+        final List<UUID> ids = planes.stream().map(UvPlanEstudioEntity::id).toList();
+        final Map<UUID, Integer> totales = consultarTotalSemestres(ids);
+        final Map<UUID, int[]> malla = consultarTotalesMalla(ids);
         return planes.stream()
-                .map(plan -> AcademicViewJpaProjectionMapper.toPlanEstudio(plan, totales.getOrDefault(plan.id(), 0)))
+                .map(plan -> {
+                    final int[] totalMalla = malla.getOrDefault(plan.id(), new int[] {0, 0});
+                    return AcademicViewJpaProjectionMapper.toPlanEstudio(plan, totales.getOrDefault(plan.id(), 0),
+                            totalMalla[0], totalMalla[1]);
+                })
                 .toList();
+    }
+
+    private Map<UUID, int[]> consultarTotalesMalla(final Collection<UUID> idsPlan) {
+        final Map<UUID, int[]> totales = new LinkedHashMap<>();
+        if (idsPlan.isEmpty()) {
+            return totales;
+        }
+        entityManager.createQuery(HQL_TOTALES_MALLA, Object[].class)
+                .setParameter("idsPlan", idsPlan)
+                .getResultList()
+                .forEach(fila -> totales.put((UUID) fila[0], new int[] {entero(fila[1]), entero(fila[2])}));
+        return totales;
+    }
+
+    private static int entero(final Object valor) {
+        return valor == null ? 0 : ((Number) valor).intValue();
     }
 
     private Map<UUID, Integer> consultarTotalSemestres(final Collection<UUID> idsPlan) {

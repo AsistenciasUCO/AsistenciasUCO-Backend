@@ -92,6 +92,18 @@ class ConsultarProgramasUseCaseImplTest {
     }
 
     @Test
+    void el_administrador_activo_consulta_sin_facultad_de_decano_y_la_db_fija_el_ambito() {
+        when(scopePort.isAdministradorActivo(ACTOR)).thenReturn(true);
+        when(scopePort.findFacultadIdByDecanoUsuario(ACTOR)).thenReturn(Optional.empty());
+
+        final ProgramasPaginaDomain result = useCase.execute(new ConsultarProgramasDomain(ACTOR, null, true, null, 1, 100));
+
+        assertEquals(ACTOR, capturar().actorUsuarioId());
+        assertEquals(12, result.totalRegistros());
+        verify(scopePort, never()).findFacultadIdByDecanoUsuario(ACTOR);
+    }
+
+    @Test
     void los_puertos_son_obligatorios() {
         assertThrows(NullPointerException.class, () -> new ConsultarProgramasUseCaseImpl(null, queryPort));
         assertThrows(NullPointerException.class, () -> new ConsultarProgramasUseCaseImpl(scopePort, null));

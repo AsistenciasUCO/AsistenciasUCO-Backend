@@ -17,7 +17,9 @@ public final class ConsultarPlanesEstudioRepositoryMapper {
                 projection.estaActivoPlanEstudio(),
                 projection.estaActivoTextoPlanEstudio(),
                 projection.justificacionEstado(),
-                projection.totalSemestres()
+                projection.totalSemestres(),
+                projection.totalAsignaturas(),
+                projection.totalCreditos()
         );
     }
 }

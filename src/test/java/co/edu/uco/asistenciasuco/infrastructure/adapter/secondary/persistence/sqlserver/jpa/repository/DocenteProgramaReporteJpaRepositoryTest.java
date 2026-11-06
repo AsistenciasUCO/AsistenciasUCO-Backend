@@ -124,6 +124,16 @@ class DocenteProgramaReporteJpaRepositoryTest {
     }
 
     @Test
+    void HR04b_docente_fuera_del_programa_del_coordinador_es_404_no_500() {
+        // Certificación Fase 3 (HU094): GEN_001 del SP llegaba como DatabaseOperationException (500).
+        when(query.getResultList()).thenThrow(new PersistenceException(
+                "DBCODE=GEN_001|Error de existencia: No se encontró el registro para la entidad [Docente]."));
+
+        assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException.class,
+                () -> repository.consultarHistorial(ACTOR, DOCENTE, null, 1, 10));
+    }
+
+    @Test
     void HR05_fecha_acepta_los_tipos_que_entrega_el_driver() {
         final LocalDate esperada = LocalDate.of(2026, 3, 15);
         assertEquals(esperada, DocenteProgramaReporteJpaRepository.fecha(esperada));

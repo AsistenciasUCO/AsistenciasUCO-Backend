@@ -40,6 +40,17 @@ public final class ConsultasFacultadDecanoDTO {
     public record SesionFacultadDTO(UUID id, String nombre, String codigo, Integer numeroSemana,
                                     LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, UUID idGrupo,
                                     Integer codigoGrupo, String nombreGrupo, UUID idAsignatura,
-                                    String nombreAsignatura, UUID idPrograma, String nombrePrograma) {
+                                    String nombreAsignatura, UUID idPrograma, String nombrePrograma,
+                                    LocalDateTime fechaHoraInicioUtc, LocalDateTime fechaHoraFinUtc,
+                                    String estadoTemporal) {
+
+        /** Compatibilidad: sesion sin procedencia temporal confirmada (HU145). */
+        public SesionFacultadDTO(UUID id, String nombre, String codigo, Integer numeroSemana,
+                                 LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, UUID idGrupo,
+                                 Integer codigoGrupo, String nombreGrupo, UUID idAsignatura,
+                                 String nombreAsignatura, UUID idPrograma, String nombrePrograma) {
+            this(id, nombre, codigo, numeroSemana, fechaHoraInicio, fechaHoraFin, idGrupo, codigoGrupo, nombreGrupo,
+                    idAsignatura, nombreAsignatura, idPrograma, nombrePrograma, null, null, "INDETERMINADA");
+        }
     }
 }

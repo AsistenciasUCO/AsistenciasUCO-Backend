@@ -34,7 +34,12 @@ public final class ConsultarProgramasUseCaseImpl implements ConsultarProgramasUs
         if (pagina < 1 || tamano < 1) {
             throw new ValidationException("Los parametros de paginacion deben ser mayores o iguales a 1.");
         }
-        ProgramaAcademicoRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
+        // HU136 (certificación de Fase 3): el ADMINISTRADOR consulta los programas de su institución para filtrar el
+        // directorio de docentes. El ámbito lo fuerza uv_auth_programa en la DB (institución del administrador, facultad
+        // del decano); el decano conserva su regla.
+        if (!scopePort.isAdministradorActivo(domain.actorUsuarioId())) {
+            ProgramaAcademicoRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
+        }
         final String nombre = domain.nombre() == null || domain.nombre().isBlank() ? null : domain.nombre().trim();
         final ProgramaAcademicoPaginaProjection resultado = queryPort.consultar(new ProgramaAcademicoQueryPort.ConsultaProgramas(
                 domain.actorUsuarioId(), nombre, domain.estaActivo(), domain.idTipoPrograma(), pagina, tamano));

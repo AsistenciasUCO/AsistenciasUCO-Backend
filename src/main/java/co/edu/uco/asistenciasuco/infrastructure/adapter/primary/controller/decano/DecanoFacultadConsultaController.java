@@ -64,14 +64,17 @@ public final class DecanoFacultadConsultaController {
     }
 
     @GetMapping("/sesiones")
-    public ResponseEntity<ApiListResponse<SesionFacultadDTO>> consultarSesiones(
+    public ResponseEntity<ApiListResponse<SesionFacultadDecanoResponse>> consultarSesiones(
             @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate desde,
             @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) final LocalDate hasta,
             @RequestParam(name = "idPrograma", required = false) final UUID idPrograma,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarSesiones(usuario(), desde, hasta, idPrograma, pagina, tamano));
+        final PaginaDTO<SesionFacultadDTO> sesiones =
+                inputPort.consultarSesiones(usuario(), desde, hasta, idPrograma, pagina, tamano);
+        return ResponseEntity.ok(new ApiListResponse<>(true,
+                sesiones.elementos().stream().map(SesionFacultadDecanoResponse::from).toList(), sesiones.total()));
     }
 
     private UUID usuario() {

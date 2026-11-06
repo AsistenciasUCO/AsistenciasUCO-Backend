@@ -112,7 +112,25 @@ class DecanoFacultadConsultaControllerTest {
         mvc.perform(get("/api/v1/decano/sesiones").param("desde", "2026-02-01").param("hasta", "2026-02-28"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos[0].codigo").value("S-01"))
-                .andExpect(jsonPath("$.datos[0].nombrePrograma").value("Sistemas"));
+                .andExpect(jsonPath("$.datos[0].nombrePrograma").value("Sistemas"))
+                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("INDETERMINADA"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").doesNotExist());
+    }
+
+    @Test
+    void T_145_01b_sesion_confirmada_expone_instantes_utc() throws Exception {
+        when(inputPort.consultarSesiones(ACTOR, null, null, null, null, null))
+                .thenReturn(new PaginaDTO<>(List.of(new SesionFacultadDTO(UUID.randomUUID(), "Sesion 1", "S-01", 2,
+                        LocalDateTime.of(2026, 2, 3, 13, 0), LocalDateTime.of(2026, 2, 3, 15, 0), UUID.randomUUID(), 1,
+                        "Grupo 1", UUID.randomUUID(), "Calculo", PROGRAMA, "Sistemas",
+                        LocalDateTime.of(2026, 2, 3, 13, 0), LocalDateTime.of(2026, 2, 3, 15, 0), "CONFIRMADA")), 1));
+
+        mvc.perform(get("/api/v1/decano/sesiones"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("CONFIRMADA"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value(org.hamcrest.Matchers.endsWith("Z")))
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value(org.hamcrest.Matchers.startsWith("2026-02-03T13:00:00")))
+                .andExpect(jsonPath("$.datos[0].fechaHoraFinUtc").value(org.hamcrest.Matchers.endsWith("Z")));
     }
 
     @Test

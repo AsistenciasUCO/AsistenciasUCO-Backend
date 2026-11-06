@@ -88,11 +88,13 @@ class AsignaturaDocenteJpaRepositoryTest {
                 .thenReturn(programas);
         when(programas.setParameter(anyString(), any())).thenReturn(programas);
         when(programas.getResultList()).thenReturn(List.of(programa));
-        when(grupos.getResultList()).thenReturn(List.<Object[]>of(new Object[]{grupo, 7}));
+        when(grupos.getResultList()).thenReturn(List.<Object[]>of(new Object[]{grupo, 7, 30}));
 
         final AsignaturaDocenteProjection resultado = repository.consultarAsignaturasDocente(DOCENTE).getFirst();
 
         assertEquals(7, resultado.estudiantesActivos());
+        // Certificación Fase 3: el cupo máximo real del grupo, para que el hub no muestre uno inventado.
+        assertEquals(30, resultado.capacidadMaximaPermitida());
         assertEquals(TIPO, resultado.idTipoPrograma());
         assertEquals("pregrado", resultado.nombreTipoPrograma());
         verify(grupos).setParameter(eq("idsGrupo"), eq(List.of(grupo)));
@@ -107,6 +109,7 @@ class AsignaturaDocenteJpaRepositoryTest {
         final AsignaturaDocenteProjection resultado = repository.consultarAsignaturasDocente(DOCENTE).getFirst();
 
         assertNull(resultado.estudiantesActivos());
+        assertNull(resultado.capacidadMaximaPermitida());
         verify(entityManager, never()).createQuery(eq(AsignaturaDocenteJpaRepository.HQL_ESTUDIANTES_ACTIVOS),
                 eq(Object[].class));
     }

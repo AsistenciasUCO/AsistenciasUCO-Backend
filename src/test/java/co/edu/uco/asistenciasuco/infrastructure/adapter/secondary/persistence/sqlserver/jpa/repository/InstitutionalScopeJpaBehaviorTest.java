@@ -55,6 +55,14 @@ class InstitutionalScopeJpaBehaviorTest {
     }
 
     @Test
+    void el_programa_del_coordinador_se_resuelve_de_forma_determinista_prefiriendo_el_activo() {
+        // Certificación Fase 3: con datos anteriores a la regla 1 a 1, cada pantalla tomaba un programa distinto.
+        final String hql = InstitutionalScopeJpaRepository.HQL_PROGRAMA_POR_COORDINADOR;
+        assertTrue(hql.contains("order by case when p.estaActivoPrograma = true then 0 else 1 end, p.nombrePrograma, c.idPrograma"));
+        assertTrue(hql.contains("p.id = c.idPrograma"));
+    }
+
+    @Test
     void identidad_inexistente_o_nula_es_ausencia() {
         uuidQuery(InstitutionalScopeJpaRepository.HQL_DOCENTE_POR_USUARIO, List.of());
         assertEquals(Optional.empty(), scope.findDocenteIdByUsuario(USUARIO));

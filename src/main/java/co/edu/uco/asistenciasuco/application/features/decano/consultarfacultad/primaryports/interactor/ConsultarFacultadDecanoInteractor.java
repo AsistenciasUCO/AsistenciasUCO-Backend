@@ -86,9 +86,10 @@ public final class ConsultarFacultadDecanoInteractor implements ConsultarFaculta
                                                           final Integer pagina, final Integer tamano) {
         final var resultado = useCase.consultarSesiones(usuario, desde, hasta, idPrograma, pagina, tamano);
         return new PaginaDTO<>(resultado.elementos().stream()
-                .map(s -> new SesionFacultadDTO(s.id(), s.nombre(), s.codigo(), s.numeroSemana(), s.fechaHoraInicio(),
-                        s.fechaHoraFin(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(), s.idAsignatura(),
-                        s.nombreAsignatura(), s.idPrograma(), s.nombrePrograma()))
+                .map(s -> new SesionFacultadDTO(s.id(), s.nombre(), s.codigo(), s.numeroSemana(),
+                        s.fechaHoraInicio(), s.fechaHoraFin(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(),
+                        s.idAsignatura(), s.nombreAsignatura(), s.idPrograma(), s.nombrePrograma(),
+                        s.fechaHoraInicioUtc(), s.fechaHoraFinUtc(), s.estadoTemporal().name()))
                 .toList(), resultado.total());
     }
 }

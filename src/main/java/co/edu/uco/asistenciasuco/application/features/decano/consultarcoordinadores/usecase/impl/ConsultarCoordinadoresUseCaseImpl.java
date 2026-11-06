@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinado
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.mapper.ConsultarCoordinadoresRepositoryMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 
 import java.util.LinkedHashMap;
@@ -35,8 +36,19 @@ public final class ConsultarCoordinadoresUseCaseImpl implements ConsultarCoordin
                 consolidado.putIfAbsent(item.id(), item);
             }
         }
+        // Certificacion F3: facultad y conteos reales por programa (antes la pantalla inventaba "Sin Facultad" y 0/0).
+        final Map<UUID, ResumenCoordinacionProjection> resumenes = new LinkedHashMap<>();
+        String nombreFacultad = null;
+        for (final ResumenCoordinacionProjection resumen : coordinadorQueryPort.consultarResumenProgramasFacultad(idFacultad)) {
+            if (resumen != null && resumen.idPrograma() != null) {
+                resumenes.putIfAbsent(resumen.idPrograma(), resumen);
+                nombreFacultad = nombreFacultad == null ? resumen.nombreFacultad() : nombreFacultad;
+            }
+        }
+        final String facultad = nombreFacultad;
         return consolidado.values().stream()
-                .map(ConsultarCoordinadoresRepositoryMapper::toDomain)
+                .map(c -> ConsultarCoordinadoresRepositoryMapper.toDomain(c, facultad,
+                        c.idPrograma() == null ? null : resumenes.get(c.idPrograma())))
                 .toList();
     }
 }

@@ -105,14 +105,45 @@ class PlanEstudioJpaRepositoryTest {
         when(entityManager.createQuery(PlanEstudioJpaRepository.HQL_TOTAL_SEMESTRES, Object[].class)).thenReturn(totales);
         when(totales.setParameter(anyString(), any())).thenReturn(totales);
         when(totales.getResultList()).thenReturn(Collections.singletonList(new Object[]{PLAN, 8}));
+        final TypedQuery<Object[]> malla = mock(TypedQuery.class);
+        when(entityManager.createQuery(PlanEstudioJpaRepository.HQL_TOTALES_MALLA, Object[].class)).thenReturn(malla);
+        when(malla.setParameter(anyString(), any())).thenReturn(malla);
+        when(malla.getResultList()).thenReturn(Collections.singletonList(new Object[]{PLAN, 1L, 3L}));
 
         final List<PlanEstudioProjection> resultado = repository.consultarPlanesPorPrograma(PROGRAMA);
 
         assertEquals(2, resultado.size());
         assertEquals(8, resultado.get(0).totalSemestres());
         assertEquals(true, resultado.get(0).estaActivoPlanEstudio());
+        // Certificación F3: totales reales de la malla (ARQ-402, 3 créditos); el plan sin asignaturas queda en 0.
+        assertEquals(1, resultado.get(0).totalAsignaturas());
+        assertEquals(3, resultado.get(0).totalCreditos());
         assertEquals(0, resultado.get(1).totalSemestres());
         assertEquals(false, resultado.get(1).estaActivoPlanEstudio());
+        assertEquals(0, resultado.get(1).totalAsignaturas());
+        assertEquals(0, resultado.get(1).totalCreditos());
+    }
+
+    @Test
+    @SuppressWarnings("unchecked")
+    void totales_de_malla_nulos_se_leen_como_cero() {
+        final TypedQuery<UvPlanEstudioEntity> planes = mock(TypedQuery.class);
+        final TypedQuery<Object[]> totales = mock(TypedQuery.class);
+        final TypedQuery<Object[]> malla = mock(TypedQuery.class);
+        when(entityManager.createQuery(PlanEstudioJpaRepository.HQL_POR_PROGRAMA, UvPlanEstudioEntity.class)).thenReturn(planes);
+        when(planes.setParameter("idPrograma", PROGRAMA)).thenReturn(planes);
+        when(planes.getResultList()).thenReturn(List.of(fila(PLAN, 1)));
+        when(entityManager.createQuery(PlanEstudioJpaRepository.HQL_TOTAL_SEMESTRES, Object[].class)).thenReturn(totales);
+        when(totales.setParameter(anyString(), any())).thenReturn(totales);
+        when(totales.getResultList()).thenReturn(List.of());
+        when(entityManager.createQuery(PlanEstudioJpaRepository.HQL_TOTALES_MALLA, Object[].class)).thenReturn(malla);
+        when(malla.setParameter(anyString(), any())).thenReturn(malla);
+        when(malla.getResultList()).thenReturn(Collections.singletonList(new Object[]{PLAN, 2L, null}));
+
+        final PlanEstudioProjection plan = repository.consultarPlanesPorPrograma(PROGRAMA).getFirst();
+
+        assertEquals(2, plan.totalAsignaturas());
+        assertEquals(0, plan.totalCreditos());
     }
 
     @Test

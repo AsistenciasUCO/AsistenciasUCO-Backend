@@ -1,10 +1,10 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase;
 
+import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase.domain.SesionFacultadHorarioDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.EstructuraFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.EstudianteFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.MatriculaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.Pagina;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.SesionFacultadProjection;
 
 import java.time.LocalDate;
 import java.util.List;
@@ -19,6 +19,6 @@ public interface ConsultarFacultadDecanoUseCase {
 
     List<EstructuraFacultadProjection> consultarEstructura(UUID usuario);
 
-    Pagina<SesionFacultadProjection> consultarSesiones(UUID usuario, LocalDate desde, LocalDate hasta, UUID idPrograma,
-                                                       Integer pagina, Integer tamano);
+    Pagina<SesionFacultadHorarioDomain> consultarSesiones(UUID usuario, LocalDate desde, LocalDate hasta,
+                                                          UUID idPrograma, Integer pagina, Integer tamano);
 }

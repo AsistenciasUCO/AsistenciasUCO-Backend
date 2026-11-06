@@ -4,6 +4,8 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.usecase.domain.CoordinadorDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection;
+import co.edu.uco.asistenciasuco.application.features.decano.consultarcoordinadores.primaryports.mapper.ConsultarCoordinadoresMapper;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.Test;
 
@@ -106,5 +108,50 @@ class ConsultarCoordinadoresUseCaseImplTest {
         assertEquals("Gomez", result.segundoApellido());
         assertEquals("ana@uco.edu.co", result.correo());
         assertEquals(true, result.estaActivoRolCoordinador());
+    }
+
+    // Certificacion F3: la tarjeta del decano muestra la facultad y los conteos reales del programa que coordina.
+    @Test
+    void execute_agrega_facultad_y_conteos_del_programa_coordinado() {
+        final UUID actor = UUID.randomUUID();
+        final UUID facultad = UUID.randomUUID();
+        final UUID programa = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actor)).thenReturn(Optional.of(facultad));
+        when(coordinadorQueryPort.consultarCoordinadoresPorFacultad(facultad)).thenReturn(List.of(
+                new CoordinadorProjection(UUID.randomUUID(), UUID.randomUUID(), "123456", "Ana Perez",
+                        programa, "Ingenieria de Sistemas", true)));
+        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma(facultad)).thenReturn(List.of(
+                new CoordinadorProjection(UUID.randomUUID(), UUID.randomUUID(), "789012", "Jorge Henao",
+                        null, null, true)));
+        when(coordinadorQueryPort.consultarResumenProgramasFacultad(facultad)).thenReturn(List.of(
+                new ResumenCoordinacionProjection(programa, "Facultad de Ingenieria", 1, 2),
+                new ResumenCoordinacionProjection(UUID.randomUUID(), "Facultad de Ingenieria", 5, 7)));
+
+        final List<CoordinadorDomain> result = useCase.execute(actor);
+
+        assertEquals("Facultad de Ingenieria", result.get(0).nombreFacultad());
+        assertEquals(1, result.get(0).totalDocentes());
+        assertEquals(2, result.get(0).totalGrupos());
+        assertEquals("Facultad de Ingenieria", result.get(1).nombreFacultad());
+        assertEquals(0, result.get(1).totalDocentes());
+        assertEquals(0, result.get(1).totalGrupos());
+        assertEquals(1, ConsultarCoordinadoresMapper.toDTO(result.get(0)).totalDocentes());
+    }
+
+    @Test
+    void execute_sin_programas_en_la_facultad_deja_facultad_nula_y_conteos_en_cero() {
+        final UUID actor = UUID.randomUUID();
+        final UUID facultad = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(actor)).thenReturn(Optional.of(facultad));
+        when(coordinadorQueryPort.consultarCoordinadoresSinPrograma(facultad)).thenReturn(List.of(
+                new CoordinadorProjection(UUID.randomUUID(), UUID.randomUUID(), "789012", "Jorge Henao",
+                        null, null, true)));
+        when(coordinadorQueryPort.consultarResumenProgramasFacultad(facultad)).thenReturn(
+                java.util.Arrays.asList(null, new ResumenCoordinacionProjection(null, "X", 9, 9)));
+
+        final CoordinadorDomain unico = useCase.execute(actor).getFirst();
+
+        assertEquals(null, unico.nombreFacultad());
+        assertEquals(0, unico.totalGrupos());
     }
 }
