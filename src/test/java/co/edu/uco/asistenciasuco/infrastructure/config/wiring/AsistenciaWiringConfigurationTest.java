@@ -51,14 +51,19 @@ class AsistenciaWiringConfigurationTest {
         assertInstanceOf(RegistrarAsistenciaAutonomaInteractor.class,
                 config.registrarAsistenciaAutonomaInputPort(registrarAsistenciaAutonomaUseCase));
 
-        final var solicitarRevisionAsistenciaUseCase = config.solicitarRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort);
+        final var solicitarRevisionAsistenciaUseCase = config.solicitarRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort, providerVacio(), providerVacio());
         assertInstanceOf(SolicitarRevisionAsistenciaUseCaseImpl.class, solicitarRevisionAsistenciaUseCase);
         assertInstanceOf(SolicitarRevisionAsistenciaInteractor.class,
                 config.solicitarRevisionAsistenciaInputPort(solicitarRevisionAsistenciaUseCase));
 
-        final var resolverSolicitudUseCase = config.resolverSolicitudRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort);
+        final var resolverSolicitudUseCase = config.resolverSolicitudRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort, providerVacio(), providerVacio());
         assertInstanceOf(ResolverSolicitudRevisionAsistenciaUseCaseImpl.class, resolverSolicitudUseCase);
         assertInstanceOf(ResolverSolicitudRevisionAsistenciaInteractor.class,
                 config.resolverSolicitudRevisionAsistenciaInputPort(resolverSolicitudUseCase));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> org.springframework.beans.factory.ObjectProvider<T> providerVacio() {
+        return mock(org.springframework.beans.factory.ObjectProvider.class);
     }
 }

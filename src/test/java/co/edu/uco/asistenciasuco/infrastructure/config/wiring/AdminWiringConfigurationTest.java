@@ -64,9 +64,14 @@ class AdminWiringConfigurationTest {
         assertInstanceOf(ConsultarAreasInteractor.class, config.consultarAreasInputPort(consultarAreasUseCase));
 
         final var ejecutarCierreMasivoUseCase = config.ejecutarCierreMasivoUseCase(
-                mock(PeriodoAcademicoQueryPort.class), mock(CierrePeriodoCommandPort.class));
+                mock(PeriodoAcademicoQueryPort.class), mock(CierrePeriodoCommandPort.class), providerVacio());
         assertInstanceOf(EjecutarCierreMasivoUseCaseImpl.class, ejecutarCierreMasivoUseCase);
         assertInstanceOf(EjecutarCierreMasivoInteractor.class,
                 config.ejecutarCierreMasivoInputPort(ejecutarCierreMasivoUseCase));
+    }
+
+    @SuppressWarnings("unchecked")
+    private static <T> org.springframework.beans.factory.ObjectProvider<T> providerVacio() {
+        return mock(org.springframework.beans.factory.ObjectProvider.class);
     }
 }

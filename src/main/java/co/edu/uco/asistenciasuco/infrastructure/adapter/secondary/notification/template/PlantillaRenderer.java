@@ -89,6 +89,20 @@ public class PlantillaRenderer {
         return new ContenidoRenderizado(asuntoSanitizado, textoPlano, html, "stored");
     }
 
+    public ContenidoRenderizado renderizarExplicito(
+            final String asunto,
+            final String cuerpo,
+            final Map<String, String> datos
+    ) {
+        final Map<String, String> mapaDatos = datos == null ? Map.of() : datos;
+        final String asuntoSanitizado = sanitizarAsunto(sustituirTextoPlano(asunto == null ? "" : asunto, mapaDatos));
+        final String cuerpoPlano = sustituirTextoPlano(cuerpo == null ? "" : cuerpo, mapaDatos);
+        final String textoPlano = construirTextoPlano(cuerpoPlano, "");
+        final String cuerpoHtml = convertirPlantillaAHtml(cuerpo == null ? "" : cuerpo, mapaDatos);
+        final String html = envolverEnLayout(cuerpoHtml);
+        return new ContenidoRenderizado(asuntoSanitizado, textoPlano, html, "preview");
+    }
+
     private Optional<PlantillaNotificacion> consultarBdSegura(final String tipo) {
         if (tipo.isEmpty()) {
             return Optional.empty();

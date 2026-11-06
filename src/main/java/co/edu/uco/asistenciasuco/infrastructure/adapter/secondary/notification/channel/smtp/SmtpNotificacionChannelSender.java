@@ -222,9 +222,10 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
                 registrarDuracion("retry", System.nanoTime() - inicioNanos);
                 sendRetryCounter.increment();
                 LOGGER.warn(
-                        "Fallo transitorio SMTP al enviar notificacion: idNotificacion={}, tipo={}, outcome=retry",
+                        "Fallo transitorio SMTP al enviar notificacion: idNotificacion={}, tipo={}, outcome=retry, causa={}",
                         notificacion.id(),
-                        notificacion.tipo()
+                        notificacion.tipo(),
+                        ex.getCause() != null ? ex.getCause().getClass().getName() : ex.getClass().getName()
                 );
                 throw ex;
             }
