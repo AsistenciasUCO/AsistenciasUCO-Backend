@@ -39,6 +39,8 @@ import java.util.UUID;
  */
 public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransversalesUseCase {
 
+    private static final java.util.Set<String> ESTADOS_VINCULO = java.util.Set.of("ACTIVO", "SIN_VINCULO", "TODOS");
+
     static final Duration RANGO_AUDITORIA_POR_DEFECTO = Duration.ofDays(7);
     static final Duration RANGO_AUDITORIA_MAXIMO = Duration.ofDays(90);
     static final int LONGITUD_MAXIMA_FILTRO_AUDITORIA = 120;
@@ -69,6 +71,26 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
                                                                final Integer pagina, final Integer tamano) {
         return queryPort.consultarDocentes(exigirUsuario(usuario), normalizar(filtro),
                 ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
+    }
+
+    @Override
+    public Pagina<DocenteFacultadProjection> consultarDocentesInstitucion(final UUID usuario, final FiltroConsulta filtro,
+                                                                         final UUID idFacultad, final String estadoVinculo,
+                                                                         final Integer pagina, final Integer tamano) {
+        return queryPort.consultarDocentes(exigirUsuario(usuario), normalizar(filtro), idFacultad,
+                estadoVinculo(estadoVinculo), ConsultaPaginadaRules.pagina(pagina), ConsultaPaginadaRules.tamano(tamano));
+    }
+
+    /** HU136: ACTIVO (por defecto), SIN_VINCULO o TODOS; cualquier otro valor es un error de validacion. */
+    private static String estadoVinculo(final String valor) {
+        if (valor == null || valor.isBlank()) {
+            return null;
+        }
+        final String normalizado = valor.trim().toUpperCase(java.util.Locale.ROOT);
+        if (!ESTADOS_VINCULO.contains(normalizado)) {
+            throw new ValidationException("El estado de vinculo debe ser ACTIVO, SIN_VINCULO o TODOS.");
+        }
+        return normalizado;
     }
 
     @Override

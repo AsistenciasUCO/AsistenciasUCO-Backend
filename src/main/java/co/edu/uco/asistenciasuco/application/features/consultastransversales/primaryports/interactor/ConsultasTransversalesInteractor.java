@@ -17,6 +17,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ProgramaCreditosDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.ResumenAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.usecase.ConsultasTransversalesUseCase;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.DocenteFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroAuditoria;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsulta;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.FiltroConsolidado;
@@ -53,9 +54,21 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                                                            final UUID idPrograma, final Boolean estaActivo,
                                                            final Integer pagina, final Integer tamano) {
         return pagina(useCase.consultarDocentes(usuario, new FiltroConsulta(busqueda, idPrograma, estaActivo), pagina,
-                        tamano),
-                d -> new DocenteFacultadDTO(d.idDocente(), d.numeroIdentificacion(), d.nombreCompleto(), d.correo(),
-                        d.activo(), d.programas(), d.totalProgramas(), d.totalGrupos()));
+                        tamano), ConsultasTransversalesInteractor::docente);
+    }
+
+    @Override
+    public PaginaDTO<DocenteFacultadDTO> consultarDocentesInstitucion(final UUID usuario, final String busqueda,
+                                                                      final UUID idFacultad, final UUID idPrograma,
+                                                                      final Boolean estaActivo, final String estadoVinculo,
+                                                                      final Integer pagina, final Integer tamano) {
+        return pagina(useCase.consultarDocentesInstitucion(usuario, new FiltroConsulta(busqueda, idPrograma, estaActivo),
+                idFacultad, estadoVinculo, pagina, tamano), ConsultasTransversalesInteractor::docente);
+    }
+
+    private static DocenteFacultadDTO docente(final DocenteFacultadProjection d) {
+        return new DocenteFacultadDTO(d.idDocente(), d.numeroIdentificacion(), d.nombreCompleto(), d.correo(),
+                d.activo(), d.programas(), d.totalProgramas(), d.totalGrupos(), d.tieneVinculoActivo());
     }
 
     @Override

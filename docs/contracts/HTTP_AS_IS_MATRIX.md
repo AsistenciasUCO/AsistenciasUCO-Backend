@@ -28,7 +28,7 @@ Los SP/views de las filas son contratos consumidos/reportados por Java; las firm
 | `GET /api/v1/admin/facultades` | ADMINISTRADOR | Consultar facultades | `FacultadQueryPort` | `uv_facultad` | IMPLEMENTATION_AVAILABLE_PENDING_E2E |  | `ApiListResponse<FacultadDTO>` |
 | `GET /api/v1/admin/areas` | ADMINISTRADOR | Consultar areas | `AreaQueryPort` | `uv_area` | IMPLEMENTATION_AVAILABLE_PENDING_E2E |  | `ApiListResponse<AreaDTO>` |
 | `POST /api/v1/admin/cierre-masivo` | ADMINISTRADOR | Ejecutar cierre masivo | `CierrePeriodoCommandPort` | `usp_ejecutar_cierre_masivo_periodo` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Validar firma DB en E2E controlado | `CierreMasivoRequest` |
-| `POST/PUT/PATCH /api/v1/admin/instituciones/**` | ADMINISTRADOR | Mutar institucion |  |  | BLOCKED_BY_DB | No hay command publico confirmado | `FeatureUnavailableException` |
+| `POST/PUT/PATCH /api/v1/admin/instituciones/**` | — | Retiradas el 2026-11-05: HU161/HU162/HU164 descartadas; `Institucion` es un catálogo de solo consulta (CAT-01) |  |  | RETIRED |  | Sin ruta (404) |
 | `POST /api/v1/admin/facultades` | ADMINISTRADOR | Crear facultad (HU116) | `FacultadCommandPort` | `usp_crear_facultad` | IMPLEMENTATION_AVAILABLE_PENDING_E2E |  | `CrearFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
 | `PUT /api/v1/admin/facultades/{id}` | ADMINISTRADOR | Modificar nombre y/o decano (HU110, HU117) | `FacultadCommandPort` | `usp_actualizar_facultad` | E2E_VERIFIED_2026-10-22 | 404 `FAC_001`/`DEC_001`, 409 `GEN_003`/`FAC_002` | `ActualizarFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
 | `PATCH /api/v1/admin/facultades/{id}/estado` | ADMINISTRADOR | Cambiar estado deseado (HU111) | `FacultadCommandPort` | `usp_cambiar_estado_facultad` | E2E_VERIFIED_2026-10-22 | Idempotente; 409 `FAC_002` al reactivar | `CambiarEstadoFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
@@ -138,9 +138,6 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | GET | `/api/v1/admin/auditoria` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | POST | `/api/v1/admin/cierre-masivo` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | GET | `/api/v1/admin/instituciones` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| POST | `/api/v1/admin/instituciones` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| PUT | `/api/v1/admin/instituciones/{id}` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| PATCH | `/api/v1/admin/instituciones/{id}/toggle-estado` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | GET | `/api/v1/admin/facultades` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | POST | `/api/v1/admin/facultades` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | PUT | `/api/v1/admin/facultades/{id}` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |

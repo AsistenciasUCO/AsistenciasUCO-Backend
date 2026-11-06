@@ -291,9 +291,7 @@ class AdminPortalControllerTest {
                 () -> controller.actualizarSede(FACULTAD), () -> controller.cambiarEstadoSede(FACULTAD),
                 controller::consultarEspaciosFisicos, controller::crearEspacioFisico,
                 () -> controller.actualizarEspacioFisico(FACULTAD), () -> controller.cambiarEstadoEspacioFisico(FACULTAD),
-                () -> controller.actualizarParametro(FACULTAD),
-                controller::crearInstitucion, () -> controller.actualizarInstitucion(FACULTAD),
-                () -> controller.cambiarEstadoInstitucion(FACULTAD)
+                () -> controller.actualizarParametro(FACULTAD)
         );
 
         for (final var operation : operations) {

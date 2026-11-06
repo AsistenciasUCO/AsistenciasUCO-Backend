@@ -193,4 +193,21 @@ class ConsultasTransversalesJpaRepositoryTest {
                 2024, ID, "2026-1", "Primer semestre", grupo, grupo == null ? null : 1, ID, "Calculo", "MAT",
                 "Matriculado", sesiones, asistencias, faltas, excusas, porcentaje, permanencia).toArray();
     }
+
+    @Test
+    void T_136_PAT_01_docentes_de_la_institucion_enlazan_la_facultad_y_el_decano_la_deja_nula() {
+        when(query.getResultList()).thenReturn(filas(fila(ID, ID, 1017000111L, "Ana", "ana@uco.edu.co", 1,
+                "Sistemas", 1, 3, 1)));
+
+        when(query.getResultList()).thenReturn(filas(fila(ID, ID, 1017000111L, "Ana", "ana@uco.edu.co", 1,
+                null, 0, 0, 1, 0)));
+        final var retirado = repository.consultarDocentes(EJECUTOR, new FiltroConsulta(null, null, null), ID, "SIN_VINCULO", 1, 10)
+                .elementos().getFirst();
+        verify(query).setParameter("idFacultad", ID);
+        verify(query).setParameter("estadoVinculo", "SIN_VINCULO");
+        org.junit.jupiter.api.Assertions.assertFalse(retirado.tieneVinculoActivo());
+
+        repository.consultarDocentes(EJECUTOR, new FiltroConsulta(null, null, null), 1, 10);
+        verify(query).setParameter("idFacultad", null);
+    }
 }

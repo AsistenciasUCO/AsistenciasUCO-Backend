@@ -107,4 +107,19 @@ class ConsultasTransversalesInteractorTest {
                 "Ingenieria", ID, "Sistemas", 2024, ID, "2026-1", "Primer semestre 2026", grupo, 1, ID, "Calculo",
                 "MAT", "Matriculado", resumen);
     }
+
+    @Test
+    void T_136_INT_01_mapea_docentes_de_la_institucion_con_facultad_y_programa() {
+        when(useCase.consultarDocentesInstitucion(USUARIO, new FiltroConsulta("ana", ID, true), ID, "TODOS", 1, 20)).thenReturn(new Pagina<>(
+                List.of(new DocenteFacultadProjection(ID, "101", "Ana", "ana@uco.edu.co", true, "Sistemas, Civil", 2, 5),
+                        new DocenteFacultadProjection(ID, "102", "Luis", null, true, null, 0, 0, false)), 2));
+
+        final var pagina = interactor.consultarDocentesInstitucion(USUARIO, "ana", ID, ID, true, "TODOS", 1, 20);
+        org.junit.jupiter.api.Assertions.assertFalse(pagina.elementos().get(1).tieneVinculoActivo());
+        org.junit.jupiter.api.Assertions.assertTrue(pagina.elementos().getFirst().tieneVinculoActivo());
+
+        assertEquals(2, pagina.total());
+        assertEquals("Sistemas, Civil", pagina.elementos().getFirst().programas());
+        assertEquals(2, pagina.elementos().getFirst().totalProgramas());
+    }
 }

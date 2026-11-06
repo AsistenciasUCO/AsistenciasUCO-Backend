@@ -14,7 +14,18 @@ public interface ConsultasTransversalesQueryPort {
     Pagina<ProgramaCreditosProjection> consultarProgramasCreditos(UUID idUsuarioEjecutor, String busqueda,
                                                                   Boolean estaActivo, int pagina, int tamano);
 
-    Pagina<DocenteFacultadProjection> consultarDocentes(UUID idUsuarioEjecutor, FiltroConsulta filtro, int pagina,
+    /** HU128 (decano) sin filtro de facultad. */
+    default Pagina<DocenteFacultadProjection> consultarDocentes(UUID idUsuarioEjecutor, FiltroConsulta filtro, int pagina,
+                                                                int tamano) {
+        return consultarDocentes(idUsuarioEjecutor, filtro, null, null, pagina, tamano);
+    }
+
+    /**
+     * HU128/HU136: docentes del ambito del ejecutor (decano: su facultad; administrador: su institucion), filtrables por
+     * facultad. {@code estadoVinculo} (solo administrador): ACTIVO (nulo), SIN_VINCULO o TODOS.
+     */
+    Pagina<DocenteFacultadProjection> consultarDocentes(UUID idUsuarioEjecutor, FiltroConsulta filtro, UUID idFacultad,
+                                                        String estadoVinculo, int pagina,
                                                         int tamano);
 
     Pagina<AsignaturaProjection> buscarAsignaturas(UUID idUsuarioEjecutor, FiltroConsulta filtro, int pagina,
@@ -89,8 +100,16 @@ public interface ConsultasTransversalesQueryPort {
                                       int totalSemestres, int totalAsignaturas, int totalCreditos) {
     }
 
+    /** HU136: {@code tieneVinculoActivo} es falso para un docente retirado de todos sus programas (solo administrador). */
     record DocenteFacultadProjection(UUID idDocente, String numeroIdentificacion, String nombreCompleto, String correo,
-                                     boolean activo, String programas, int totalProgramas, int totalGrupos) {
+                                     boolean activo, String programas, int totalProgramas, int totalGrupos,
+                                     boolean tieneVinculoActivo) {
+
+        public DocenteFacultadProjection(final UUID idDocente, final String numeroIdentificacion, final String nombreCompleto,
+                                         final String correo, final boolean activo, final String programas,
+                                         final int totalProgramas, final int totalGrupos) {
+            this(idDocente, numeroIdentificacion, nombreCompleto, correo, activo, programas, totalProgramas, totalGrupos, true);
+        }
     }
 
     record AsignaturaProjection(UUID idAsignatura, String codigo, String nombre, Integer creditos, String nombreArea,

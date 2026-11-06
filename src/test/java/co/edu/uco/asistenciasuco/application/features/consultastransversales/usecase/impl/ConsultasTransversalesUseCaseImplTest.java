@@ -102,4 +102,19 @@ class ConsultasTransversalesUseCaseImplTest {
 
         assertSame(filas, useCase.consultarHistorial(USUARIO, ESTUDIANTE));
     }
+
+    @Test
+    void T_136_UC_01_docentes_de_la_institucion_normaliza_y_pasa_la_facultad() {
+        when(port.consultarDocentes(any(), any(), any(), any(), anyInt(), anyInt())).thenReturn(new Pagina<>(List.of(), 0));
+
+        useCase.consultarDocentesInstitucion(USUARIO, new FiltroConsulta("  ana ", PADRE, null), PADRE, " sin_vinculo ", null, null);
+
+        verify(port).consultarDocentes(org.mockito.ArgumentMatchers.eq(USUARIO),
+                org.mockito.ArgumentMatchers.eq(new FiltroConsulta("ana", PADRE, null)),
+                org.mockito.ArgumentMatchers.eq(PADRE), org.mockito.ArgumentMatchers.eq("SIN_VINCULO"), anyInt(), anyInt());
+        assertThrows(ValidationException.class, () -> useCase.consultarDocentesInstitucion(USUARIO, null, null, "OTRO", null, null));
+        useCase.consultarDocentesInstitucion(USUARIO, null, null, "  ", null, null);
+        verify(port).consultarDocentes(org.mockito.ArgumentMatchers.eq(USUARIO), any(), org.mockito.ArgumentMatchers.isNull(),
+                org.mockito.ArgumentMatchers.isNull(), anyInt(), anyInt());
+    }
 }
