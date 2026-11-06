@@ -12,14 +12,13 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.UsuarioIdentidadRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.security.InstitutionalRole;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 
@@ -37,7 +36,6 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
     private final CorreoInstitucionalPolicy correoPolicy;
     private final PasswordEncoderPort passwordEncoder;
     private final MatriculaQrRepositoryPort repositorio;
-    private final UsuarioRepositoryPort usuarioRepositorio;
     private final IdentityProviderPort identityProvider;
     private final NotificacionPort notificacionPort;
     private final RealtimePublisherPort realtime;
@@ -47,7 +45,6 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
             final CorreoInstitucionalPolicy correoPolicy,
             final PasswordEncoderPort passwordEncoder,
             final MatriculaQrRepositoryPort repositorio,
-            final UsuarioRepositoryPort usuarioRepositorio,
             final IdentityProviderPort identityProvider,
             final NotificacionPort notificacionPort,
             final RealtimePublisherPort realtime
@@ -56,7 +53,6 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
         this.correoPolicy = Objects.requireNonNull(correoPolicy, "CorreoInstitucionalPolicy es obligatoria.");
         this.passwordEncoder = Objects.requireNonNull(passwordEncoder, "PasswordEncoderPort es obligatorio.");
         this.repositorio = Objects.requireNonNull(repositorio, "MatriculaQrRepositoryPort es obligatorio.");
-        this.usuarioRepositorio = Objects.requireNonNull(usuarioRepositorio, "UsuarioRepositoryPort es obligatorio.");
         this.identityProvider = Objects.requireNonNull(identityProvider, "IdentityProviderPort es obligatorio.");
         this.notificacionPort = Objects.requireNonNull(notificacionPort, "NotificacionPort es obligatorio.");
         this.realtime = Objects.requireNonNull(realtime, "RealtimePublisherPort es obligatorio.");
@@ -81,21 +77,22 @@ public final class RegistrarEstudiantePorTokenUseCaseImpl implements RegistrarEs
                         comando.correo(), passwordEncoder.encode(comando.password())));
 
         // DB SUCCESS a partir de aqui: el IdP nunca se invoca antes.
-        provisionarIdentidad(comando);
+        provisionarIdentidad(comando, matricula);
         avisarVerificacionCorreo(comando, matricula);
         realtime.publish(RealtimeEvent.of(EVENTO_MATRICULADO, Map.of("grupo", matricula.idGrupo().toString(), "origen", "QR")));
         return new Resultado(matricula.idGrupo(), String.valueOf(comando.numeroIdentificacion()));
     }
 
-    private void provisionarIdentidad(final Comando comando) {
-        final UsuarioIdentidadRepositoryProjection usuario = usuarioRepositorio
-                .consultarUsuarioPorIdentificacion(comando.tipoIdentificacionId(), comando.numeroIdentificacion())
-                .filter(u -> u.id() != null && u.correo() != null && !u.correo().isBlank())
-                .orElseThrow(() -> new InternalApplicationException(
-                        "No fue posible resolver la identidad institucional del usuario despues de la matricula por QR."));
+    private void provisionarIdentidad(final Comando comando, final MatriculaQrRepositoryPort.MatriculaRealizada matricula) {
+        if (matricula == null || matricula.idUsuario() == null) {
+            throw new InternalApplicationException(
+                    "No fue posible resolver la identidad institucional del usuario despues de la matricula por QR.");
+        }
         try {
             identityProvider.crearCuenta(new CrearCuentaIdentidadDTO(
-                    String.valueOf(comando.numeroIdentificacion()), usuario.id(), usuario.correo(),
+                    String.valueOf(comando.numeroIdentificacion()),
+                    matricula.idUsuario(),
+                    comando.correo().strip().toLowerCase(Locale.ROOT),
                     comando.primerNombre(), comando.primerApellido(), comando.password(),
                     InstitutionalRole.ESTUDIANTE).conVerificacionCorreo());
         } catch (final IdentityProviderPort.IdentityProviderException exception) {

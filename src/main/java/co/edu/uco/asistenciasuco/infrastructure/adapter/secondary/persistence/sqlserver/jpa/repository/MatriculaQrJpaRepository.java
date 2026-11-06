@@ -35,6 +35,9 @@ import java.util.UUID;
 @Repository
 public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
 
+    private static final String P_ID_GRUPO = "idGrupo";
+    private static final String P_TOKEN_HASH = "tokenHash";
+    private static final String P_PIN = "pin";
     private static final String P_ID_CORRELACION = "idCorrelacion";
     private static final String P_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
     private static final String CODIGO_TOKEN_INVALIDO = "MQR_001";
@@ -95,9 +98,9 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     public VentanaAbierta abrirVentana(final UUID grupoId, final String token, final String pin, final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", grupoId);
-        parametros.put("tokenHash", TokenHashHelper.sha256(token));
-        parametros.put("pin", pin);
+        parametros.put(P_ID_GRUPO, grupoId);
+        parametros.put(P_TOKEN_HASH, TokenHashHelper.sha256(token));
+        parametros.put(P_PIN, pin);
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         final ProcedureRow fila = procedureExecutor.executeWithExtras("abrirVentanaMatriculaGrupo", SQL_ABRIR, parametros, correlationId, 2);
@@ -108,7 +111,7 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     public void cerrarVentana(final UUID grupoId, final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", grupoId);
+        parametros.put(P_ID_GRUPO, grupoId);
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         procedureExecutor.execute("cerrarVentanaMatriculaGrupo", SQL_CERRAR, parametros, correlationId);
@@ -118,9 +121,9 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     public VentanaRotada rotarManual(final UUID grupoId, final String token, final String pin, final UUID usuarioEjecutor) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", grupoId);
-        parametros.put("tokenHash", TokenHashHelper.sha256(token));
-        parametros.put("pin", pin);
+        parametros.put(P_ID_GRUPO, grupoId);
+        parametros.put(P_TOKEN_HASH, TokenHashHelper.sha256(token));
+        parametros.put(P_PIN, pin);
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);
         return aVentanaRotada(procedureExecutor.executeWithExtras(
@@ -136,9 +139,9 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
     public VentanaRotada rotarAutomatico(final UUID grupoId, final String token, final String pin) {
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", grupoId);
-        parametros.put("tokenHash", TokenHashHelper.sha256(token));
-        parametros.put("pin", pin);
+        parametros.put(P_ID_GRUPO, grupoId);
+        parametros.put(P_TOKEN_HASH, TokenHashHelper.sha256(token));
+        parametros.put(P_PIN, pin);
         parametros.put(P_ID_CORRELACION, correlationId);
         final VentanaRotada ventana;
         try {
@@ -180,8 +183,8 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
                     final List<?> filas;
                     try {
                         final Query consulta = credencial.token() != null
-                                ? entityManager.createNativeQuery(SQL_VALIDAR_TOKEN).setParameter("tokenHash", TokenHashHelper.sha256(credencial.token()))
-                                : entityManager.createNativeQuery(SQL_VALIDAR_PIN).setParameter("pin", credencial.pin());
+                                ? entityManager.createNativeQuery(SQL_VALIDAR_TOKEN).setParameter(P_TOKEN_HASH, TokenHashHelper.sha256(credencial.token()))
+                                : entityManager.createNativeQuery(SQL_VALIDAR_PIN).setParameter(P_PIN, credencial.pin());
                         filas = consulta.setParameter(P_ID_CORRELACION, correlationId).getResultList();
                     } catch (final PersistenceException exception) {
                         throw DbCodeTranslator.traducir(exception);
@@ -203,9 +206,9 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
         final boolean porToken = datos.credencial().token() != null;
         final Map<String, Object> parametros = new LinkedHashMap<>();
         if (porToken) {
-            parametros.put("tokenHash", TokenHashHelper.sha256(datos.credencial().token()));
+            parametros.put(P_TOKEN_HASH, TokenHashHelper.sha256(datos.credencial().token()));
         } else {
-            parametros.put("pin", datos.credencial().pin());
+            parametros.put(P_PIN, datos.credencial().pin());
         }
         parametros.put("idTipoIdentificacion", datos.tipoIdentificacionId());
         parametros.put("numeroIdentificacion", datos.numeroIdentificacion());
@@ -228,9 +231,9 @@ public class MatriculaQrJpaRepository implements MatriculaQrRepositoryPort {
         final boolean porToken = credencial.token() != null;
         final Map<String, Object> parametros = new LinkedHashMap<>();
         if (porToken) {
-            parametros.put("tokenHash", TokenHashHelper.sha256(credencial.token()));
+            parametros.put(P_TOKEN_HASH, TokenHashHelper.sha256(credencial.token()));
         } else {
-            parametros.put("pin", credencial.pin());
+            parametros.put(P_PIN, credencial.pin());
         }
         parametros.put(P_ID_CORRELACION, correlationId);
         parametros.put(P_ID_USUARIO_EJECUTOR, usuarioEjecutor);

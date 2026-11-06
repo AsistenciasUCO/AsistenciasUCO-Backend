@@ -29,9 +29,10 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 import static org.junit.jupiter.api.Assertions.assertArrayEquals;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertNull;
-import static org.junit.jupiter.api.Assertions.assertSame;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.ArgumentMatchers.eq;
@@ -110,8 +111,10 @@ class MatriculaQrVentanaUseCasesTest {
     @Test
     void T03_un_docente_sin_titularidad_recibe_403_y_no_toca_la_base_de_datos() {
         when(scope.canDocenteAccessGrupo(DOCENTE, GRUPO)).thenReturn(false);
+        final AbrirVentanaMatriculaUseCaseImpl useCase = abrir();
+        final var comando = new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
 
-        assertThrows(ForbiddenException.class, () -> abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando));
 
         verify(repositorio, never()).abrirVentana(any(), any(), any(), any());
         verify(generador, never()).generarToken();
@@ -119,11 +122,14 @@ class MatriculaQrVentanaUseCasesTest {
 
     @Test
     void T26_con_la_funcionalidad_apagada_o_sin_parametro_responde_404() {
+        final AbrirVentanaMatriculaUseCaseImpl useCase = abrir();
+        final var comando = new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
+
         when(parametros.getParameter("MATRICULA_QR", "HABILITADA")).thenReturn(Optional.of("false"));
-        assertThrows(ResourceNotFoundException.class, () -> abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(comando));
 
         when(parametros.getParameter("MATRICULA_QR", "HABILITADA")).thenReturn(Optional.empty());
-        assertThrows(ResourceNotFoundException.class, () -> abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        assertThrows(ResourceNotFoundException.class, () -> useCase.execute(comando));
 
         verify(repositorio, never()).abrirVentana(any(), any(), any(), any());
     }
@@ -145,9 +151,10 @@ class MatriculaQrVentanaUseCasesTest {
     void T09_al_quinto_intento_fallido_propaga_el_error_controlado() {
         when(repositorio.abrirVentana(any(), anyString(), anyString(), any()))
                 .thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_006));
+        final AbrirVentanaMatriculaUseCaseImpl useCase = abrir();
+        final var comando = new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
 
-        final ConflictException error = assertThrows(ConflictException.class,
-                () -> abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        final ConflictException error = assertThrows(ConflictException.class, () -> useCase.execute(comando));
 
         assertEquals("MQR_006", error.getCode());
         verify(repositorio, times(MatriculaQrCredencialesEmisor.MAX_INTENTOS)).abrirVentana(any(), anyString(), anyString(), any());
@@ -157,8 +164,10 @@ class MatriculaQrVentanaUseCasesTest {
     void otros_errores_de_negocio_no_se_reintentan() {
         when(repositorio.abrirVentana(any(), anyString(), anyString(), any()))
                 .thenThrow(new ConflictException(MatriculaQrErrorCode.MQR_004));
+        final AbrirVentanaMatriculaUseCaseImpl useCase = abrir();
+        final var comando = new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
 
-        assertThrows(ConflictException.class, () -> abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        assertThrows(ConflictException.class, () -> useCase.execute(comando));
 
         verify(repositorio, times(1)).abrirVentana(any(), anyString(), anyString(), any());
     }
@@ -180,9 +189,10 @@ class MatriculaQrVentanaUseCasesTest {
     @Test
     void T40_rotar_manual_sin_titularidad_recibe_403() {
         when(scope.canDocenteAccessGrupo(DOCENTE, GRUPO)).thenReturn(false);
+        final var useCase = new RotarVentanaMatriculaUseCaseImpl(acceso, scope, emisor, presentador, repositorio);
+        final var comando = new RotarVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
 
-        assertThrows(ForbiddenException.class, () -> new RotarVentanaMatriculaUseCaseImpl(acceso, scope, emisor, presentador, repositorio)
-                .execute(new RotarVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando));
         verify(repositorio, never()).rotarManual(any(), any(), any(), any());
     }
 
@@ -199,9 +209,10 @@ class MatriculaQrVentanaUseCasesTest {
     @Test
     void T05_cerrar_sin_titularidad_recibe_403() {
         when(scope.canDocenteAccessGrupo(DOCENTE, GRUPO)).thenReturn(false);
+        final var useCase = new CerrarVentanaMatriculaUseCaseImpl(scope, repositorio);
+        final var comando = new CerrarVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE);
 
-        assertThrows(ForbiddenException.class, () -> new CerrarVentanaMatriculaUseCaseImpl(scope, repositorio)
-                .execute(new CerrarVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE)));
+        assertThrows(ForbiddenException.class, () -> useCase.execute(comando));
         verify(repositorio, never()).cerrarVentana(any(), any());
     }
 
@@ -213,7 +224,11 @@ class MatriculaQrVentanaUseCasesTest {
         final var resultado = abrir().execute(new AbrirVentanaMatriculaInputPort.Comando(GRUPO, DOCENTE));
 
         // El resultado no expone el token como campo propio: solo vive dentro de la URL y del QR.
-        assertSame(resultado.urlMatricula().contains("token-1"), true);
-        assertEquals(false, resultado.pin().contains("token"));
+        assertTrue(resultado.urlMatricula().contains("token-1"));
+        assertFalse(resultado.pin().contains("token"));
+        assertEquals("MQR_001", MatriculaQrErrorCode.MQR_001.code());
+        assertEquals("El código de matrícula no es válido o ya no está disponible. Solicítale al docente uno nuevo.",
+                MatriculaQrErrorCode.MQR_001.defaultMessage());
+        assertEquals(co.edu.uco.asistenciasuco.crosscutting.exception.ErrorKind.NOT_FOUND, MatriculaQrErrorCode.MQR_001.kind());
     }
 }

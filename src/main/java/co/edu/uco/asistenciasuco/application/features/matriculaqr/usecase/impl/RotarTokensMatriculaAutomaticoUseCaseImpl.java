@@ -48,7 +48,7 @@ public final class RotarTokensMatriculaAutomaticoUseCaseImpl implements RotarTok
     public int execute() {
         try {
             acceso.exigirHabilitada();
-        } catch (final RuntimeException exception) {
+        } catch (final RuntimeException _) {
             return 0;
         }
         int rotadas = 0;

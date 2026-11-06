@@ -29,9 +29,9 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -132,7 +132,7 @@ class MatriculaQrControllersTest {
     }
 
     @Test
-    void T30_validar_con_formato_de_token_o_pin_invalido_responde_400_sin_llegar_al_caso_de_uso() throws Exception {
+    void T30_validar_con_formato_de_token_o_pin_invalido_responde_400_sin_llegar_al_caso_de_uso() {
         exigirRechazoDeValidacion("/api/v1/public/matricula-qr/validar", "{\"token\":\"corto\"}");
         exigirRechazoDeValidacion("/api/v1/public/matricula-qr/validar", "{\"pin\":\"12ab56\"}");
 
@@ -152,11 +152,33 @@ class MatriculaQrControllersTest {
     }
 
     @Test
-    void T30_registro_con_contrasena_corta_o_documento_fuera_de_rango_responde_400() throws Exception {
+    void T30_registro_con_contrasena_corta_o_documento_fuera_de_rango_responde_400() {
         exigirRechazoDeValidacion("/api/v1/public/matricula-qr/registro", registroJson("corta"));
         exigirRechazoDeValidacion("/api/v1/public/matricula-qr/registro", registroJson("Clave-segura-1").replace("1017555444", "99999999999"));
 
         verify(registrar, never()).execute(any());
+    }
+
+    @Test
+    void validador_cubre_todos_los_campos_y_limites_del_registro_y_credencial() {
+        final var validator = new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matriculaqr.validation.MatriculaQrRequestValidator();
+        org.junit.jupiter.api.Assertions.assertFalse(validator.validarCredencial(null).isValid());
+        org.junit.jupiter.api.Assertions.assertFalse(validator.validarRegistro(null).isValid());
+
+        final String largo51 = "a".repeat(51);
+        final String correoLargo = "a".repeat(95) + "@uco.edu.co";
+        final String passLarga = "a".repeat(256);
+        final var invalido = new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matriculaqr.request.MatriculaQrRequests.Registro(
+                TOKEN, null, null, 50L, largo51, largo51, "", null, correoLargo, passLarga);
+        org.junit.jupiter.api.Assertions.assertFalse(validator.validarRegistro(invalido).isValid());
+
+        final var vacios = new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matriculaqr.request.MatriculaQrRequests.Registro(
+                null, "123456", null, null, null, "Segundo", "Apellido", "SegundoAp", "sin-arroba", "");
+        org.junit.jupiter.api.Assertions.assertFalse(validator.validarRegistro(vacios).isValid());
+
+        final var sinCorreo = new co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matriculaqr.request.MatriculaQrRequests.Registro(
+                TOKEN, null, UUID.randomUUID(), 1017555444L, "Ana", null, "Gomez", null, " ", "Clave-segura-1");
+        org.junit.jupiter.api.Assertions.assertFalse(validator.validarRegistro(sinCorreo).isValid());
     }
 
     @Test
@@ -225,7 +247,7 @@ class MatriculaQrControllersTest {
         filtro.doFilter(tercera, respuesta, bloqueada);
 
         assertNull(bloqueada.getRequest(), "el tercer intento no debia llegar a la cadena");
-        verify(writer).write(eq(tercera), eq(respuesta), eq(HttpStatus.TOO_MANY_REQUESTS), eq(SecurityErrorCode.TOO_MANY_REQUESTS));
+        verify(writer).write(tercera, respuesta, HttpStatus.TOO_MANY_REQUESTS, SecurityErrorCode.TOO_MANY_REQUESTS);
     }
 
     @Test
@@ -259,6 +281,48 @@ class MatriculaQrControllersTest {
         final MockFilterChain segunda = new MockFilterChain();
         filtro.doFilter(peticion("/api/v1/public/matricula-qr/validar", "POST"), new MockHttpServletResponse(), segunda);
         assertNull(segunda.getRequest());
+    }
+
+    @Test
+    void wiring_crea_todos_los_beans_y_resuelve_el_limite_por_ip_con_respaldo() throws Exception {
+        final var config = new co.edu.uco.asistenciasuco.infrastructure.config.wiring.MatriculaQrWiringConfiguration();
+        final var catalogo = mock(co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort.class);
+        @SuppressWarnings("unchecked")
+        final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort> provider =
+                mock(org.springframework.beans.factory.ObjectProvider.class);
+        when(provider.getObject()).thenReturn(catalogo);
+
+        final var tokenGen = config.tokenGeneratorPort();
+        final var qrGen = config.codigoQrGeneratorPort();
+        final var redPort = config.redInstitucionalPort(catalogo);
+        final var ipResolver = config.networkClientIpResolver(provider);
+        final var acceso = config.matriculaQrAccesoPolicy(catalogo, redPort);
+        final var emisor = config.matriculaQrCredencialesEmisor(tokenGen);
+        final var presentador = config.matriculaQrPresentador(catalogo, qrGen);
+        final var scope = mock(co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort.class);
+        final var repo = mock(co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort.class);
+        final var correoPolicy = mock(co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy.class);
+        final var encoder = mock(co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort.class);
+        final var idp = mock(co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort.class);
+        final var notif = mock(co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort.class);
+        final var realtime = mock(co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort.class);
+        final var writer = mock(SecurityErrorResponseWriter.class);
+
+        assertNotNull(config.abrirVentanaMatriculaInputPort(acceso, scope, emisor, presentador, repo));
+        assertNotNull(config.rotarVentanaMatriculaInputPort(acceso, scope, emisor, presentador, repo));
+        assertNotNull(config.cerrarVentanaMatriculaInputPort(scope, repo));
+        assertNotNull(config.validarTokenMatriculaInputPort(acceso, repo));
+        assertNotNull(config.registrarEstudiantePorTokenInputPort(acceso, correoPolicy, encoder, repo, idp, notif, realtime));
+        assertNotNull(config.matricularEstudianteAutenticadoInputPort(acceso, repo, realtime));
+        final var rotarAuto = config.rotarTokensMatriculaAutomaticoInputPort(acceso, emisor, presentador, repo, realtime);
+        assertNotNull(config.rotacionTokenMatriculaScheduler(rotarAuto, Duration.ofSeconds(5)));
+
+        final var reg = config.matriculaQrRateLimitFilter(provider, ipResolver, writer, 100);
+        assertNotNull(reg.getFilter());
+        when(catalogo.getParameter("MATRICULA_QR", "LIMITE_IP_POR_MINUTO")).thenReturn(Optional.of("1"));
+        reg.getFilter().doFilter(peticion("/api/v1/public/matricula-qr/validar", "POST"), new MockHttpServletResponse(), new MockFilterChain());
+        when(catalogo.getParameter("MATRICULA_QR", "LIMITE_IP_POR_MINUTO")).thenReturn(Optional.of("invalido"));
+        reg.getFilter().doFilter(peticion("/api/v1/public/matricula-qr/validar", "POST"), new MockHttpServletResponse(), new MockFilterChain());
     }
 
     private static MockHttpServletRequest peticion(final String uri, final String metodo) {

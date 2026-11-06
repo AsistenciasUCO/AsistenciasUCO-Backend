@@ -38,4 +38,13 @@ class DbFailureClassifierSolicitudIngresoTest {
     void CLS04_accion_o_motivo_invalidos_son_400(final String codigo) {
         assertEquals(CommonErrorCode.VALIDATION_ERROR, clasificar(codigo));
     }
+
+    @Test
+    void clasifica_todos_los_codigos_mqr_de_matricula_por_qr() {
+        assertEquals(co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode.MQR_001, clasificar("MQR_001"));
+        assertEquals(co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode.MQR_004, clasificar("MQR_004"));
+        assertEquals(co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode.MQR_005, clasificar("MQR_005"));
+        assertEquals(co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode.MQR_006, clasificar("MQR_006"));
+        assertEquals(co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode.MQR_007, clasificar("MQR_007"));
+    }
 }

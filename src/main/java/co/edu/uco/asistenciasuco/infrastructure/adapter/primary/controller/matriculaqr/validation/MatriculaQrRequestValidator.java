@@ -14,7 +14,7 @@ import java.util.regex.Pattern;
 public final class MatriculaQrRequestValidator {
 
     private static final Pattern TOKEN = Pattern.compile("^[A-Za-z0-9_-]{43}$");
-    private static final Pattern PIN = Pattern.compile("^[0-9]{6}$");
+    private static final Pattern PIN = Pattern.compile("^\\d{6}$");
     private static final int MAX_NOMBRE = 50;
     private static final int MAX_CORREO = 100;
     private static final int MIN_PASSWORD = 8;

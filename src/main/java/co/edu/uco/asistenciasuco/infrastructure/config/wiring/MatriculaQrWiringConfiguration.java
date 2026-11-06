@@ -25,7 +25,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notific
 import co.edu.uco.asistenciasuco.application.secondaryports.qr.CodigoQrGeneratorPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimePublisherPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.MatriculaQrRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEncoderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.TokenGeneratorPort;
@@ -146,13 +145,12 @@ public class MatriculaQrWiringConfiguration {
             final CorreoInstitucionalPolicy correoInstitucionalPolicy,
             final PasswordEncoderPort passwordEncoderPort,
             final MatriculaQrRepositoryPort repositorio,
-            final UsuarioRepositoryPort usuarioRepositoryPort,
             final IdentityProviderPort identityProviderPort,
             final NotificacionPort notificacionPort,
             final RealtimePublisherPort realtimePublisherPort
     ) {
         return new RegistrarEstudiantePorTokenUseCaseImpl(
-                acceso, correoInstitucionalPolicy, passwordEncoderPort, repositorio, usuarioRepositoryPort,
+                acceso, correoInstitucionalPolicy, passwordEncoderPort, repositorio,
                 identityProviderPort, notificacionPort, realtimePublisherPort);
     }
 
@@ -209,7 +207,7 @@ public class MatriculaQrWiringConfiguration {
                 .map(valor -> {
                     try {
                         return Integer.parseInt(valor.strip());
-                    } catch (final NumberFormatException exception) {
+                    } catch (final NumberFormatException _) {
                         return LIMITE_IP_POR_DEFECTO;
                     }
                 })

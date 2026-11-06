@@ -42,7 +42,7 @@ public final class CidrRange {
         final int prefijo;
         try {
             prefijo = Integer.parseInt(limpio.substring(barra + 1));
-        } catch (final NumberFormatException exception) {
+        } catch (final NumberFormatException _) {
             return Optional.empty();
         }
         final boolean esIpv4 = IPV4.matcher(direccion).matches();
@@ -114,7 +114,7 @@ public final class CidrRange {
             mapeada[11] = (byte) 0xFF;
             System.arraycopy(crudo, 0, mapeada, 12, 4);
             return Optional.of(mapeada);
-        } catch (final UnknownHostException exception) {
+        } catch (final UnknownHostException _) {
             return Optional.empty();
         }
     }

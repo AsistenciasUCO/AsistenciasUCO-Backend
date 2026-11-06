@@ -103,10 +103,11 @@ class SlidingWindowRateLimiterTest {
     @Test
     void valida_los_parametros_de_construccion_y_de_uso() {
         final MutableClock clock = new MutableClock();
+        final Duration unMinuto = Duration.ofSeconds(60);
         assertThrows(IllegalArgumentException.class, () -> new SlidingWindowRateLimiter(Duration.ZERO, 10, clock));
-        assertThrows(IllegalArgumentException.class, () -> new SlidingWindowRateLimiter(Duration.ofSeconds(60), 0, clock));
-        assertThrows(NullPointerException.class, () -> new SlidingWindowRateLimiter(Duration.ofSeconds(60), 10, null));
-        final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(Duration.ofSeconds(60), 10, clock);
+        assertThrows(IllegalArgumentException.class, () -> new SlidingWindowRateLimiter(unMinuto, 0, clock));
+        assertThrows(NullPointerException.class, () -> new SlidingWindowRateLimiter(unMinuto, 10, null));
+        final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(unMinuto, 10, clock);
         assertThrows(IllegalArgumentException.class, () -> limiter.tryAcquire("ip", 0));
     }
 

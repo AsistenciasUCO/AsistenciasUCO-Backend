@@ -7,12 +7,13 @@ import org.junit.jupiter.params.provider.CsvSource;
 
 import java.util.Optional;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * HU176B (CA-05, T-18, T-21, T-22): la IP del cliente debe pertenecer a los rangos CIDR del campus configurados en
- * {@code RED/CIDRS_CAMPUS}. Sin rangos validos se niega todo (fail-closed).
+ * {@code RED/CIDRS_CAMPUS}. Sin rangos validos se rechaza cualquier direccion (fail-closed).
  */
 class CidrRedInstitucionalAdapterTest {
 
@@ -23,6 +24,9 @@ class CidrRedInstitucionalAdapterTest {
             "10.0.0.0/8, 9.255.255.255, false",
             "10.0.0.0/8, 11.0.0.0, false",
             "192.168.10.0/24, 192.168.10.37, true",
+            "192.168.10.0/24, 192.168.10.129, true",
+            "192.168.10.0/25, 192.168.10.127, true",
+            "192.168.10.0/25, 192.168.10.128, false",
             "192.168.10.0/24, 192.168.11.1, false",
             "127.0.0.1/32, 127.0.0.1, true",
             "127.0.0.1/32, 127.0.0.2, false",
@@ -34,7 +38,7 @@ class CidrRedInstitucionalAdapterTest {
     void T22_pertenencia_correcta_en_los_bordes_del_rango_ipv4_e_ipv6(final String cidr, final String ip, final boolean esperado) {
         final CidrRedInstitucionalAdapter adapter = adapter(cidr);
 
-        assertTrue(adapter.perteneceACampus(ip) == esperado, () -> ip + " frente a " + cidr + " debia ser " + esperado);
+        assertEquals(esperado, adapter.perteneceACampus(ip), () -> ip + " frente a " + cidr + " debia ser " + esperado);
     }
 
     @Test
@@ -57,12 +61,16 @@ class CidrRedInstitucionalAdapterTest {
     void T21_fail_closed_sin_rangos_configurados() {
         assertFalse(adapter("").perteneceACampus("127.0.0.1"));
         assertFalse(adapter("   ").perteneceACampus("127.0.0.1"));
-        assertFalse(new CidrRedInstitucionalAdapter(() -> Optional.empty()).perteneceACampus("127.0.0.1"));
+        assertFalse(new CidrRedInstitucionalAdapter(Optional::empty).perteneceACampus("127.0.0.1"));
     }
 
     @Test
     void T21_fail_closed_si_todos_los_rangos_son_invalidos() {
-        assertFalse(adapter("no-es-un-cidr,10.0.0.0/99,10.0.0/8").perteneceACampus("10.0.0.1"));
+        assertFalse(adapter("no-es-un-cidr,10.0.0.0/99,10.0.0/8,/8,10.0.0.1/,10.0.0.1/8/16,10.0.0.1/-1,10.0.0.1/abc,2001:db8::/129").perteneceACampus("10.0.0.1"));
+        assertTrue(co.edu.uco.asistenciasuco.crosscutting.network.CidrRange.parse(null).isEmpty());
+        assertTrue(co.edu.uco.asistenciasuco.crosscutting.network.CidrRange.parseLista(null).isEmpty());
+        assertFalse(co.edu.uco.asistenciasuco.crosscutting.network.CidrRange.esDireccionIpValida(null));
+        assertFalse(co.edu.uco.asistenciasuco.crosscutting.network.CidrRange.esDireccionIpValida("2001:db8::zzzz"));
     }
 
     @Test
