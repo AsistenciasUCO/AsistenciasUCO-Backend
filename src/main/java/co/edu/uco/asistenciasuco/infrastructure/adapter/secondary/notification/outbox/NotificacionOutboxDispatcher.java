@@ -87,6 +87,10 @@ public class NotificacionOutboxDispatcher implements SmartLifecycle {
         }
     }
 
+    public void despertar() {
+        signal();
+    }
+
     public String instanceId() {
         return properties.instanceId();
     }

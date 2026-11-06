@@ -56,6 +56,7 @@ public class JakartaMailCorreoTransport implements CorreoTransport {
         javaMailProps.put("mail.smtp.connectiontimeout", connectTimeoutMs);
         javaMailProps.put("mail.smtp.timeout", readTimeoutMs);
         javaMailProps.put("mail.smtp.writetimeout", readTimeoutMs);
+        javaMailProps.put("mail.smtp.localhost", "localhost");
         return sender;
     }
 

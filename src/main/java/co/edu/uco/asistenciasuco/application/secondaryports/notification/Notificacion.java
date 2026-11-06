@@ -27,6 +27,16 @@ public record Notificacion(
     public static final String TIPO_SOLICITUD_INGRESO_RETIRADA = "SOLICITUD_INGRESO_RETIRADA";
     /** IDENT-001: aviso al estudiante registrado por el docente para verificar su correo (el enlace lo emite el canal al entregar). */
     public static final String TIPO_VERIFICACION_CORREO = "VERIFICACION_CORREO";
+    /** HU010/HU035: el estudiante radica una solicitud de revision de asistencia (aviso al docente titular). */
+    public static final String TIPO_RECLAMO_ASISTENCIA_RADICADO = "RECLAMO_ASISTENCIA_RADICADO";
+    /** HU037/HU042/HU146: el docente resuelve la solicitud de revision (aviso al estudiante). */
+    public static final String TIPO_RECLAMO_ASISTENCIA_RESUELTO = "RECLAMO_ASISTENCIA_RESUELTO";
+    /** HU012/HU015: alerta de riesgo de inasistencia (regla institucional 20%). */
+    public static final String TIPO_ALERTA_RIESGO_INASISTENCIA = "ALERTA_RIESGO_INASISTENCIA";
+    /** HU013: alerta de perdida de asignatura por inasistencia. */
+    public static final String TIPO_ALERTA_PERDIDA_INASISTENCIA = "ALERTA_PERDIDA_INASISTENCIA";
+    /** HU174: el administrador institucional ejecuta el cierre masivo del periodo academico. */
+    public static final String TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO = "CIERRE_MASIVO_PERIODO_EJECUTADO";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");
