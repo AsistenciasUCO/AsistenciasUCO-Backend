@@ -64,4 +64,11 @@ class DbFailureClassifierCoordinadorTest {
         assertEquals(CommonErrorCode.VALIDATION_ERROR,
                 DbFailureClassifier.classify(USER, tecnico("GEN_002"), "actualizarCoordinador"));
     }
+
+    @Test
+    void HU159_correccion_de_identidad_clasifica_motivo_interruptor_y_ambito() {
+        assertEquals(CommonErrorCode.VALIDATION_ERROR, DbFailureClassifier.classify(USER, tecnico("IDE_001"), "corregirIdentidadUsuario"));
+        assertEquals(CommonErrorCode.CONFLICT, DbFailureClassifier.classify(USER, tecnico("IDE_003"), "actualizarDocentePrograma"));
+        assertEquals(CommonErrorCode.RESOURCE_NOT_FOUND, DbFailureClassifier.classify(USER, tecnico("GEN_001"), "corregirIdentidadUsuario"));
+    }
 }

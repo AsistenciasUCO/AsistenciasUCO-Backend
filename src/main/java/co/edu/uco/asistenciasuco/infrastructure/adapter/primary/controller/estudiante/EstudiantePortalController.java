@@ -6,7 +6,6 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmateri
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.ConsultarSesionesMateriaEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarhorarios.primaryports.dto.HorarioEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.dto.MateriaEstudianteDTO;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionMateriaEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.ConsultarReclamosEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ConsultarReclamosEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.dto.ReclamosEstudiantePaginaDTO;
@@ -63,13 +62,13 @@ public final class EstudiantePortalController {
     }
 
     @GetMapping("/materias/{materiaId}/sesiones")
-    public ResponseEntity<ApiListResponse<SesionMateriaEstudianteDTO>> consultarSesionesMateria(
+    public ResponseEntity<ApiListResponse<SesionMateriaEstudianteResponse>> consultarSesionesMateria(
             @PathVariable final UUID materiaId
     ) {
         final var data = consultarSesionesMateriaEstudianteInputPort.execute(
                 authenticatedUserResolver.requireAuthenticatedUserId(),
                 materiaId
-        );
+        ).stream().map(SesionMateriaEstudianteResponse::from).toList();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 

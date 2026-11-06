@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.ActualizarDocenteProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.primaryports.interactor.ActualizarDocenteProgramaInteractor;
 import co.edu.uco.asistenciasuco.application.features.coordinador.actualizardocenteprograma.usecase.ActualizarDocenteProgramaUseCase;
@@ -99,8 +100,9 @@ public class DocenteProgramaWiringConfiguration {
     @Bean ActualizarDocenteProgramaUseCase actualizarDocenteProgramaUseCase(
             final InstitutionalScopePort scopePort,
             final DocenteProgramaCommandPort commandPort,
-            final DocenteProgramaQueryPort queryPort) {
-        return new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort);
+            final DocenteProgramaQueryPort queryPort,
+            final SincronizarCuentaInstitucionalService sincronizacion) {
+        return new ActualizarDocenteProgramaUseCaseImpl(scopePort, commandPort, queryPort, sincronizacion);
     }
 
     @Bean ActualizarDocenteProgramaInputPort actualizarDocenteProgramaInputPort(final ActualizarDocenteProgramaUseCase useCase) {

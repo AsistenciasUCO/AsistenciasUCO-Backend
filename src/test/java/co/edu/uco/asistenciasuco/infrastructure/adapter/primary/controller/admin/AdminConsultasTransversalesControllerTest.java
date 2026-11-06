@@ -3,8 +3,11 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admi
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.ConsultasTransversalesInputPort;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.AsignaturaInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstadoSistemaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EstudianteInstitucionDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.EventoAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
+import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.MatriculaHistorialDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
@@ -13,6 +16,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -23,7 +27,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-/** HU143/HU157: endpoints GET de solo lectura del administrador. */
+/** HU143/HU157/HU172: endpoints GET de solo lectura del administrador. */
 class AdminConsultasTransversalesControllerTest {
 
     private static final UUID ACTOR = UUID.randomUUID();
@@ -46,6 +50,24 @@ class AdminConsultasTransversalesControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(15))
                 .andExpect(jsonPath("$.datos[0].nombreFacultad").value("Ingenieria"));
+    }
+
+    @Test
+    void T_172_02_get_auditoria_convierte_fechas_y_filtros() throws Exception {
+        final OffsetDateTime desde = OffsetDateTime.parse("2026-11-01T05:00:00Z");
+        final OffsetDateTime hasta = OffsetDateTime.parse("2026-11-04T05:00:00Z");
+        when(inputPort.consultarAuditoria(ACTOR, new FiltroAuditoriaDTO(desde, hasta, "CREAR_SESION", null, null, null,
+                null, false), 1, 25)).thenReturn(new PaginaDTO<>(List.of(new EventoAuditoriaDTO(ID, hasta,
+                ACTOR.toString(), "USER", "Ana", "CREAR_SESION", "SESION", "S1", "SUCCESS", ID, "POST",
+                "/api/v1/sesiones", 201, null, null, null, true)), 1));
+
+        mvc.perform(get("/api/v1/admin/auditoria").param("desde", "2026-11-01T05:00:00Z")
+                        .param("hasta", "2026-11-04T05:00:00Z").param("accion", "CREAR_SESION")
+                        .param("soloAsistencia", "false").param("pagina", "1").param("tamano", "25"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.datos[0].nombreActor").value("Ana"))
+                .andExpect(jsonPath("$.datos[0].accionAsistencia").value(true));
     }
 
     @Test
@@ -78,5 +100,31 @@ class AdminConsultasTransversalesControllerTest {
                 .thenThrow(new ForbiddenException("SEC_001", "No tiene el perfil requerido para esta consulta."));
 
         mvc.perform(get("/api/v1/admin/estudiantes/{id}/historial", ID)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void T_155_02_get_estados_del_sistema() throws Exception {
+        when(inputPort.consultarEstadosSistema()).thenReturn(List.of(
+                new EstadoSistemaDTO("SOLICITUD", ID, "P", "pendiente"),
+                new EstadoSistemaDTO("ESTUDIANTE_GRUPO", ID, "A", "activo")));
+
+        mvc.perform(get("/api/v1/admin/estados"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(2))
+                .andExpect(jsonPath("$.datos[1].catalogo").value("ESTUDIANTE_GRUPO"));
+    }
+
+    @Test
+    void T_136_01_get_docentes_de_la_institucion_con_filtros() throws Exception {
+        when(inputPort.consultarDocentesInstitucion(ACTOR, "ana", ID, ID, true, "SIN_VINCULO", 2, 10)).thenReturn(new PaginaDTO<>(
+                List.of(new co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.DocenteFacultadDTO(
+                        ID, "101", "Ana Ruiz", "ana@uco.edu.co", true, "Sistemas", 1, 3)), 1));
+
+        mvc.perform(get("/api/v1/admin/docentes").param("busqueda", "ana").param("idFacultad", ID.toString())
+                        .param("idPrograma", ID.toString()).param("estaActivo", "true").param("estadoVinculo", "SIN_VINCULO")
+                        .param("pagina", "2").param("tamano", "10"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.total").value(1))
+                .andExpect(jsonPath("$.datos[0].programas").value("Sistemas"));
     }
 }

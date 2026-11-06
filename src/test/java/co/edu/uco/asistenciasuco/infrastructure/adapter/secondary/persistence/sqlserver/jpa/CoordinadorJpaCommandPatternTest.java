@@ -173,7 +173,8 @@ class CoordinadorJpaCommandPatternTest {
                 new Object[]{CORRELATION, "Coordinador actualizado.", "", true, idUsuario}));
 
         final co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection resultado =
-                command.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@example.test", FACULTAD, EJECUTOR);
+                command.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@example.test", FACULTAD, EJECUTOR,
+                        co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna());
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_actualizar_coordinador"));
         verify(query).setParameter("idCoordinador", COORDINADOR);
@@ -228,7 +229,8 @@ class CoordinadorJpaCommandPatternTest {
                 CORRELATION, "ok", "", true, "no-es-un-uuid"}));
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR));
+                () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR,
+                        co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -250,7 +252,8 @@ class CoordinadorJpaCommandPatternTest {
                 "DBCODE=GEN_001|Coordinador", false, null}));
 
         assertThrows(co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException.class,
-                () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR));
+                () -> command.actualizarCoordinador(COORDINADOR, "ANA", null, "PEREZ", null, "ana@example.test", FACULTAD, EJECUTOR,
+                        co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()));
     }
 }
 

@@ -21,17 +21,23 @@ public final class AsignaturaDocenteJdbcBaseline implements AsignaturaDocenteQue
     @Override
     public List<AsignaturaDocenteProjection> consultarAsignaturasDocente(final UUID idDocente) {
         return jdbcOperations.query("""
-                SELECT DISTINCT idAsignatura, nombreAsignatura, idGrupo, nombreGrupo, idPrograma, nombrePrograma
-                FROM dbo.uv_docente
-                WHERE id = :idDocente
-                ORDER BY nombreAsignatura, nombreGrupo
+                SELECT DISTINCT d.idAsignatura, d.nombreAsignatura, d.idGrupo, d.nombreGrupo, d.idPrograma, d.nombrePrograma,
+                       p.idTipoPrograma, p.nombreTipoPrograma, g.estudiantesActivos
+                FROM dbo.uv_docente d
+                LEFT JOIN dbo.uv_programa p ON p.id = d.idPrograma
+                 LEFT JOIN dbo.uv_grupo g ON g.id = d.idGrupo
+                WHERE d.id = :idDocente
+                ORDER BY d.nombreAsignatura, d.nombreGrupo
                 """, new MapSqlParameterSource("idDocente", idDocente), (rs, rowNum) -> new AsignaturaDocenteProjection(
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idAsignatura")),
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreAsignatura")),
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idGrupo")),
                 JdbcBaselineValueMapper.toString(rs.getObject("nombreGrupo")),
                 JdbcBaselineValueMapper.toUuid(rs.getObject("idPrograma")),
-                JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma"))
+                JdbcBaselineValueMapper.toString(rs.getObject("nombrePrograma")),
+                JdbcBaselineValueMapper.toUuid(rs.getObject("idTipoPrograma")),
+                JdbcBaselineValueMapper.toString(rs.getObject("nombreTipoPrograma")),
+                (Integer) rs.getObject("estudiantesActivos")
         ));
     }
 }

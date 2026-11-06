@@ -62,7 +62,10 @@ public final class DecanoCoordinadorGestionController {
                 request.getPrimerApellido(),
                 request.getSegundoApellido(),
                 request.getCorreo(),
-                authenticatedUserResolver.requireAuthenticatedUserId()
+                authenticatedUserResolver.requireAuthenticatedUserId(),
+                request.getIdTipoIdentificacion(),
+                request.getNumeroIdentificacion(),
+                request.getMotivo()
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, toResponse(resultado)));
     }

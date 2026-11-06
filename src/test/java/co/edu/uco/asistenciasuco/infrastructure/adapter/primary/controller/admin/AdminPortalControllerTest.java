@@ -33,6 +33,16 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.UUID;
 
+import java.lang.reflect.Method;
+import java.util.Arrays;
+import java.util.Optional;
+import java.util.stream.Stream;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -283,17 +293,33 @@ class AdminPortalControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // HU020/HU140 descartadas (2026-11-06): sedes y espacios fisicos no se piden; sus stubs 501 se retiraron.
+    @Test
+    void sedes_y_espacios_fisicos_retirados_no_tienen_ruta() {
+        final List<String> rutas = Arrays.stream(AdminPortalController.class.getDeclaredMethods())
+                .flatMap(AdminPortalControllerTest::rutasDe)
+                .toList();
+
+        assertFalse(rutas.isEmpty());
+        assertTrue(rutas.stream().noneMatch(ruta -> ruta.startsWith("/sedes") || ruta.startsWith("/espacios-fisicos")),
+                () -> "Rutas retiradas aun mapeadas: " + rutas);
+    }
+
+    private static Stream<String> rutasDe(final Method metodo) {
+        return Stream.of(
+                        Optional.ofNullable(metodo.getAnnotation(GetMapping.class)).map(GetMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(PostMapping.class)).map(PostMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(PutMapping.class)).map(PutMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(PatchMapping.class)).map(PatchMapping::value))
+                .flatMap(Optional::stream)
+                .flatMap(Arrays::stream);
+    }
+
     @Test
     void endpoints_no_implementados_lanzan_featureUnavailable() {
         final List<Executable> operations = List.of(
                 () -> controller.toggleDecano(FACULTAD),
-                controller::consultarSedes, controller::crearSede,
-                () -> controller.actualizarSede(FACULTAD), () -> controller.cambiarEstadoSede(FACULTAD),
-                controller::consultarEspaciosFisicos, controller::crearEspacioFisico,
-                () -> controller.actualizarEspacioFisico(FACULTAD), () -> controller.cambiarEstadoEspacioFisico(FACULTAD),
-                () -> controller.actualizarParametro(FACULTAD), controller::consultarAuditoria,
-                controller::crearInstitucion, () -> controller.actualizarInstitucion(FACULTAD),
-                () -> controller.cambiarEstadoInstitucion(FACULTAD)
+                () -> controller.actualizarParametro(FACULTAD)
         );
 
         for (final var operation : operations) {

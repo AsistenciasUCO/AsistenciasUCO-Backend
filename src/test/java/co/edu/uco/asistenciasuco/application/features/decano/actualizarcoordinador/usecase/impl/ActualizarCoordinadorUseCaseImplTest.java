@@ -55,7 +55,8 @@ class ActualizarCoordinadorUseCaseImplTest {
 
     private void dbActualiza() {
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(FACULTAD));
-        when(commandPort.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", FACULTAD, DECANO))
+        when(commandPort.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", FACULTAD, DECANO,
+                co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()))
                 .thenReturn(new ResultadoGestionCoordinadorProjection(USUARIO_COORDINADOR, false));
     }
 
@@ -108,11 +109,29 @@ class ActualizarCoordinadorUseCaseImplTest {
     @Test
     void execute_no_invoca_la_identidad_si_la_db_rechaza_la_operacion() {
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(FACULTAD));
-        when(commandPort.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", FACULTAD, DECANO))
+        when(commandPort.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", FACULTAD, DECANO,
+                co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO.ninguna()))
                 .thenThrow(new ConflictException("Correo ya registrado."));
 
         assertThrows(ConflictException.class, () -> useCase.execute(dominio()));
 
         verifyNoInteractions(sincronizacion);
+    }
+
+    @Test
+    void HU159_correccion_del_documento_envia_el_documento_y_sincroniza_el_username() {
+        final UUID tipo = UUID.randomUUID();
+        when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(FACULTAD));
+        final co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO documento =
+                new co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO(tipo, 915900021, "Digitacion");
+        when(commandPort.actualizarCoordinador(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", FACULTAD, DECANO, documento))
+                .thenReturn(new ResultadoGestionCoordinadorProjection(USUARIO_COORDINADOR, false));
+        when(sincronizacion.actualizarDatos(eq(USUARIO_COORDINADOR), any())).thenReturn(ResultadoSincronizacion.OK);
+
+        useCase.execute(new ActualizarCoordinadorDomain(COORDINADOR, "ANA", "MARIA", "PEREZ", "GOMEZ", "ana@uco.edu.co", DECANO,
+                tipo, 915900021, "Digitacion"));
+
+        verify(sincronizacion).actualizarDatos(USUARIO_COORDINADOR,
+                new ActualizarCuentaIdentidadDTO("ana@uco.edu.co", "ANA", "PEREZ", "915900021"));
     }
 }

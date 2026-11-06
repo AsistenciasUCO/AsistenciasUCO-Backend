@@ -34,7 +34,8 @@ class MessageUcoLabLiveIT {
 
     private static final String APP = System.getenv("MESSAGEUCOLAB_LIVE_APPLICATION_ID");
     private static final String ENV = System.getenv("MESSAGEUCOLAB_LIVE_ENVIRONMENT_ID");
-    private static final String URL = System.getenv().getOrDefault("MESSAGEUCOLAB_LIVE_URL", "http://localhost:8000");
+    private static final long PAUSA_ENTRE_PETICIONES_MS = 600;
+    private static final String URL =System.getenv().getOrDefault("MESSAGEUCOLAB_LIVE_URL", "http://localhost:8000");
 
     private MessageCatalogPort adapter(final ApplicationContextRunnerHolder holder, final String environmentId) {
         return holder.build(environmentId);
@@ -112,6 +113,11 @@ class MessageUcoLabLiveIT {
             if (c[5].length() > limite) {
                 continue;
             }
+            if (verificados > 0) {
+                // El gateway limita a 120 peticiones por minuto por IP y responde 429; el adaptador sin cache pide
+                // cada codigo, asi que se espacia (~100/min) para medir el catalogo y no el limite.
+                Thread.sleep(PAUSA_ENTRE_PETICIONES_MS);
+            }
             verificados++;
             final Optional<String> actual = port.findUserMessage(c[0]);
             if (!Optional.of(c[5]).equals(actual)) {
@@ -120,7 +126,7 @@ class MessageUcoLabLiveIT {
         }
 
         assertEquals(List.of(), discrepancias);
-        assertTrue(verificados >= 76, "se esperaban al menos 76 mensajes verificados y fueron " + verificados);
+        assertTrue(verificados >= 140, "se esperaban al menos 140 mensajes verificados y fueron " + verificados);
     }
 
     @Test

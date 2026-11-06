@@ -102,23 +102,7 @@ public final class AdminPortalController {
         throw unavailable("cambiar estado de decano");
     }
 
-    @GetMapping("/sedes")
-    public ResponseEntity<ApiListResponse<Void>> consultarSedes() { throw unavailable("consultar sedes"); }
-    @PostMapping("/sedes")
-    public ResponseEntity<ApiDataResponse<Void>> crearSede() { throw unavailable("crear sede"); }
-    @PutMapping("/sedes/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarSede(@PathVariable final UUID id) { throw unavailable("actualizar sede"); }
-    @PatchMapping("/sedes/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoSede(@PathVariable final UUID id) { throw unavailable("cambiar estado de sede"); }
-
-    @GetMapping("/espacios-fisicos")
-    public ResponseEntity<ApiListResponse<Void>> consultarEspaciosFisicos() { throw unavailable("consultar espacios fisicos"); }
-    @PostMapping("/espacios-fisicos")
-    public ResponseEntity<ApiDataResponse<Void>> crearEspacioFisico() { throw unavailable("crear espacio fisico"); }
-    @PutMapping("/espacios-fisicos/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarEspacioFisico(@PathVariable final UUID id) { throw unavailable("actualizar espacio fisico"); }
-    @PatchMapping("/espacios-fisicos/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoEspacioFisico(@PathVariable final UUID id) { throw unavailable("cambiar estado de espacio fisico"); }
+    // HU020/HU140 descartadas (decision de John 2026-11-06): sedes y espacios fisicos no se piden; se retiran sus stubs 501.
 
     @GetMapping("/parametros")
     public ResponseEntity<ApiListResponse<ParametroDTO>> consultarParametros() {
@@ -127,8 +111,6 @@ public final class AdminPortalController {
     }
     @PutMapping("/parametros/{id}")
     public ResponseEntity<ApiDataResponse<Void>> actualizarParametro(@PathVariable final UUID id) { throw unavailable("actualizar parametro"); }
-    @GetMapping("/auditoria")
-    public ResponseEntity<ApiListResponse<Void>> consultarAuditoria() { throw unavailable("consultar auditoria"); }
 
     @PostMapping("/cierre-masivo")
     public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {
@@ -144,12 +126,7 @@ public final class AdminPortalController {
         final var data = consultarInstitucionesInputPort.execute();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @PostMapping("/instituciones")
-    public ResponseEntity<ApiDataResponse<Void>> crearInstitucion() { throw unavailable("crear institucion"); }
-    @PutMapping("/instituciones/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarInstitucion(@PathVariable final UUID id) { throw unavailable("actualizar institucion"); }
-    @PatchMapping("/instituciones/{id}/toggle-estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoInstitucion(@PathVariable final UUID id) { throw unavailable("cambiar estado de institucion"); }
+    // HU161/HU162/HU164 descartadas (decision de John 2026-11-05): Institucion es un catalogo de solo consulta.
 
     @GetMapping("/facultades")
     public ResponseEntity<ApiListResponse<FacultadDTO>> consultarFacultades() {

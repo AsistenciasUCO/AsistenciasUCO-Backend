@@ -74,7 +74,7 @@ class EstudiantePortalControllerTest {
         when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
                 UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1", "Grupo 1",
                 java.time.LocalDateTime.of(2026, 1, 20, 8, 0), java.time.LocalDateTime.of(2026, 1, 20, 10, 0),
-                "AUSENTE", null, true)));
+                null, null, "INDETERMINADA", "AUSENTE", null, true)));
 
         mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA))
                 .andExpect(status().isOk())
@@ -83,6 +83,31 @@ class EstudiantePortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].estadoSolicitudRevision").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].reclamable").value(true));
         verify(sesiones).execute(ACTOR, MATERIA);
+    }
+
+    /** APP-04: aditivo; v1 sin zona se conserva y los instantes UTC llevan sufijo Z solo si la procedencia es CONFIRMADA. */
+    @Test
+    void APP04_consultarSesionesMateria_expone_instantes_utc_confirmados_sin_alterar_v1() throws Exception {
+        when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(
+                new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
+                        "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
+                        java.time.LocalDateTime.of(2026, 8, 17, 15, 0), java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
+                        java.time.LocalDateTime.of(2026, 8, 17, 15, 0), "CONFIRMADA", "JUSTIFICADA", "aprobada", false),
+                new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 2", 2, "SES-02", 2, UUID.randomUUID(), "G1",
+                        "Grupo 1", java.time.LocalDateTime.of(2026, 10, 13, 8, 0),
+                        java.time.LocalDateTime.of(2026, 10, 13, 10, 0), null, null, "INDETERMINADA",
+                        "NO_DISPONIBLE", null, false)));
+
+        mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicio").value("2026-08-17T13:00:00"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraInicioUtc").value("2026-08-17T13:00:00Z"))
+                .andExpect(jsonPath("$.datos[0].fechaHoraFinUtc").value("2026-08-17T15:00:00Z"))
+                .andExpect(jsonPath("$.datos[0].estadoTemporal").value("CONFIRMADA"))
+                .andExpect(jsonPath("$.datos[0].estadoAsistencia").value("JUSTIFICADA"))
+                .andExpect(jsonPath("$.datos[1].fechaHoraInicio").value("2026-10-13T08:00:00"))
+                .andExpect(jsonPath("$.datos[1].fechaHoraInicioUtc").doesNotExist())
+                .andExpect(jsonPath("$.datos[1].estadoTemporal").value("INDETERMINADA"));
     }
 
     /** HU010/HU011 (consulta): CT-01 el estudiante ve sus solicitudes con los mismos campos que la bandeja docente. */

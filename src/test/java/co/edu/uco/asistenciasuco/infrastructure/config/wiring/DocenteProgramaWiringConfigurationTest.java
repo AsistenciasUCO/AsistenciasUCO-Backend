@@ -52,7 +52,8 @@ class DocenteProgramaWiringConfigurationTest {
     void actualizar_docente_programa_beans_se_construyen_con_los_adapters_esperados() {
         final DocenteProgramaWiringConfiguration config = new DocenteProgramaWiringConfiguration();
 
-        final var useCase = config.actualizarDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query);
+        final var useCase = config.actualizarDocenteProgramaUseCase(scope, mock(DocenteProgramaCommandPort.class), query,
+                mock(co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService.class));
         assertInstanceOf(ActualizarDocenteProgramaUseCaseImpl.class, useCase);
         assertInstanceOf(ActualizarDocenteProgramaInteractor.class, config.actualizarDocenteProgramaInputPort(useCase));
     }

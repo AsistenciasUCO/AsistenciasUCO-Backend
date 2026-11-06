@@ -8,6 +8,13 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 import jakarta.persistence.Query;
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.time.Instant;
+import java.time.OffsetDateTime;
+import java.time.ZoneOffset;
+import java.time.format.DateTimeFormatter;
+import java.time.format.DateTimeFormatterBuilder;
+import java.time.temporal.ChronoField;
 import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
@@ -41,7 +48,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @tamanoPagina = :tamanoPagina,
                  @idPrograma = :idPadre,
                  @busqueda = :busqueda,
-                 @estaActivo = :estaActivo
+                 @estaActivo = :estaActivo,
+                 @idFacultad = :idFacultad,
+                 @estadoVinculo = :estadoVinculo
             """;
     static final String SQL_ASIGNATURAS = """
             EXEC dbo.usp_buscar_asignaturas_paginado
@@ -69,6 +78,52 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @idCorrelacion = :idCorrelacion,
                  @idEstudiante = :idEstudiante
             """;
+    static final String SQL_CONSOLIDADO = """
+            EXEC dbo.usp_consultar_consolidado_asistencia_grupos_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina,
+                 @idPeriodoAcademico = :idPeriodoAcademico,
+                 @idPrograma = :idPrograma,
+                 @idAsignatura = :idAsignatura,
+                 @idDocente = :idDocente
+            """;
+    static final String SQL_AUDITORIA = """
+            EXEC dbo.usp_consultar_auditoria_eventos_paginado
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion,
+                 @numeroPagina = :numeroPagina,
+                 @tamanoPagina = :tamanoPagina,
+                 @desdeUtc = :desdeUtc,
+                 @hastaUtc = :hastaUtc,
+                 @accion = :accion,
+                 @tipoRecurso = :tipoRecurso,
+                 @idRecurso = :idRecurso,
+                 @idUsuarioActor = :idUsuarioActor,
+                 @resultado = :resultado,
+                 @soloAsistencia = :soloAsistencia
+            """;
+    static final String SQL_COMPONENTES = """
+            EXEC dbo.usp_consultar_componentes_formacion
+                 @idUsuarioEjecutor = :idUsuarioEjecutor,
+                 @idCorrelacion = :idCorrelacion
+            """;
+    /** HU155: lectura directa de las vistas de catalogo (sin SP: no hay ambito ni escritura). */
+    static final String SQL_ESTADOS = """
+            SELECT catalogo = 'SOLICITUD', e.id, e.codigo, e.nombre FROM dbo.uv_estado e
+            UNION ALL
+            SELECT catalogo = 'ESTUDIANTE_GRUPO', g.id, g.codigo, g.nombre FROM dbo.uv_estado_estudiante_grupo g
+            ORDER BY catalogo DESC, nombre
+            """;
+    /** HU005/HU016: lectura directa de la vista del catalogo (sin SP: no hay ambito ni escritura). */
+    static final String SQL_CATEGORIAS_JUSTIFICACION = """
+            SELECT c.id, c.codigo, c.nombre, c.descripcion FROM dbo.uv_categoria_justificacion c ORDER BY c.nombre
+            """;
+    private static final DateTimeFormatter FORMATO_DATETIMEOFFSET = new DateTimeFormatterBuilder()
+            .appendPattern("yyyy-MM-dd HH:mm:ss")
+            .optionalStart().appendFraction(ChronoField.NANO_OF_SECOND, 0, 9, true).optionalEnd()
+            .appendLiteral(' ').appendOffset("+HH:MM", "Z").toFormatter();
 
     private final EntityManager entityManager;
 
@@ -92,12 +147,15 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
 
     @Override
     public Pagina<DocenteFacultadProjection> consultarDocentes(final UUID idUsuarioEjecutor,
-                                                               final FiltroConsulta filtro, final int pagina,
+                                                               final FiltroConsulta filtro, final UUID idFacultad,
+                                                               final String estadoVinculo, final int pagina,
                                                                final int tamano) {
-        return pagina("consultarDocentesFacultad", "No fue posible consultar los docentes de la facultad.",
-                SQL_DOCENTES, idUsuarioEjecutor, q -> filtrar(paginar(q, pagina, tamano), filtro), 9,
+        return pagina("consultarDocentesFacultad", "No fue posible consultar los docentes.",
+                SQL_DOCENTES, idUsuarioEjecutor,
+                q -> filtrar(paginar(q, pagina, tamano), filtro).setParameter("idFacultad", idFacultad)
+                        .setParameter("estadoVinculo", estadoVinculo), 9,
                 f -> new DocenteFacultadProjection(NativeRowValues.uuid(f[0]), texto(f[2]), texto(f[3]), texto(f[4]),
-                        verdadero(f[5]), texto(f[6]), cero(f[7]), cero(f[8])));
+                        verdadero(f[5]), texto(f[6]), cero(f[7]), cero(f[8]), f.length <= 10 || verdadero(f[10])));
     }
 
     @Override
@@ -127,6 +185,73 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
         return filas("consultarHistorialEstudiante", "No fue posible consultar el historial del estudiante.",
                 SQL_HISTORIAL, idUsuarioEjecutor, q -> q.setParameter("idEstudiante", idEstudiante))
                 .stream().map(ConsultasTransversalesJpaRepository::historial).toList();
+    }
+
+    @Override
+    public Pagina<ConsolidadoGrupoProjection> consultarConsolidadoAsistencia(final UUID idUsuarioEjecutor,
+                                                                             final FiltroConsolidado filtro,
+                                                                             final int pagina, final int tamano) {
+        return pagina("consultarConsolidadoAsistencia", "No fue posible consultar el consolidado de asistencia.",
+                SQL_CONSOLIDADO, idUsuarioEjecutor, q -> paginar(q, pagina, tamano)
+                        .setParameter("idPeriodoAcademico", filtro.idPeriodoAcademico())
+                        .setParameter("idPrograma", filtro.idPrograma())
+                        .setParameter("idAsignatura", filtro.idAsignatura())
+                        .setParameter("idDocente", filtro.idDocente()), 20,
+                f -> new ConsolidadoGrupoProjection(NativeRowValues.uuid(f[0]), entero(f[1]), texto(f[2]),
+                        NativeRowValues.uuid(f[3]), texto(f[4]), NativeRowValues.uuid(f[5]), texto(f[6]),
+                        NativeRowValues.uuid(f[7]), texto(f[8]), NativeRowValues.uuid(f[9]), texto(f[10]),
+                        cero(f[11]), cero(f[12]), cero(f[13]), cero(f[14]), cero(f[15]), decimal(f[16]),
+                        decimal(f[17]), cero(f[18]), cero(f[19])));
+    }
+
+    @Override
+    public Pagina<EventoAuditoriaProjection> consultarAuditoria(final UUID idUsuarioEjecutor,
+                                                                final FiltroAuditoria filtro, final int pagina,
+                                                                final int tamano) {
+        return pagina("consultarAuditoria", "No fue posible consultar el rastro de auditoria.", SQL_AUDITORIA,
+                idUsuarioEjecutor, q -> paginar(q, pagina, tamano)
+                        .setParameter("desdeUtc", filtro.desde())
+                        .setParameter("hastaUtc", filtro.hasta())
+                        .setParameter("accion", filtro.accion())
+                        .setParameter("tipoRecurso", filtro.tipoRecurso())
+                        .setParameter("idRecurso", filtro.idRecurso())
+                        .setParameter("idUsuarioActor", filtro.idUsuarioActor())
+                        .setParameter("resultado", filtro.resultado())
+                        .setParameter("soloAsistencia", filtro.soloAsistencia()), 17,
+                f -> new EventoAuditoriaProjection(NativeRowValues.uuid(f[0]), fechaHora(f[1]), texto(f[2]),
+                        texto(f[3]), texto(f[4]), texto(f[5]), texto(f[6]), texto(f[7]), texto(f[8]),
+                        NativeRowValues.uuid(f[9]), texto(f[10]), texto(f[11]), entero(f[12]), texto(f[13]),
+                        texto(f[14]), texto(f[15]), verdadero(f[16])));
+    }
+
+    @Override
+    public List<ComponenteFormacionProjection> consultarComponentes(final UUID idUsuarioEjecutor) {
+        return filas("consultarComponentesFormacion", "No fue posible consultar los componentes de formacion.",
+                SQL_COMPONENTES, idUsuarioEjecutor, UnaryOperator.identity()).stream()
+                .map(f -> new ComponenteFormacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]),
+                        cero(f[3])))
+                .toList();
+    }
+
+    @Override
+    public List<EstadoSistemaProjection> consultarEstadosSistema() {
+        return JpaQueryExecutor.execute("consultarEstadosSistema", "No fue posible consultar los estados del sistema.",
+                () -> ((List<?>) entityManager.createNativeQuery(SQL_ESTADOS).getResultList()).stream()
+                        .map(Object[].class::cast)
+                        .map(f -> new EstadoSistemaProjection(texto(f[0]), NativeRowValues.uuid(f[1]), texto(f[2]),
+                                texto(f[3])))
+                        .toList());
+    }
+
+    @Override
+    public List<CategoriaJustificacionProjection> consultarCategoriasJustificacion() {
+        return JpaQueryExecutor.execute("consultarCategoriasJustificacion",
+                "No fue posible consultar las categorias de justificacion.",
+                () -> ((List<?>) entityManager.createNativeQuery(SQL_CATEGORIAS_JUSTIFICACION).getResultList()).stream()
+                        .map(Object[].class::cast)
+                        .map(f -> new CategoriaJustificacionProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]),
+                                texto(f[3])))
+                        .toList());
     }
 
     private static HistorialEstudianteProjection historial(final Object[] f) {
@@ -193,5 +318,16 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
             return null;
         }
         return valor instanceof BigDecimal numero ? numero : new BigDecimal(valor.toString());
+    }
+
+    /** DATETIMEOFFSET: Hibernate lo entrega como OffsetDateTime; el driver puede entregar su propio tipo (texto ISO). */
+    static OffsetDateTime fechaHora(final Object valor) {
+        return switch (valor) {
+            case null -> null;
+            case OffsetDateTime fecha -> fecha;
+            case Instant instante -> instante.atOffset(ZoneOffset.UTC);
+            case LocalDateTime fecha -> fecha.atOffset(ZoneOffset.UTC);
+            default -> OffsetDateTime.parse(valor.toString().strip(), FORMATO_DATETIMEOFFSET);
+        };
     }
 }

@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
 import co.edu.uco.asistenciasuco.crosscutting.validation.Validator;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador.request.ActualizarDocenteProgramaRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad.validation.CorreccionDocumentoValidation;
 
 /** HU092: al menos un campo; primer nombre/apellido no pueden quedar en blanco si vienen; segundos pueden limpiarse con "". */
 public final class ActualizarDocenteProgramaRequestValidator implements Validator<ActualizarDocenteProgramaRequest> {
@@ -18,7 +19,8 @@ public final class ActualizarDocenteProgramaRequestValidator implements Validato
             return builder.add("request", ValidationErrorType.REQUIRED, "La informacion a actualizar es obligatoria.").build();
         }
         if (request.getIdTipoVinculacion() == null && request.getPrimerNombre() == null && request.getSegundoNombre() == null
-                && request.getPrimerApellido() == null && request.getSegundoApellido() == null) {
+                && request.getPrimerApellido() == null && request.getSegundoApellido() == null
+                && !request.solicitaCambioDocumento()) {
             builder.add("campos", ValidationErrorType.REQUIRED, "Debe indicar al menos un dato a actualizar.");
         }
         if (request.getIdTipoVinculacion() != null && request.getIdTipoVinculacion().getMostSignificantBits() == 0
@@ -29,6 +31,7 @@ public final class ActualizarDocenteProgramaRequestValidator implements Validato
         nombre(builder, "primerApellido", request.getPrimerApellido(), true);
         nombre(builder, "segundoNombre", request.getSegundoNombre(), false);
         nombre(builder, "segundoApellido", request.getSegundoApellido(), false);
+        CorreccionDocumentoValidation.validar(builder, request, false);
         return builder.build();
     }
 

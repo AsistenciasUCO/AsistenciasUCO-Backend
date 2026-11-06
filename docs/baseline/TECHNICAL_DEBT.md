@@ -896,6 +896,7 @@ GOLDEN PATH EFFECT:         NONE
 - **Evidencia:** definición del SP v2 (parámetro declarado y sin uso) y DDL de `SolicitudRevisionAsistencia`.
 - **Motivo para no resolver ahora:** requiere DDL y un cambio en un SP del manifiesto LB-004D. Decisión del owner D1 = B (2026-10-21).
 - **Resolución esperada:** columna nullable o FK a un catálogo de categorías, persistida por el SP v2 y expuesta en el detalle; abordarla junto con HU005/HU014.
+- **Avance (2026-11-05):** HU005/HU016 creó el catálogo `CategoriaJustificacion` (6 categorías, solo consulta) y el formulario ya lo usa. Falta la FK y la persistencia en el SP v2: el diseño está en `docs/work-items/HU005-HU016-categorias-justificacion/DISENO_CAMBIO_COORDINADO.md` del repo de BD, junto con el plazo de HU026B y el soporte obligatorio por categoría.
 - **Bloquea línea base:** no. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU035-HU036](../work-items/HU035-HU036-bandeja-detalle-reclamos-docente/PLAN.md).
 
 ## TD-061
@@ -938,6 +939,7 @@ GOLDEN PATH EFFECT:         NONE
 - **Impacto:** HU129 y HU141 quedan bloqueadas por falta de datos, y HU140 bloqueada en HTTP 501.
 - **Resolución esperada:** Creación formal en base de datos de las tablas físicas `cat_escalafon_docente`, dedicación contractual de docentes y catálogo de sedes universitarias, con sus respectivas claves foráneas.
 - **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU133-HU139](../work-items/HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales/VALIDATION.md).
+- **Cierre (2026-11-06):** **CLOSED / WONT_FIX**. John descartó HU129, HU140 y HU141 (no se piden): no se modelan escalafón, dedicación contractual ni sedes. Se retiraron los stubs 501 de `/admin/sedes` y `/admin/espacios-fisicos` ([RETIRO-SEDES-HU020-HU140](../work-items/RETIRO-SEDES-HU020-HU140/PLAN.md)).
 
 ## TD-066
 

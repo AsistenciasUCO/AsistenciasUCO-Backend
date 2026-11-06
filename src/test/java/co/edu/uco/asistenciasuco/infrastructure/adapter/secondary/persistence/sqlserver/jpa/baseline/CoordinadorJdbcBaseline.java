@@ -57,10 +57,11 @@ public final class CoordinadorJdbcBaseline implements CoordinadorQueryPort, Coor
     @Override
     public ResultadoGestionCoordinadorProjection actualizarCoordinador(
             final UUID idCoordinador, final String primerNombre, final String segundoNombre, final String primerApellido,
-            final String segundoApellido, final String correo, final UUID idFacultad, final UUID usuarioEjecutor
+            final String segundoApellido, final String correo, final UUID idFacultad, final UUID usuarioEjecutor,
+            final co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO documento
     ) {
         return commands.actualizarCoordinador(idCoordinador, primerNombre, segundoNombre, primerApellido,
-                segundoApellido, correo, idFacultad, usuarioEjecutor);
+                segundoApellido, correo, idFacultad, usuarioEjecutor, documento);
     }
 
     @Override

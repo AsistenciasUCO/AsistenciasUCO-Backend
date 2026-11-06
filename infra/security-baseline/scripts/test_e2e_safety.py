@@ -369,8 +369,8 @@ class ProfileAssignmentTest(unittest.TestCase):
     def test_expectations_come_from_the_access_catalog_not_from_a_hardcoded_matrix(self):
         everything_denied = lambda path: "DENY"  # noqa: E731
         self.assertEqual(PROFILES.mismatches(set(), everything_denied), [])
-        # COORDINADOR también ve /admin/sedes según el catálogo: negarlo es una discrepancia, y permitirlo a DOCENTE también.
-        self.assertTrue(any("/api/v1/admin/sedes" in m for m in PROFILES.mismatches({"COORDINADOR"}, everything_denied)))
+        # COORDINADOR también ve /admin/areas según el catálogo: negarlo es una discrepancia, y permitirlo a DOCENTE también.
+        self.assertTrue(any("/api/v1/admin/areas" in m for m in PROFILES.mismatches({"COORDINADOR"}, everything_denied)))
         allow_docente_only = lambda path: "ALLOW" if path == PROFILES.ROUTES["DOCENTE"] else "DENY"  # noqa: E731
         self.assertEqual(PROFILES.mismatches({"DOCENTE"}, allow_docente_only), [])
         self.assertTrue(PROFILES.mismatches(set(), allow_docente_only))

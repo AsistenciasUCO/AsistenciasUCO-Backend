@@ -9,6 +9,16 @@ public record ActualizarDocenteProgramaDomain(
         String primerNombre,
         String segundoNombre,
         String primerApellido,
-        String segundoApellido
+        String segundoApellido,
+        UUID idTipoIdentificacion,
+        Integer numeroIdentificacion,
+        String motivo
 ) {
+
+    /** Edicion sin correccion de documento (contrato original de HU092). */
+    public ActualizarDocenteProgramaDomain(final UUID actorUsuarioId, final UUID idDocente, final UUID idTipoVinculacion,
+            final String primerNombre, final String segundoNombre, final String primerApellido, final String segundoApellido) {
+        this(actorUsuarioId, idDocente, idTipoVinculacion, primerNombre, segundoNombre, primerApellido, segundoApellido,
+                null, null, null);
+    }
 }
