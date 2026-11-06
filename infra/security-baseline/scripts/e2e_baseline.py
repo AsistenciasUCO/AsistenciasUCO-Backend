@@ -62,7 +62,7 @@ def main():
     check("X-User-Id enviado por el cliente no autentica -> 401", status == 401, status)
 
     # ALLOW por rol (GET) y X-Decision-Id del PEP
-    for role, path in (("ADMINISTRADOR", "/api/v1/admin/sedes"), ("DECANO", "/api/v1/decano/programas"),
+    for role, path in (("ADMINISTRADOR", "/api/v1/admin/areas"), ("DECANO", "/api/v1/decano/programas"),
                        ("COORDINADOR", "/api/v1/coordinador/periodos-academicos"), ("DOCENTE", "/api/v1/docente/horarios"),
                        ("ESTUDIANTE", "/api/v1/estudiante/horarios")):
         status, headers, _ = request(base, "GET", path, token=tokens[role])
@@ -75,8 +75,8 @@ def main():
     # DENY: Spring (rol) y PEP/PDP (política) coinciden
     status, _, _ = request(base, "GET", "/api/v1/estudiante/horarios", token=tokens["DOCENTE"])
     check("DOCENTE GET /estudiante/horarios -> 403", status == 403, status)
-    status, _, _ = request(base, "GET", "/api/v1/admin/sedes", token=tokens["ESTUDIANTE"])
-    check("ESTUDIANTE GET /admin/sedes -> 403", status == 403, status)
+    status, _, _ = request(base, "GET", "/api/v1/admin/areas", token=tokens["ESTUDIANTE"])
+    check("ESTUDIANTE GET /admin/areas -> 403", status == 403, status)
 
     # Métodos con efectos (POST/PATCH/PUT/DELETE) y rutas con variables: pasan PEP (no 401/403/503 del PEP)
     for role, method, path, body in (

@@ -939,6 +939,7 @@ GOLDEN PATH EFFECT:         NONE
 - **Impacto:** HU129 y HU141 quedan bloqueadas por falta de datos, y HU140 bloqueada en HTTP 501.
 - **Resolución esperada:** Creación formal en base de datos de las tablas físicas `cat_escalafon_docente`, dedicación contractual de docentes y catálogo de sedes universitarias, con sus respectivas claves foráneas.
 - **Bloquea línea base:** No. **Estado:** **OPEN / MEDIUM / DB_OWNER**. **Work item:** [HU133-HU139](../work-items/HU133-HU134-HU135-HU136-HU138-HU139-kpis-admin-datos-reales/VALIDATION.md).
+- **Cierre (2026-11-06):** **CLOSED / WONT_FIX**. John descartó HU129, HU140 y HU141 (no se piden): no se modelan escalafón, dedicación contractual ni sedes. Se retiraron los stubs 501 de `/admin/sedes` y `/admin/espacios-fisicos` ([RETIRO-SEDES-HU020-HU140](../work-items/RETIRO-SEDES-HU020-HU140/PLAN.md)).
 
 ## TD-066
 

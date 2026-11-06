@@ -111,8 +111,8 @@ public class SecurityConfig {
                         "/swagger-ui/**",
                         "/openapi/openapi-golden-path.yaml"
                 ).permitAll()
-                // Catálogos institucionales de solo lectura: sedes y áreas de conocimiento
-                .requestMatchers(HttpMethod.GET, "/api/v1/admin/sedes", "/api/v1/admin/sedes/**", "/api/v1/admin/areas", "/api/v1/admin/areas/**")
+                // Catálogo institucional de solo lectura: áreas de conocimiento (sedes retiradas: HU020/HU140 descartadas)
+                .requestMatchers(HttpMethod.GET, "/api/v1/admin/areas", "/api/v1/admin/areas/**")
                     .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/admin/**").hasRole(ROLE_ADMINISTRADOR)
                 .requestMatchers("/api/v1/decano/**").hasAnyRole(ROLE_DECANO, ROLE_ADMINISTRADOR)

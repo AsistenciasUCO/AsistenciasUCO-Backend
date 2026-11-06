@@ -36,7 +36,7 @@ APP = "asistencias-uco"
 DOCENTE_PROFILE = "Docencia"
 COORDINATOR_PROFILE = "Coordinación de programa"
 # Un recurso representativo por rol (GET) y el rol que lo permite.
-ROUTES = {"ADMINISTRADOR": "/api/v1/admin/sedes", "DECANO": "/api/v1/decano/programas",
+ROUTES = {"ADMINISTRADOR": "/api/v1/admin/areas", "DECANO": "/api/v1/decano/programas",
           "COORDINADOR": "/api/v1/coordinador/periodos-academicos", "DOCENTE": "/api/v1/docente/horarios",
           "ESTUDIANTE": "/api/v1/estudiante/horarios"}
 RESULTS = []

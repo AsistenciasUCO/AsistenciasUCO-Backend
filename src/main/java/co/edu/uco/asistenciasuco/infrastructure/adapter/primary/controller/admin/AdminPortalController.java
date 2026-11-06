@@ -102,23 +102,7 @@ public final class AdminPortalController {
         throw unavailable("cambiar estado de decano");
     }
 
-    @GetMapping("/sedes")
-    public ResponseEntity<ApiListResponse<Void>> consultarSedes() { throw unavailable("consultar sedes"); }
-    @PostMapping("/sedes")
-    public ResponseEntity<ApiDataResponse<Void>> crearSede() { throw unavailable("crear sede"); }
-    @PutMapping("/sedes/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarSede(@PathVariable final UUID id) { throw unavailable("actualizar sede"); }
-    @PatchMapping("/sedes/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoSede(@PathVariable final UUID id) { throw unavailable("cambiar estado de sede"); }
-
-    @GetMapping("/espacios-fisicos")
-    public ResponseEntity<ApiListResponse<Void>> consultarEspaciosFisicos() { throw unavailable("consultar espacios fisicos"); }
-    @PostMapping("/espacios-fisicos")
-    public ResponseEntity<ApiDataResponse<Void>> crearEspacioFisico() { throw unavailable("crear espacio fisico"); }
-    @PutMapping("/espacios-fisicos/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarEspacioFisico(@PathVariable final UUID id) { throw unavailable("actualizar espacio fisico"); }
-    @PatchMapping("/espacios-fisicos/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> cambiarEstadoEspacioFisico(@PathVariable final UUID id) { throw unavailable("cambiar estado de espacio fisico"); }
+    // HU020/HU140 descartadas (decision de John 2026-11-06): sedes y espacios fisicos no se piden; se retiran sus stubs 501.
 
     @GetMapping("/parametros")
     public ResponseEntity<ApiListResponse<ParametroDTO>> consultarParametros() {
