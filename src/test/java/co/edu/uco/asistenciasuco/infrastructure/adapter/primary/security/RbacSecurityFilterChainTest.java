@@ -431,6 +431,61 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isForbidden());
     }
 
+    // --- HU176B: ventana de matricula por QR (solo DOCENTE; la titularidad la valida Application y la DB) y las dos
+    // unicas rutas publicas de matricula (permitAll declarado una por una, sin comodin /public/**) ---
+
+    @Test
+    void T32_abrir_rotar_y_cerrar_la_ventana_de_matricula_es_solo_del_docente() throws Exception {
+        final String grupo = "11111111-1111-1111-1111-111111111111";
+        mockMvc.perform(post("/api/v1/grupos/{g}/matricula-qr", grupo).header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/grupos/{g}/matricula-qr/rotacion", grupo).header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(delete("/api/v1/grupos/{g}/matricula-qr", grupo).header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isOk());
+    }
+
+    @Test
+    void T32_la_ventana_de_matricula_rechaza_a_coordinador_administrador_y_estudiante_con_403() throws Exception {
+        final String grupo = "11111111-1111-1111-1111-111111111111";
+        for (final String rol : List.of("COORDINADOR", "ADMINISTRADOR", "ESTUDIANTE", "DECANO")) {
+            mockMvc.perform(post("/api/v1/grupos/{g}/matricula-qr", grupo).header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(post("/api/v1/grupos/{g}/matricula-qr/rotacion", grupo).header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+            mockMvc.perform(delete("/api/v1/grupos/{g}/matricula-qr", grupo).header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isForbidden());
+        }
+    }
+
+    @Test
+    void T32_la_ventana_de_matricula_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(post("/api/v1/grupos/{g}/matricula-qr", "11111111-1111-1111-1111-111111111111"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void las_rutas_publicas_de_matricula_qr_no_exigen_token() throws Exception {
+        mockMvc.perform(post("/api/v1/public/matricula-qr/validar")).andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/public/matricula-qr/registro")).andExpect(status().isOk());
+    }
+
+    @Test
+    void T31_no_hay_comodin_publico_otra_ruta_public_sin_token_recibe_401() throws Exception {
+        mockMvc.perform(post("/api/v1/public/otra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(post("/api/v1/public/matricula-qr/otra")).andExpect(status().isUnauthorized());
+        mockMvc.perform(get("/api/v1/public/matricula-qr/validar")).andExpect(status().isUnauthorized());
+    }
+
+    @Test
+    void matricular_grupo_del_estudiante_sigue_siendo_solo_del_rol_estudiante() throws Exception {
+        mockMvc.perform(post("/api/v1/estudiante/matricular-grupo").header(HttpHeaders.AUTHORIZATION, bearer("ESTUDIANTE")))
+                .andExpect(status().isOk());
+        mockMvc.perform(post("/api/v1/estudiante/matricular-grupo").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/estudiante/matricular-grupo")).andExpect(status().isUnauthorized());
+    }
+
     // --- Política CSRF: /api/v1/** es stateless y Bearer-only; sin Bearer => 401, nunca 403 de CSRF ---
 
     @Test
@@ -762,6 +817,18 @@ class RbacSecurityFilterChainTest {
 
         @PostMapping("/api/v1/grupos/{grupoId}/estudiantes")
         String matricularEstudiante() {
+            return "ok";
+        }
+
+        @PostMapping({"/api/v1/grupos/{grupoId}/matricula-qr", "/api/v1/grupos/{grupoId}/matricula-qr/rotacion",
+                "/api/v1/public/matricula-qr/validar", "/api/v1/public/matricula-qr/registro",
+                "/api/v1/estudiante/matricular-grupo"})
+        String matriculaQr() {
+            return "ok";
+        }
+
+        @DeleteMapping("/api/v1/grupos/{grupoId}/matricula-qr")
+        String cerrarMatriculaQr() {
             return "ok";
         }
 

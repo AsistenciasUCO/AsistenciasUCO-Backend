@@ -94,8 +94,7 @@ public final class EstudiantePortalController {
     public ResponseEntity<ApiDataResponse<Void>> crearReclamo() { throw unavailable("crear reclamo"); }
     @DeleteMapping("/reclamos/{id}")
     public ResponseEntity<ApiDataResponse<Void>> eliminarReclamo(@PathVariable final UUID id) { throw unavailable("eliminar reclamo"); }
-    @PostMapping("/matricular-grupo")
-    public ResponseEntity<ApiDataResponse<Void>> matricularGrupo() { throw unavailable("matricular grupo"); }
+    // HU176B: POST /matricular-grupo ya no es 501; lo atiende EstudianteMatriculaQrController.
 
     private FeatureUnavailableException unavailable(final String operation) {
         return new FeatureUnavailableException("La operacion de estudiante no esta disponible: " + operation + ".");

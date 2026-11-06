@@ -3,7 +3,7 @@ status: draft
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
-last-reviewed: 2026-10-21
+last-reviewed: 2026-11-04
 ---
 
 # PLAN — HU176B: Matrícula autónoma por QR/PIN del curso, con creación de cuenta y validación de red del campus
@@ -30,14 +30,15 @@ Programa padre: [`REG-000`](../REG-000-programa-registro-vinculacion-roles/PLAN.
 
 | ID | Criterio |
 |---|---|
-| CA-01 | El docente titular **abre una ventana de matrícula** de su grupo: recibe un QR (imagen generada por el **backend**), un PIN numérico corto, la URL de matrícula y la hora de expiración. Solo hay una ventana activa por grupo; abrir otra revoca la anterior. |
-| CA-02 | El docente puede **cerrar** la ventana antes de que expire. Un token expirado o revocado se rechaza con un mensaje de catálogo. |
+| CA-01 | El docente titular **abre una ventana de matrícula** de su grupo: recibe un QR (imagen generada por el **backend**), un PIN numérico corto, la URL de matrícula y la hora de rotación. Solo hay una ventana activa por grupo; abrir otra revoca la anterior. |
+| CA-01b | **(D2 = QR rotativo, 2026-11-04)** Mientras la ventana está abierta, el backend **rota** el token y el PIN cada `ROTACION_SEGUNDOS` (60 s). El token vigente y el **inmediatamente anterior** (durante `TOLERANCIA_SEGUNDOS`, 60 s) son válidos; cualquier otro se rechaza. El QR nuevo llega a la pantalla del docente **por SSE dirigido solo a él**, sin polling ni `setInterval`. La ventana termina al cerrarla el docente o al llegar a `DURACION_MAXIMA_MINUTOS`. |
+| CA-02 | El docente puede **cerrar** la ventana antes de que expire, y **regenerar** el código de inmediato. Un token expirado, rotado fuera de tolerancia o revocado se rechaza con un mensaje de catálogo. |
 | CA-03 | Un estudiante **sin cuenta** abre la URL del QR (o la pantalla de PIN) **sin iniciar sesión**, ve los datos mínimos del curso y completa tipo y número de documento, nombres, correo y contraseña inicial (DA-5). Se crean el usuario, el estudiante y la matrícula **activa** en el grupo, y la cuenta en Keycloak con rol `ESTUDIANTE`. |
 | CA-04 | Un estudiante **con cuenta** inicia sesión y se matricula con el mismo token o PIN (`POST /estudiante/matricular-grupo`). No se duplica ninguna cuenta. |
 | CA-05 | Toda validación y registro por token exige que la IP del cliente pertenezca a los **rangos de red del campus**, configurados como parámetro (App Configuration). Fuera del campus: 403 con un mensaje de catálogo. |
 | CA-06 | Se aplican las reglas de la matrícula manual: cupo, cruce de horario, duplicado en el grupo, programa del estudiante y consistencia institucional. La matrícula es **atómica**. |
 | CA-07 | Los endpoints públicos tienen **límite de intentos** por IP y por token, y el token se guarda **hasheado** en la DB. El PIN solo funciona mientras la ventana está activa. |
-| CA-08 | El roster del docente se actualiza **por SSE** (`ESTUDIANTE_MATRICULADO`) sin polling. El evento no lleva datos personales. |
+| CA-08 | El roster del docente se actualiza **por SSE** (`ESTUDIANTE_MATRICULADO`) sin polling. El evento no lleva datos personales y se entrega **solo al docente emisor** (SSE dirigido, ver §8.1). |
 | CA-09 | Desaparece la generación del QR en el cliente con `api.qrserver.com` y el "PIN = id del grupo". |
 
 ---
@@ -81,6 +82,8 @@ Programa padre: [`REG-000`](../REG-000-programa-registro-vinculacion-roles/PLAN.
     - `GestioAsistenciaBackend/src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/secondary/{persistence/sqlserver/jpa/repository/TokenMatriculaJpaRepository.java, persistence/sqlserver/jpa/entity/Sp*TokenMatricula*Entity.java, network/CidrRedInstitucionalAdapter.java, qr/ZxingCodigoQrGeneratorAdapter.java, security/SecureRandomTokenGeneratorAdapter.java}` (nuevos)
     - `GestioAsistenciaBackend/src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/{publico/MatriculaQrPublicaController.java, grupo/GrupoMatriculaQrController.java, estudiante/EstudiantePortalController.java, filter/ClientIpResolver.java, filter/PublicEndpointRateLimitFilter.java}` (+ request, response, mapper y validator)
     - `GestioAsistenciaBackend/src/main/java/co/edu/uco/asistenciasuco/infrastructure/config/wiring/MatriculaQrWiringConfiguration.java` (nuevo)
+    - **(D2)** Rotación: `application/features/matriculaqr/rotartoken/**` y `infrastructure/scheduling/RotacionTokenMatriculaScheduler.java` (nuevos); SP `usp_rotar_token_matricula_grupo` y `usp_consultar_ventanas_matricula_por_rotar` (DB).
+    - **(D2)** Realtime dirigido (ampliación aditiva): `application/secondaryports/realtime/RealtimePublisherPort.java` (método `publishToUser`), `RealtimeEvent` (destinatario opcional) y `ReactorRealtimeAdapter` con sus tests. Frontend: lectura de `core/realtime/**`; solo se cambia si hace falta exponer el filtro por tipo de evento.
     - `GestioAsistenciaBackend/src/main/java/co/edu/uco/asistenciasuco/infrastructure/config/security/SecurityConfig.java` ⚠️ (solo `permitAll` de `/api/v1/public/matricula-qr/**`, la regla `DOCENTE` de `/api/v1/grupos/*/matricula-qr` y el registro del filtro)
     - `GestioAsistenciaBackend/src/main/java/.../support/error/DbFailureClassifier.java` (`MQR_*`)
     - `GestioAsistenciaBackend/src/test/java/co/edu/uco/asistenciasuco/**` (tests del perímetro + `RbacSecurityFilterChainTest` ⚠️)
@@ -224,6 +227,34 @@ Los de §3 (ALLOWED_PATHS) y los tests de [TEST_PLAN.md](TEST_PLAN.md).
 | **D8** | `register.component` (inaccesible) y `POST /usuarios` | (a) Retirar el componente: su función la cubre la ruta pública de matrícula. `POST /usuarios` queda solo para el admin (IAM-001 D4) o se retira. (b) Reutilizar el formulario dentro de `MatriculaQrComponent`. | **(b)**: se reutiliza su UI (campos y validaciones de forma) y se retira la ruta `register`. `POST /usuarios` se retira cuando este WI cierre, si IAM-001 lo dejó solo para el admin y nadie lo usa. |
 | **D9** | ¿Interruptor de la funcionalidad? | (a) Parámetro `asistencias:matricula-qr:habilitada` (App Configuration): si está en `false`, los endpoints públicos responden 404 y el botón del docente se oculta. (b) Sin interruptor. | **(a)**: permite apagar la superficie pública sin redeploy ante un abuso. |
 
+### 8.1 Resoluciones del owner (2026-11-04)
+
+| ID | Resolución | Efecto en el diseño |
+|---|---|---|
+| **D1** | **(a)** Solo matrícula. HU175/HU176 quedan para un WI posterior que reutiliza token, red y rate limit. | Sin cambio. |
+| **D2** | **Cambia a rotativo:** QR/PIN rotan cada 60 s (se rechazó la recomendación (a) del borrador). | Ver abajo: rotación en servidor, SSE dirigido, tolerancia del token anterior. |
+| **D3** | **(a)** Matrícula activa. | Sin cambio (`MATRICULA_QR / ESTADO_MATRICULA`). |
+| **IAM-001** | **No se espera.** Se usa el patrón de HU050 con la deuda **TD-015** aceptada; se ajusta lo necesario para que el registro y la matrícula por QR queden completos. | Documentar TD-015 en el cierre; migrar a `SincronizarCuentaInstitucionalService` cuando IAM-001 cierre. |
+| **D4** | **(a)** Aceptada: QR generado en el backend con ZXing. | Sin cambio. |
+| **D5** | **(a)** Aceptada: `X-Forwarded-For` solo desde proxies confiables. | Sin cambio. |
+| **D6** | **(a)** Aceptada: se retira `usp_registrar_estudiante_en_grupo_autonomo` y su test. | Sin cambio. |
+| **D7** | **(a)** Aceptada: rate limit en memoria (20 intentos/min por IP, 5 registros/min por token). | Sin cambio. |
+| **D8** | **(b)** Aceptada: se reutiliza el formulario de `register` dentro de `MatriculaQrComponent` y se retira la ruta `register`. | `POST /usuarios` se retira al cerrar el WI si nadie lo usa. |
+| **D9** | **(a)** Aceptada: interruptor `asistencias:matricula-qr:habilitada`. | Sin cambio. |
+| **Duración máxima** | **Variable global administrable**, no un valor fijo: `DURACION_MAXIMA_MINUTOS` se lee del catálogo de parámetros (`ParameterCatalogPort`) y el administrador puede cambiarla sin redeploy. Valor inicial de siembra: 60. | Ver nota de límites abajo. |
+
+> **Límite conocido de la variable administrable:** `AdminPortalController` ya lista los parámetros (`GET /admin/parametros`, pestaña "Parámetros Globales" de `admin-system`), pero `PUT /admin/parametros/{id}` responde 501. Hasta que exista esa edición, el valor se cambia con un `UPDATE` controlado sobre el parámetro de la DB (`MATRICULA_QR` / `DURACION_MAXIMA_MINUTOS`), que los SP leen en cada operación y que ya aparece en la pestaña de parámetros. Implementar el `PUT` queda **fuera de este WI** y se registra como deuda. El mismo criterio aplica a `ROTACION_SEGUNDOS` y `TOLERANCIA_SEGUNDOS`. *(Corregido por el addendum A1 del CONTRACT: la versión anterior de esta nota mencionaba App Configuration.)*
+| **Tolerancia** | Se acepta el token **vigente y el anterior**. | `TOLERANCIA_SEGUNDOS` (60) parametrizable. |
+
+**Consecuencias de D2 = rotativo:**
+
+1. **Parámetros nuevos** (reemplazan a `TTL_MINUTOS`), todos administrables: `ROTACION_SEGUNDOS` = 60, `TOLERANCIA_SEGUNDOS` = 60, `DURACION_MAXIMA_MINUTOS` = 60 (siembra inicial).
+2. **DB:** la fila de la ventana guarda token y PIN vigentes y anteriores (`tokenHash`, `pin`, `tokenHashAnterior`, `pinAnterior`, `fechaRotacionUtc`). Nuevo SP `usp_rotar_token_matricula_grupo` y consulta `usp_consultar_ventanas_matricula_por_rotar`.
+3. **Quién rota:** un job del **servidor** (`RotacionTokenMatriculaScheduler`, `@Scheduled`) rota las ventanas vencidas. No es polling del cliente. Es idempotente (el SP revalida la condición), por lo que dos instancias no rotan doble.
+4. **Realtime:** el `ReactorRealtimeAdapter` hoy es broadcast. Se amplía con **entrega dirigida a un usuario** (`publishToUser`), para que el token solo llegue a la pantalla del docente emisor. Esto resuelve también el riesgo R6 (el roster deja de recibir eventos ajenos).
+5. **Frontend:** el modal del docente escucha `MATRICULA_QR_ROTADO` por `RealtimeService` y reemplaza el QR. Sin `setInterval`. Si el SSE se reconecta, el modal llama a `POST /grupos/{id}/matricula-qr/rotacion` para obtener un QR fresco (el token en claro no se guarda, solo su hash).
+6. **Efecto en el estudiante:** un token escaneado vale entre 60 s y 120 s según cuándo se escanee. El formulario de registro debe completarse en ese lapso. Mitigación: ajustar `TOLERANCIA_SEGUNDOS`, y mensaje `MQR_001` que pide escanear de nuevo.
+
 ---
 
 ## 9. Riesgos y dependencias
@@ -235,7 +266,11 @@ Los de §3 (ALLOWED_PATHS) y los tests de [TEST_PLAN.md](TEST_PLAN.md).
 | R3 | El PIN de 6 dígitos colisiona entre ventanas activas | Unicidad del PIN entre las ventanas activas, garantizada en el SP (`UPDLOCK, HOLDLOCK`), con reintento de generación en el backend (máximo 5) |
 | R4 | Keycloak cae después del commit | Igual que en HU050: error controlado y desfase (IAM-001). Reintentar con el mismo token: el modo existente detecta al estudiante y la reconciliación crea la cuenta |
 | R5 | El token viaja en la URL (`?t=`) y puede quedar en el historial del navegador | TTL corto; el token no permite leer datos sensibles por sí solo y exige la red del campus. Se descarta tras el registro (el front lo borra de la URL con `history.replaceState`). Alternativa: solo PIN (D2) |
-| R6 | Broadcast SSE sin destinatario | El payload solo lleva `idGrupo` y el origen. El roster vuelve a pedir los datos con ámbito |
+| R6 | Broadcast SSE sin destinatario | **Resuelto con D2:** entrega dirigida al docente emisor (`publishToUser`). El payload de matrícula sigue sin PII; el roster vuelve a pedir los datos con ámbito |
+| R8 | **(D2)** El token en claro viaja por SSE al docente y por la pantalla proyectada | Entrega dirigida al emisor; el token solo vive 60 s + tolerancia; nunca se loguea; las pruebas verifican que otro usuario conectado no recibe `MATRICULA_QR_ROTADO` |
+| R9 | **(D2)** El estudiante no alcanza a completar el registro antes de que expire el token | Tolerancia parametrizable (`TOLERANCIA_SEGUNDOS`), mensaje claro y reescaneo. Se mide `matricula_qr_total{resultado=token_invalido}` en la validación manual |
+| R10 | **(D2)** El job de rotación falla o se detiene: el QR proyectado deja de ser válido | El token anterior sigue válido solo durante la tolerancia. Log `ERROR` y métrica `matricula_qr_rotacion_total{resultado}`; el docente puede regenerar manualmente |
+| R11 | **(D2)** Cambio en el módulo realtime (sensible, compartido con el resto) | Cambio aditivo (`publishToUser`), sin alterar `publish`; pruebas de no regresión del broadcast; revisión con la skill `uco-realtime` |
 | R7 | Estudiante que ya existe con otro rol (p. ej. un docente) | El SP en modo público detecta el documento o correo existente → `MQR_005`, y pide iniciar sesión con el flujo autenticado, que exige el rol ESTUDIANTE. La regla queda acordada en el CONTRACT §2.4 |
 
 **Dependencias:**
@@ -300,10 +335,10 @@ Ver [TEST_PLAN.md](TEST_PLAN.md).
 | 3. Contratos identificados | ✅ (borrador) | [CONTRACT.md](CONTRACT.md) |
 | 4. Matriz de pruebas | ✅ | [TEST_PLAN.md](TEST_PLAN.md) |
 | 5. Sin conflictos WORM | ✅ | — |
-| 6. Decisiones del owner | ❌ | D1–D9 |
+| 6. Decisiones del owner | ✅ | D1–D9, IAM-001 y duración máxima resueltas el 2026-11-04 (§8.1) |
 | 7. Aprobación de seguridad (endpoints públicos) | ❌ | Owner de seguridad |
 | 8. Rangos de red del campus | ❌ (solo producción) | Infra |
-| 9. Archivos calientes liberados | ❌ (pasos ⚠️) | HU035/036 |
+| 9. Archivos calientes liberados | ✅ | HU035/HU036 figuran `closed` en `docs/work-items/INDEX.md` (2026-11-04) |
 
 **Dictamen DoR:** 👉 **`NOT_READY`**.
 

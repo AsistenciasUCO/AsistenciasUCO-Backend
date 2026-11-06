@@ -3,7 +3,7 @@ status: draft
 type: work-item
 scope: fullstack-database-backend-frontend
 owner: fullstack-team
-last-reviewed: 2026-10-21
+last-reviewed: 2026-11-04
 ---
 
 # TEST_PLAN — HU176B: Matrícula autónoma por QR/PIN
@@ -23,7 +23,7 @@ last-reviewed: 2026-10-21
 
 | ID | Requisito | Acción | Resultado esperado | Nivel |
 |---|---|---|---|---|
-| T-01 | CA-01: abrir ventana | Docente titular | 201 con PIN de 6 dígitos, URL con token, PNG decodificable (el QR leído = URL) y expiración = ahora + TTL | DB, UseCase, Controller, IT |
+| T-01 | CA-01: abrir ventana | Docente titular | 201 con PIN de 6 dígitos, URL con token, PNG decodificable (el QR leído = URL) y fin de ventana = ahora + `DURACION_MAXIMA_MINUTOS` | DB, UseCase, Controller, IT |
 | T-02 | Una ventana activa por grupo | Abrir dos veces | La primera queda `CERRADA`; su token y su PIN se rechazan | DB |
 | T-03 | Titularidad | Docente no titular / coordinador | 403 (scope) / 403 (`SecurityConfig`) | DB, Security |
 | T-04 | Sin cupo | Grupo lleno | 409 | DB |
@@ -57,6 +57,20 @@ last-reviewed: 2026-10-21
 | T-32 | Reglas DOCENTE antes del comodín de grupos | `POST /grupos/{id}/matricula-qr` con JWT DOCENTE / COORDINADOR | 201-403 según el scope / 403 | `RbacSecurityFilterChainTest` ⚠️ |
 | T-33 | Retiro del SP autónomo (D6) | Después de migrar | `OBJECT_ID` NULL; su test y su `:r` se retiran | DB |
 | T-34 | Logs sin secretos | Todos los flujos | Ni token, ni PIN, ni contraseña, ni documento, ni correo | UseCase / filtro (captura de salida) |
+| T-35 | **D2** rotación en SP | `debeRotar=1` (fixture con `fechaRotacionUtc` antigua) | Token y PIN vigentes pasan a anteriores; los nuevos rigen; `fechaRotacionUtc` se actualiza | DB |
+| T-36 | **D2** idempotencia del job | Rotar dos veces seguidas (modo job) | La segunda no cambia nada (`debeRotar=0`) | DB |
+| T-37 | **D2** tolerancia | Token anterior dentro / fuera de `TOLERANCIA_SEGUNDOS` | Dentro: válido; fuera: 404 `MQR_001` | DB |
+| T-38 | **D2** token de dos rotaciones atrás | Rotar dos veces y usar el primero | 404 `MQR_001` | DB |
+| T-39 | **D2** PIN único con anteriores | PIN nuevo igual al `pinAnterior` de otra ventana activa | `MQR_006` | DB |
+| T-40 | **D2** rotación manual | Docente titular / no titular / sin ventana | 200 con QR nuevo / 403 / 404 | DB, Controller, Security |
+| T-41 | **D2** ventana vencida | `fechaExpiracionUtc` pasada | La rotación marca `EXPIRADA` y no genera token nuevo | DB |
+| T-42 | **D2** scheduler | Dos ventanas por rotar, una falla | La otra se rota igual; métrica `matricula_qr_rotacion_total{error}` incrementa; sin excepción propagada | UseCase / Scheduler |
+| T-43 | **D2** SSE dirigido | Dos usuarios conectados; rota la ventana del docente A | Solo A recibe `MATRICULA_QR_ROTADO` y `ESTUDIANTE_MATRICULADO`; B no | Adapter realtime, IT |
+| T-44 | **D2** no regresión de `publish` | Evento broadcast existente | Sigue llegando a todos los clientes | Adapter realtime |
+| T-45 | **D2** usuario sin conexión | `publishToUser` sin sesiones SSE | Descarta sin lanzar excepción | Adapter realtime |
+| T-46 | **D2** sin secretos en logs | Rotación | Ni token, ni PIN, ni PNG en logs | Scheduler (captura de salida) |
+| T-FE-09 | **D2** modal rota por SSE | Llega `MATRICULA_QR_ROTADO` de su grupo / de otro grupo | Reemplaza QR y PIN / ignora; sin `setInterval` ni `setTimeout` | Jasmine |
+| T-FE-10 | **D2** reconexión SSE | El stream se reconecta | Llama a `/rotacion` una vez y muestra el QR nuevo | Jasmine |
 | T-ARCH | Arquitectura | ArchUnit | Los puertos nuevos no dependen de ZXing ni de Servlet; los controllers solo dependen de input ports | ArchUnit existentes |
 | T-WIR | Wiring | Contexto | `MatriculaQrWiringConfiguration` completo | `MatriculaQrWiringConfigurationTest` |
 | T-FE-01 | Ruta pública | Navegar a `/matricula/qr?t=x` sin sesión | No redirige a login; llama a `validar`; el token se borra de la URL | Jasmine |
@@ -74,6 +88,7 @@ last-reviewed: 2026-10-21
 ### 2.1 DB
 - `test_usp_abrir_ventana_matricula_grupo.sql`: T-01…04, T-08.
 - `test_usp_cerrar_ventana_matricula_grupo.sql`: T-05.
+- `test_usp_rotar_token_matricula_grupo.sql`: T-35…41.
 - `test_usp_validar_token_matricula_publico.sql`: T-06, 07.
 - `test_usp_matricular_estudiante_por_token.sql`: T-10…14, 16.
 - `scripts/database/tests/test_matricula_qr_concurrencia.ps1`: T-15.
