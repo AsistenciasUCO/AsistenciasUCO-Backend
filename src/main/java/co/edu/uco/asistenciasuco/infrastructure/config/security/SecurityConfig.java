@@ -103,6 +103,10 @@ public class SecurityConfig {
                 // IDENT-001: verificacion publica del correo. permitAll solo para esta ruta POST (sin comodin /public/**): la
                 // credencial es el token de un solo uso y el limite de intentos lo aplica VerificacionCorreoRateLimitFilter.
                 .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.VERIFICAR_CORREO).permitAll()
+                // HU176B: matricula publica por QR/PIN. Las unicas dos rutas publicas de negocio nuevas, declaradas una por una
+                // (sin comodin /public/**): la credencial es el token/PIN rotativo; el limite de intentos lo aplica
+                // MatriculaQrRateLimitFilter y la red del campus y el interruptor los exige el caso de uso.
+                .requestMatchers(HttpMethod.POST, SecurityPublicEndpoints.MATRICULA_QR_VALIDAR, SecurityPublicEndpoints.MATRICULA_QR_REGISTRO).permitAll()
                 // Solo lectura de documentación runtime. La propiedad de Swagger UI controla
                 // si estos handlers existen; ningún endpoint de negocio se abre por esta regla.
                 .requestMatchers(
@@ -182,6 +186,10 @@ public class SecurityConfig {
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
                 // IDENT-001: reenvio del enlace de verificacion de correo. Mismo criterio que la matricula manual: la DB valida
                 // que el ejecutor sea docente titular del grupo o coordinador de su programa.
+                // HU176B: el docente abre (POST), regenera (POST /rotacion) y cierra (DELETE) la ventana de matricula por QR de su
+                // grupo. La titularidad se valida en Application y en la DB. Va ANTES de los comodines de /grupos/**.
+                .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/matricula-qr", "/api/v1/grupos/*/matricula-qr/rotacion").hasRole(ROLE_DOCENTE)
+                .requestMatchers(HttpMethod.DELETE, "/api/v1/grupos/*/matricula-qr").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes/*/reenviar-verificacion")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
                 // F3: el DOCENTE crea sus propios grupos (la DB exige que el titular sea el propio docente y que

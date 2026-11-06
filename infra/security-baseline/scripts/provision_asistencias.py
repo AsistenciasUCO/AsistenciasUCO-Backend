@@ -39,6 +39,7 @@ APP_NAME = "asistencias-uco"
 API_CLIENT = "asistencias-api"
 SPA_CLIENT = "asistencias-uco-spa"
 PROVISIONER = "asistencias-provisioner"
+USER_ID_ATTRIBUTE = "idUsuario"  # atributo del usuario que vincula la cuenta de Keycloak con Usuario.id de la base de datos
 SPA_ORIGINS = ["http://localhost:4200", "http://127.0.0.1:4200"]
 ROLES = ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"]
 ALL = tuple(ROLES)
@@ -258,6 +259,17 @@ def provision_keycloak(env, enable_pdp_profile_sync=False):
             kc.call("POST", f"/clients/{prov_id}/protocol-mappers/models",
                     _mapper("audience-pdp", "oidc-audience-mapper", {"included.client.audience": "security-baseline-pdp"}))
         evidence["provisioner"]["pdp_audience"] = "security-baseline-pdp (sincronización de perfiles del backend)"
+
+    # 4. Perfil de usuario del realm: Keycloak 26 descarta en silencio los atributos no declarados. Sin `idUsuario` las cuentas
+    #    que crea el backend (registro, matrícula por QR) quedan sin vínculo institucional y la verificación de correo no las
+    #    encuentra (500 "No existe la cuenta de identidad"). Solo el administrador del realm puede editar el perfil.
+    _, _, profile = kc.call("GET", "/users/profile")
+    if not any(a.get("name") == USER_ID_ATTRIBUTE for a in profile.get("attributes", [])):
+        profile["attributes"].append({
+            "name": USER_ID_ATTRIBUTE, "displayName": "Id de usuario institucional", "validations": {},
+            "annotations": {}, "permissions": {"view": ["admin"], "edit": ["admin"]}, "multivalued": False})
+        kc.call("PUT", "/users/profile", profile)
+    evidence["user_profile"] = {"attribute": USER_ID_ATTRIBUTE, "declared": True}
     return evidence
 
 

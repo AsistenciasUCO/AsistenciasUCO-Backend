@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
 import jakarta.persistence.PersistenceException;
 
 /**
@@ -38,6 +39,9 @@ final class DbCodeTranslator {
             case "VCE_003" -> new ConflictException("VCE_003", "Debe esperar unos minutos antes de volver a enviar el enlace de verificacion.");
             case "VCE_004" -> new ResourceNotFoundException("VCE_004", "El estudiante no pertenece a un grupo a su cargo.");
             case "VCE_005" -> new ConflictException("VCE_005", "El correo de este estudiante ya fue verificado.");
+            // HU176B: validacion publica del token. MQR_001 es el mismo error para cualquier token invalido.
+            case "MQR_001" -> new ResourceNotFoundException(MatriculaQrErrorCode.MQR_001);
+            case "MQR_007" -> new ValidationException(MatriculaQrErrorCode.MQR_007.code(), MatriculaQrErrorCode.MQR_007.defaultMessage());
             case "PAG_001" -> new ValidationException("Los parametros de paginacion no son validos.");
             case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
             // HU112/HU128/HU143/HU157: el SP de lectura exige el perfil del ejecutor.
