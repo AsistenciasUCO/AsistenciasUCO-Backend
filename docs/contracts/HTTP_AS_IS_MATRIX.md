@@ -33,8 +33,7 @@ Los SP/views de las filas son contratos consumidos/reportados por Java; las firm
 | `PUT /api/v1/admin/facultades/{id}` | ADMINISTRADOR | Modificar nombre y/o decano (HU110, HU117) | `FacultadCommandPort` | `usp_actualizar_facultad` | E2E_VERIFIED_2026-10-22 | 404 `FAC_001`/`DEC_001`, 409 `GEN_003`/`FAC_002` | `ActualizarFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
 | `PATCH /api/v1/admin/facultades/{id}/estado` | ADMINISTRADOR | Cambiar estado deseado (HU111) | `FacultadCommandPort` | `usp_cambiar_estado_facultad` | E2E_VERIFIED_2026-10-22 | Idempotente; 409 `FAC_002` al reactivar | `CambiarEstadoFacultadRequest` / `ApiDataResponse<FacultadDTO>` |
 | `POST/PUT/PATCH /api/v1/admin/areas/**` | ADMINISTRADOR | Mutar area |  |  | BLOCKED_BY_DB | No hay command publico confirmado | `FeatureUnavailableException` |
-| `/api/v1/admin/sedes/**` | ADMINISTRADOR | Sedes |  |  | BLOCKED_BY_DB | Sede no esta modelada actualmente | `FeatureUnavailableException` |
-| `/api/v1/admin/espacios-fisicos/**` | ADMINISTRADOR | Espacios fisicos |  |  | BLOCKED_BY_DB | EspacioFisico no esta modelado actualmente | `FeatureUnavailableException` |
+| `/api/v1/admin/sedes/**` y `/api/v1/admin/espacios-fisicos/**` | — | Retiradas el 2026-11-06: HU020 y HU140 descartadas (sedes, bloques y aulas no se piden); respondían 501 |  |  | RETIRED |  | Sin ruta (404) |
 | `GET /api/v1/decano/coordinadores` | DECANO / ADMINISTRADOR | Consultar coordinadores por facultad | `CoordinadorQueryPort` | `uv_coordinador` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope por `idFacultad` autenticada | `ApiListResponse<CoordinadorDTO>` |
 | `POST /api/v1/decano/coordinadores` | DECANO / ADMINISTRADOR | Crear coordinador | `CoordinadorCommandPort` | `usp_crear_coordinador` | IMPLEMENTATION_AVAILABLE_PENDING_E2E | Scope por `idFacultad` autenticada | `CrearCoordinadorRequest` |
 | `PATCH /api/v1/decano/coordinadores/{id}/estado` | DECANO / ADMINISTRADOR | Toggle coordinador |  |  | BLOCKED_BY_DB | No hay command publico especifico confirmado | `FeatureUnavailableException` |
@@ -125,14 +124,6 @@ Extraído de annotations presentes; excluye endpoints de framework (Actuator). S
 | GET | `/api/v1/admin/decanos` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | POST | `/api/v1/admin/decanos` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | PATCH | `/api/v1/admin/decanos/{id}/toggle` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| GET | `/api/v1/admin/sedes` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| POST | `/api/v1/admin/sedes` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| PUT | `/api/v1/admin/sedes/{id}` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| PATCH | `/api/v1/admin/sedes/{id}/estado` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| GET | `/api/v1/admin/espacios-fisicos` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| POST | `/api/v1/admin/espacios-fisicos` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| PUT | `/api/v1/admin/espacios-fisicos/{id}` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
-| PATCH | `/api/v1/admin/espacios-fisicos/{id}/estado` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | GET | `/api/v1/admin/parametros` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | PUT | `/api/v1/admin/parametros/{id}` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
 | GET | `/api/v1/admin/auditoria` | [AdminPortalController](../../src/main/java/co/edu/uco/asistenciasuco/infrastructure/adapter/primary/controller/admin/AdminPortalController.java) |
