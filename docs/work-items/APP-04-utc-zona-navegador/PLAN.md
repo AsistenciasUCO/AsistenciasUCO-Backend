@@ -44,7 +44,7 @@ last-reviewed: 2026-11-03
 
 ## Pendiente (bloques siguientes, no en esta rama)
 
-- `/api/v1/decano/sesiones` (HU145) y `/api/v1/estudiante/materias/{id}/sesiones`: mismo enriquecimiento aditivo.
+- `/api/v1/decano/sesiones` (HU145): **hecho el 2026-11-06** en [CERT-F3-CORRECCIONES](../CERT-F3-CORRECCIONES/PLAN.md) (`SesionFacultadDecanoResponse`, mismo criterio que el coordinador). Queda `/api/v1/estudiante/materias/{id}/sesiones` con el mismo enriquecimiento aditivo.
 - HU061 `AsistenciaSesionDTO.fechaHoraInicio/Fin` y reporte Excel: v1 sin zona; requieren política explícita.
 - Bitácora del coordinador (`DocenteProgramaJpaRepository`) convierte `datetime2` a `Instant` asumiendo UTC sin leer
   procedencia: riesgo de reinterpretar históricos INDETERMINADOS. Requiere decisión contractual.

@@ -12,6 +12,7 @@ public final class ConsultarCoordinadoresMapper {
         return new CoordinadorDTO(domain.id(), domain.idUsuario(), domain.numeroIdentificacion(), domain.nombreCompleto(),
                 domain.idPrograma(), domain.nombrePrograma(), domain.estaActivoCoordinador(),
                 domain.primerNombre(), domain.segundoNombre(), domain.primerApellido(), domain.segundoApellido(),
-                domain.correo(), domain.estaActivoRolCoordinador());
+                domain.correo(), domain.estaActivoRolCoordinador(), domain.nombreFacultad(), domain.totalDocentes(),
+                domain.totalGrupos());
     }
 }

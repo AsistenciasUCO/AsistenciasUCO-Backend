@@ -17,7 +17,9 @@ public final class ConsultarPlanesEstudioMapper {
                 domain.estaActivoPlanEstudio(),
                 domain.estaActivoTextoPlanEstudio(),
                 domain.justificacionEstado(),
-                domain.totalSemestres()
+                domain.totalSemestres(),
+                domain.totalAsignaturas(),
+                domain.totalCreditos()
         );
     }
 }

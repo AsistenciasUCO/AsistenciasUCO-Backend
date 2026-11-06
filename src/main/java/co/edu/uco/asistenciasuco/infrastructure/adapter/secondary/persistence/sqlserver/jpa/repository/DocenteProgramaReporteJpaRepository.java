@@ -11,6 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
 import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceException;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
@@ -63,16 +64,7 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
                 OP_HISTORIAL,
                 "No fue posible consultar el historial de grupos del docente desde base de datos.",
                 () -> {
-                    final List<Object[]> filas = ((List<?>) entityManager.createNativeQuery(SQL_HISTORIAL)
-                            .setParameter("idUsuarioEjecutor", usuarioEjecutor)
-                            .setParameter("idCorrelacion", correlationId)
-                            .setParameter("idDocente", idDocente)
-                            .setParameter("idPeriodoAcademico", idPeriodoAcademico)
-                            .setParameter("numeroPagina", pagina)
-                            .setParameter("tamanoPagina", tamano)
-                            .getResultList()).stream()
-                            .map(Object[].class::cast)
-                            .toList();
+                    final List<Object[]> filas = historial(usuarioEjecutor, correlationId, idDocente, idPeriodoAcademico, pagina, tamano);
                     if (filas.isEmpty()) {
                         return new HistorialGruposDocentePagina(List.of(), 0, 0, 0, 0, 0);
                     }
@@ -82,6 +74,28 @@ public class DocenteProgramaReporteJpaRepository implements HistorialGruposDocen
                             valor(primera[20]), valor(primera[16]), valor(primera[17]), valor(primera[18]), valor(primera[19]));
                 }
         );
+    }
+
+    /**
+     * Certificación Fase 3 (HU094): el SP rechaza con GEN_001 un docente que no está en el programa del coordinador.
+     * Antes llegaba como 500; {@link DbCodeTranslator} lo traduce a 404, como las demás consultas por SP.
+     */
+    private List<Object[]> historial(final UUID usuarioEjecutor, final UUID correlationId, final UUID idDocente,
+                                     final UUID idPeriodoAcademico, final int pagina, final int tamano) {
+        try {
+            return ((List<?>) entityManager.createNativeQuery(SQL_HISTORIAL)
+                            .setParameter("idUsuarioEjecutor", usuarioEjecutor)
+                            .setParameter("idCorrelacion", correlationId)
+                            .setParameter("idDocente", idDocente)
+                            .setParameter("idPeriodoAcademico", idPeriodoAcademico)
+                            .setParameter("numeroPagina", pagina)
+                            .setParameter("tamanoPagina", tamano)
+                            .getResultList()).stream()
+                            .map(Object[].class::cast)
+                            .toList();
+        } catch (final PersistenceException exception) {
+            throw DbCodeTranslator.traducir(exception, "docente");
+        }
     }
 
     @Override

@@ -64,10 +64,17 @@ public final class AcademicViewJpaProjectionMapper {
     /** HU058: el tipo de programa (nivel formativo) sale de {@code uv_programa}; nulo si el grupo no tiene programa. */
     public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row, final UvProgramaEntity programa,
                                                                   final Integer estudiantesActivos) {
+        return toAsignaturaDocente(row, programa, estudiantesActivos, null);
+    }
+
+    /** Certificación Fase 3: además el cupo máximo del grupo (uv_grupo), para no mostrar un cupo inventado. */
+    public static AsignaturaDocenteProjection toAsignaturaDocente(final UvDocenteEntity row, final UvProgramaEntity programa,
+                                                                  final Integer estudiantesActivos,
+                                                                  final Integer capacidadMaximaPermitida) {
         return new AsignaturaDocenteProjection(row.idAsignatura(), row.nombreAsignatura(), row.idGrupo(),
                 row.nombreGrupo(), row.idPrograma(), row.nombrePrograma(),
                 programa == null ? null : programa.idTipoPrograma(), programa == null ? null : programa.nombreTipoPrograma(),
-                estudiantesActivos);
+                estudiantesActivos, capacidadMaximaPermitida);
     }
 
     public static MateriaEstudianteProjection toMateriaEstudiante(final MateriaEstudianteQueryRow row) {
@@ -122,9 +129,14 @@ public final class AcademicViewJpaProjectionMapper {
     }
 
     public static PlanEstudioProjection toPlanEstudio(final UvPlanEstudioEntity row, final int totalSemestres) {
+        return toPlanEstudio(row, totalSemestres, 0, 0);
+    }
+
+    public static PlanEstudioProjection toPlanEstudio(final UvPlanEstudioEntity row, final int totalSemestres,
+                                                      final int totalAsignaturas, final int totalCreditos) {
         return new PlanEstudioProjection(row.id(), row.idPrograma(), row.nombrePrograma(), text(row.inp()),
                 flag(row.estaActivoPlanEstudio()), row.estaActivoTextoPlanEstudio(), row.justificacionEstado(),
-                totalSemestres);
+                totalSemestres, totalAsignaturas, totalCreditos);
     }
 
     public static AsignaturaProjection toAsignatura(final AsignaturaQueryRow row) {

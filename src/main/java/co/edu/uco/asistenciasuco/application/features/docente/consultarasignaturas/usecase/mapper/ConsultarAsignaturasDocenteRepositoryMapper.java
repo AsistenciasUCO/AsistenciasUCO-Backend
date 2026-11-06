@@ -11,6 +11,7 @@ public final class ConsultarAsignaturasDocenteRepositoryMapper {
     public static AsignaturaDocenteDomain toDomain(final AsignaturaDocenteProjection projection) {
         return new AsignaturaDocenteDomain(projection.idAsignatura(), projection.nombreAsignatura(),
                 projection.idGrupo(), projection.nombreGrupo(), projection.idPrograma(), projection.nombrePrograma(),
-                projection.idTipoPrograma(), projection.nombreTipoPrograma(), projection.estudiantesActivos());
+                projection.idTipoPrograma(), projection.nombreTipoPrograma(), projection.estudiantesActivos(),
+                projection.capacidadMaximaPermitida());
     }
 }

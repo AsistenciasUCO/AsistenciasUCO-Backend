@@ -154,6 +154,30 @@ class CoordinadorJpaCommandPatternTest {
         assertTrue(resultado.isEmpty());
     }
 
+    // Certificacion F3: resumen por programa (facultad, docentes activos y grupos habilitados) solo desde vistas uv_*.
+    @Test
+    void COO_PAT_011_resumen_de_programas_lee_vistas_y_mapea_conteos() {
+        final UUID programa = UUID.fromString("80808080-8080-8080-8080-808080808080");
+        when(query.getResultList()).thenReturn(java.util.List.of(
+                new Object[]{programa, "Facultad de Ingenieria", 1, 2L},
+                new Object[]{programa.toString(), null, null, null}));
+
+        final java.util.List<co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection> resumen =
+                command.consultarResumenProgramasFacultad(FACULTAD);
+
+        org.mockito.Mockito.verify(entityManager).createNativeQuery(CoordinadorJpaRepository.SQL_RESUMEN_PROGRAMAS_FACULTAD);
+        org.mockito.Mockito.verify(query).setParameter("idFacultad", FACULTAD);
+        assertEquals(2, resumen.size());
+        assertEquals(programa, resumen.get(0).idPrograma());
+        assertEquals("Facultad de Ingenieria", resumen.get(0).nombreFacultad());
+        assertEquals(1, resumen.get(0).totalDocentes());
+        assertEquals(2, resumen.get(0).totalGrupos());
+        assertEquals(programa, resumen.get(1).idPrograma());
+        assertEquals(0, resumen.get(1).totalDocentes());
+        assertTrue(CoordinadorJpaRepository.SQL_RESUMEN_PROGRAMAS_FACULTAD.contains("dbo.uv_docente_programa"));
+        assertTrue(CoordinadorJpaRepository.SQL_RESUMEN_PROGRAMAS_FACULTAD.contains("dbo.uv_grupo_programa"));
+    }
+
     // Regresion hallada en el E2E de HU121/HU122: con Coordinador.facultad, uv_coordinador devuelve filas con
     // idPrograma nulo (parte de la identidad compuesta de la entidad) y Hibernate las entrega como null. Los
     // coordinadores sin programa se leen con la otra consulta (por columnas), asi que esta los excluye.

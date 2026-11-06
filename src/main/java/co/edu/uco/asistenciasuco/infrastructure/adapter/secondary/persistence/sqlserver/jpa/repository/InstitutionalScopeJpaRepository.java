@@ -49,9 +49,15 @@ public class InstitutionalScopeJpaRepository implements InstitutionalScopePort {
     static final String HQL_DECANO_POR_USUARIO = """
             select d.id from UvDecanoIdentidadEntity d where d.idUsuario = :usuarioId
             """;
+    /**
+     * La regla 1 a 1 (PROG_005) impide hoy dos programas por coordinador, pero una base con datos anteriores a la regla
+     * puede tenerlos (certificación Fase 3). Para que todas las pantallas del coordinador resuelvan el MISMO programa,
+     * se prefiere el programa activo y se ordena de forma estable.
+     */
     static final String HQL_PROGRAMA_POR_COORDINADOR = """
-            select c.idPrograma from UvCoordinadorEntity c
-            where c.idUsuario = :usuarioId and c.estaActivoCoordinador = 1
+            select c.idPrograma from UvCoordinadorEntity c, UvProgramaEntity p
+            where p.id = c.idPrograma and c.idUsuario = :usuarioId and c.estaActivoCoordinador = 1
+            order by case when p.estaActivoPrograma = true then 0 else 1 end, p.nombrePrograma, c.idPrograma
             """;
     static final String HQL_FACULTAD_POR_DECANO = """
             select d.idFacultad from UvDecanoEntity d

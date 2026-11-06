@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.p
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase.ConsultarFacultadDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase.impl.ConsultarFacultadDecanoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -14,8 +15,9 @@ import org.springframework.context.annotation.Configuration;
 public class FacultadDecanoWiringConfiguration {
 
     @Bean ConsultarFacultadDecanoUseCase consultarFacultadDecanoUseCase(
-            final FacultadDecanoQueryPort queryPort, final InstitutionalScopePort scopePort) {
-        return new ConsultarFacultadDecanoUseCaseImpl(queryPort, scopePort);
+            final FacultadDecanoQueryPort queryPort, final InstitutionalScopePort scopePort,
+            final SesionProcedenciaQueryPort procedenciaPort) {
+        return new ConsultarFacultadDecanoUseCaseImpl(queryPort, scopePort, procedenciaPort);
     }
 
     @Bean ConsultarFacultadDecanoInputPort consultarFacultadDecanoInputPort(final ConsultarFacultadDecanoUseCase useCase) {

@@ -4,12 +4,16 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.interactor.ConsultarFacultadDecanoInteractor;
+import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase.domain.SesionFacultadHorarioDomain;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.EstructuraFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.EstudianteFacultadProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.MatriculaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.Pagina;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadDecanoQueryPort.SesionFacultadProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -22,9 +26,11 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.Mockito.mock;
+import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.verifyNoInteractions;
 import static org.mockito.Mockito.when;
@@ -39,18 +45,22 @@ class ConsultarFacultadDecanoUseCaseImplTest {
 
     private final FacultadDecanoQueryPort queryPort = mock(FacultadDecanoQueryPort.class);
     private final InstitutionalScopePort scopePort = mock(InstitutionalScopePort.class);
+    private final SesionProcedenciaQueryPort procedenciaPort = mock(SesionProcedenciaQueryPort.class);
     private ConsultarFacultadDecanoUseCaseImpl useCase;
 
     @BeforeEach
     void preparar() {
-        useCase = new ConsultarFacultadDecanoUseCaseImpl(queryPort, scopePort);
+        useCase = new ConsultarFacultadDecanoUseCaseImpl(queryPort, scopePort, procedenciaPort);
         when(scopePort.findFacultadIdByDecanoUsuario(DECANO)).thenReturn(Optional.of(FACULTAD));
     }
 
     @Test
     void constructor_rechaza_dependencias_nulas() {
-        assertThrows(NullPointerException.class, () -> new ConsultarFacultadDecanoUseCaseImpl(null, scopePort));
-        assertThrows(NullPointerException.class, () -> new ConsultarFacultadDecanoUseCaseImpl(queryPort, null));
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarFacultadDecanoUseCaseImpl(null, scopePort, procedenciaPort));
+        assertThrows(NullPointerException.class,
+                () -> new ConsultarFacultadDecanoUseCaseImpl(queryPort, null, procedenciaPort));
+        assertThrows(NullPointerException.class, () -> new ConsultarFacultadDecanoUseCaseImpl(queryPort, scopePort, null));
     }
 
     @Test
@@ -106,11 +116,66 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         final LocalDate hasta = LocalDate.of(2026, 2, 28);
         when(queryPort.consultarSesiones(DECANO, desde, hasta, PROGRAMA, 1, 100))
                 .thenReturn(new Pagina<>(List.of(sesion()), 1));
+        when(queryPort.consultarSesiones(DECANO, desde, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(), 0));
 
         assertEquals(1, useCase.consultarSesiones(DECANO, desde, hasta, PROGRAMA, 1, 100).total());
         assertThrows(ValidationException.class, () -> useCase.consultarSesiones(DECANO, hasta, desde, null, 1, 10));
         useCase.consultarSesiones(DECANO, desde, null, null, null, null);
         verify(queryPort).consultarSesiones(DECANO, desde, null, null, 1, 10);
+    }
+
+    @Test
+    void T_145_02_sesion_confirmada_expone_instantes_utc_y_la_indeterminada_no() {
+        final SesionFacultadProjection confirmada = sesion();
+        final SesionFacultadProjection antigua = sesion(confirmada.idGrupo());
+        final SesionFacultadProjection otroGrupo = sesion();
+        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(confirmada, antigua, otroGrupo), 3));
+        when(procedenciaPort.consultarSesionesPorGrupo(confirmada.idGrupo())).thenReturn(List.of(
+                procedencia(confirmada, confirmada.idGrupo(), "UTC_V2"),
+                procedencia(antigua, confirmada.idGrupo(), null)));
+        // Fila de otro grupo con el mismo id: nunca se aplica (defensa en profundidad).
+        when(procedenciaPort.consultarSesionesPorGrupo(otroGrupo.idGrupo()))
+                .thenReturn(List.of(procedencia(otroGrupo, UUID.randomUUID(), "UTC_V2")));
+
+        final var resultado = useCase.consultarSesiones(DECANO, null, null, null, null, null);
+
+        assertEquals(3, resultado.total());
+        final var primera = resultado.elementos().getFirst();
+        assertEquals(EstadoHorarioSesion.CONFIRMADA, primera.estadoTemporal());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 12, 0), primera.fechaHoraInicioUtc());
+        assertEquals(LocalDateTime.of(2026, 2, 3, 14, 0), primera.fechaHoraFinUtc());
+        assertEquals(EstadoHorarioSesion.INDETERMINADA, resultado.elementos().get(1).estadoTemporal());
+        assertNull(resultado.elementos().get(1).fechaHoraInicioUtc());
+        assertEquals(EstadoHorarioSesion.INDETERMINADA, resultado.elementos().get(2).estadoTemporal());
+        assertNull(resultado.elementos().get(2).fechaHoraFinUtc());
+        verify(procedenciaPort, times(1)).consultarSesionesPorGrupo(confirmada.idGrupo());
+    }
+
+    @Test
+    void T_145_03_pagina_vacia_no_consulta_procedencia() {
+        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10)).thenReturn(new Pagina<>(List.of(), 0));
+
+        assertTrue(useCase.consultarSesiones(DECANO, null, null, null, null, null).elementos().isEmpty());
+        verifyNoInteractions(procedenciaPort);
+    }
+
+    @Test
+    void T_145_04_dominio_descarta_instantes_si_no_esta_confirmada() {
+        final var dominio = dominio(UUID.randomUUID(), LocalDateTime.now(), EstadoHorarioSesion.INDETERMINADA);
+
+        assertNull(dominio.fechaHoraInicioUtc());
+        assertNull(dominio.fechaHoraFinUtc());
+        assertThrows(NullPointerException.class,
+                () -> dominio(null, null, EstadoHorarioSesion.INDETERMINADA));
+        assertThrows(NullPointerException.class, () -> dominio(UUID.randomUUID(), null, null));
+    }
+
+    private static SesionFacultadHorarioDomain dominio(final UUID id, final LocalDateTime utc,
+                                                       final EstadoHorarioSesion estado) {
+        return new SesionFacultadHorarioDomain(id, "Sesion 1", "S-01", 2, LocalDateTime.of(2026, 2, 3, 12, 0),
+                LocalDateTime.of(2026, 2, 3, 14, 0), UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(), "Calculo",
+                PROGRAMA, "Sistemas", utc, utc, estado);
     }
 
     @Test
@@ -134,6 +199,8 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         final var sesiones = interactor.consultarSesiones(DECANO, null, null, null, null, null);
         assertEquals("S-01", sesiones.elementos().getFirst().codigo());
         assertEquals("Sistemas", sesiones.elementos().getFirst().nombrePrograma());
+        assertEquals("INDETERMINADA", sesiones.elementos().getFirst().estadoTemporal());
+        assertNull(sesiones.elementos().getFirst().fechaHoraInicioUtc());
     }
 
     @Test
@@ -186,9 +253,19 @@ class ConsultarFacultadDecanoUseCaseImplTest {
     }
 
     private static SesionFacultadProjection sesion() {
+        return sesion(UUID.randomUUID());
+    }
+
+    private static SesionFacultadProjection sesion(final UUID grupo) {
         return new SesionFacultadProjection(UUID.randomUUID(), "Sesion 1", "S-01", 2,
-                LocalDateTime.of(2026, 2, 3, 7, 0), LocalDateTime.of(2026, 2, 3, 9, 0), UUID.randomUUID(), 1,
+                LocalDateTime.of(2026, 2, 3, 12, 0), LocalDateTime.of(2026, 2, 3, 14, 0), grupo, 1,
                 "Grupo 1", UUID.randomUUID(), "Calculo", PROGRAMA, "Sistemas");
+    }
+
+    private static SesionProcedenciaRepositoryProjection procedencia(final SesionFacultadProjection s, final UUID grupo,
+                                                                     final String procedenciaTemporal) {
+        return new SesionProcedenciaRepositoryProjection(s.id(), grupo, s.nombre(), 1, s.codigo(), s.numeroSemana(),
+                "1", s.nombreGrupo(), s.fechaHoraInicio(), s.fechaHoraFin(), procedenciaTemporal);
     }
 
     private static EstructuraFacultadProjection fila(final UUID programa, final String nombre, final UUID plan,

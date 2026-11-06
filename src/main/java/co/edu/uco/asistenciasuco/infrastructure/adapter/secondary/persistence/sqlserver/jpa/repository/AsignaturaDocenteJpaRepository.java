@@ -42,7 +42,7 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
 
     /** APP-04: conteo real de matriculas activas, independiente del horario del docente. */
     static final String HQL_ESTUDIANTES_ACTIVOS = """
-            select g.id, g.estudiantesActivos
+            select g.id, g.estudiantesActivos, g.capacidadMaximaPermitida
             from UvGrupoEntity g
             where g.id in :idsGrupo
             """;
@@ -63,11 +63,11 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
                             .setParameter("idDocente", idDocente)
                             .getResultList();
                     final Map<UUID, UvProgramaEntity> programas = programas(filas);
-                    final Map<UUID, Integer> activos = estudiantesActivos(filas);
+                    final Map<UUID, Integer[]> grupos = datosGrupo(filas);
                     return filas.stream()
                             .map(fila -> AcademicViewJpaProjectionMapper.toAsignaturaDocente(fila,
                                     fila.idPrograma() == null ? null : programas.get(fila.idPrograma()),
-                                    fila.idGrupo() == null ? null : activos.get(fila.idGrupo())))
+                                    dato(grupos, fila.idGrupo(), 0), dato(grupos, fila.idGrupo(), 1)))
                             .toList();
                 }
         );
@@ -85,17 +85,23 @@ public class AsignaturaDocenteJpaRepository implements AsignaturaDocenteQueryPor
                 .collect(Collectors.toMap(UvProgramaEntity::id, Function.identity(), (a, b) -> a));
     }
 
-    private Map<UUID, Integer> estudiantesActivos(final List<UvDocenteEntity> filas) {
+    private static Integer dato(final Map<UUID, Integer[]> grupos, final UUID idGrupo, final int indice) {
+        final Integer[] datos = idGrupo == null ? null : grupos.get(idGrupo);
+        return datos == null ? null : datos[indice];
+    }
+
+    /** Por grupo: {estudiantesActivos, capacidadMaximaPermitida}. */
+    private Map<UUID, Integer[]> datosGrupo(final List<UvDocenteEntity> filas) {
         final List<UUID> idsGrupo = filas.stream().map(UvDocenteEntity::idGrupo).filter(Objects::nonNull).distinct().toList();
         if (idsGrupo.isEmpty()) {
             return Map.of();
         }
-        final Map<UUID, Integer> activos = new HashMap<>();
+        final Map<UUID, Integer[]> datos = new HashMap<>();
         for (final Object[] fila : entityManager.createQuery(HQL_ESTUDIANTES_ACTIVOS, Object[].class)
                 .setParameter("idsGrupo", idsGrupo)
                 .getResultList()) {
-            activos.put((UUID) fila[0], (Integer) fila[1]);
+            datos.put((UUID) fila[0], new Integer[] {(Integer) fila[1], (Integer) fila[2]});
         }
-        return activos;
+        return datos;
     }
 }

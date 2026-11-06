@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.CoordinadorQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.CoordinadorProjection;
+import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResumenCoordinacionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ResultadoGestionCoordinadorProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.dto.CorreccionDocumentoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.AcademicViewJpaProjectionMapper;
@@ -82,6 +83,22 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
             from UvCoordinadorEntity c
             where c.idPrograma is null and c.idFacultad = :idFacultad
             order by c.nombreCompleto, c.id
+            """;
+
+    /**
+     * Certificacion F3: por programa de la facultad, docentes con vinculacion activa y grupos habilitados. Solo lee
+     * vistas {@code uv_*} (concedidas al rol runtime); no cambia objetos de BD.
+     */
+    static final String SQL_RESUMEN_PROGRAMAS_FACULTAD = """
+            SELECT pr.id,
+                   pr.nombreFacultad,
+                   (SELECT COUNT(DISTINCT dp.idDocente) FROM dbo.uv_docente_programa dp
+                     WHERE dp.idPrograma = pr.id AND dp.estaActivoDocentePrograma = 1) AS totalDocentes,
+                   (SELECT COUNT(*) FROM dbo.uv_grupo_programa gp
+                     WHERE gp.idPrograma = pr.id AND gp.grupoEstaHablitado = 1) AS totalGrupos
+            FROM dbo.uv_programa pr
+            WHERE pr.idFacultad = :idFacultad
+            ORDER BY pr.nombrePrograma, pr.id
             """;
 
     static final String OP_CREAR_COORDINADOR = "crearCoordinador";
@@ -192,7 +209,36 @@ public class CoordinadorJpaRepository implements CoordinadorQueryPort, Coordinad
         );
     }
 
+    @Override
+    public List<ResumenCoordinacionProjection> consultarResumenProgramasFacultad(final UUID idFacultad) {
+        return JpaQueryExecutor.execute(
+                "consultarResumenProgramasFacultad",
+                "No fue posible consultar el resumen de los programas de la facultad desde base de datos.",
+                () -> {
+                    final List<ResumenCoordinacionProjection> resumenes = new java.util.ArrayList<>();
+                    for (final Object fila : entityManager.createNativeQuery(SQL_RESUMEN_PROGRAMAS_FACULTAD)
+                            .setParameter("idFacultad", idFacultad).getResultList()) {
+                        final Object[] columnas = (Object[]) fila;
+                        resumenes.add(new ResumenCoordinacionProjection(uuid(columnas[0]), (String) columnas[1],
+                                entero(columnas[2]), entero(columnas[3])));
+                    }
+                    return resumenes;
+                }
+        );
+    }
+
     // PRIVATE HELPERS
+
+    private static UUID uuid(final Object valor) {
+        if (valor == null || valor instanceof UUID) {
+            return (UUID) valor;
+        }
+        return UUID.fromString(String.valueOf(valor).trim());
+    }
+
+    private static int entero(final Object valor) {
+        return valor == null ? 0 : ((Number) valor).intValue();
+    }
 
     /** El SP devuelve el usuario del coordinador cuando la operacion tuvo exito; su ausencia es una violacion del contrato. */
     private static UUID idUsuarioDeFila(final ProcedureRow fila, final String operation) {
