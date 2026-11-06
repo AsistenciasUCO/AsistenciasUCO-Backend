@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoError
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
+import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.VerificacionCorreoErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.exception.ErrorDefinition;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.CommonErrorCode;
@@ -81,6 +82,12 @@ final class DbFailureClassifier {
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
             // IDENT-001: correo institucional y verificacion. VCE_001/VCE_002 son entradas invalidas (400, VCE_002 identico para
             // cualquier token invalido); VCE_005 ya verificado es conflicto; VCE_007 usuario inexistente o inactivo es no encontrado.
+            // HU176B: matricula por QR/PIN. MQR_001 es generico para cualquier token invalido (anti-enumeracion).
+            case "MQR_001" -> MatriculaQrErrorCode.MQR_001;
+            case "MQR_004" -> MatriculaQrErrorCode.MQR_004;
+            case "MQR_005" -> MatriculaQrErrorCode.MQR_005;
+            case "MQR_006" -> MatriculaQrErrorCode.MQR_006;
+            case "MQR_007" -> MatriculaQrErrorCode.MQR_007;
             case "VCE_001" -> VerificacionCorreoErrorCode.VCE_001;
             case "VCE_002" -> VerificacionCorreoErrorCode.VCE_002;
             case "VCE_005" -> VerificacionCorreoErrorCode.VCE_005;

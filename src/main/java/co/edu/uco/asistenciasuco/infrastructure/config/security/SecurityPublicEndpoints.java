@@ -15,6 +15,9 @@ public final class SecurityPublicEndpoints {
     public static final String ACTUATOR = "/actuator/**";
     /** IDENT-001: verificacion publica del correo; su credencial es el token de un solo uso del enlace. */
     public static final String VERIFICAR_CORREO = "/api/v1/public/verificar-correo";
+    /** HU176B: validacion y alta publicas de la matricula por QR/PIN; su credencial es el token/PIN rotativo. */
+    public static final String MATRICULA_QR_VALIDAR = "/api/v1/public/matricula-qr/validar";
+    public static final String MATRICULA_QR_REGISTRO = "/api/v1/public/matricula-qr/registro";
     private static final String[] DOCUMENTATION_GET = {
             "/swagger-ui",
             "/swagger-ui/**",
@@ -42,6 +45,8 @@ public final class SecurityPublicEndpoints {
                 paths.matcher(ACTUATOR),
                 paths.matcher(AzureEventGridAuthFilter.WEBHOOK_PATH),
                 paths.matcher(HttpMethod.POST, VERIFICAR_CORREO),
+                paths.matcher(HttpMethod.POST, MATRICULA_QR_VALIDAR),
+                paths.matcher(HttpMethod.POST, MATRICULA_QR_REGISTRO),
                 paths.matcher(ERROR_VIEW),
                 new OrRequestMatcher(documentation)
         );

@@ -4,7 +4,9 @@
   "roles": ["ADMINISTRADOR", "DECANO", "COORDINADOR", "DOCENTE", "ESTUDIANTE"],
   "exempt": [
     {"method": "POST", "path": "/api/v1/internal/azure-events", "reason": "Webhook de Azure Event Grid: autenticado por AzureEventGridAuthFilter (aeg-sas-token), fuera del PEP."},
-    {"method": "POST", "path": "/api/v1/public/verificar-correo", "reason": "IDENT-001: verificacion publica del correo; la credencial es el token de un solo uso del enlace (SHA-256 en BD, vigencia por parametro) y la ruta tiene limite de intentos por IP (VerificacionCorreoRateLimitFilter). Sin datos personales en la respuesta."}
+    {"method": "POST", "path": "/api/v1/public/verificar-correo", "reason": "IDENT-001: verificacion publica del correo; la credencial es el token de un solo uso del enlace (SHA-256 en BD, vigencia por parametro) y la ruta tiene limite de intentos por IP (VerificacionCorreoRateLimitFilter). Sin datos personales en la respuesta."},
+    {"method": "POST", "path": "/api/v1/public/matricula-qr/validar", "reason": "HU176B: validacion publica de la matricula por QR/PIN; la credencial es el token/PIN rotativo (SHA-256 en BD, vigencia por parametros). Exige red del campus, interruptor y limite de intentos por IP (MatriculaQrRateLimitFilter); responde solo los datos minimos del curso y un error generico MQR_001 para cualquier token invalido."},
+    {"method": "POST", "path": "/api/v1/public/matricula-qr/registro", "reason": "HU176B: alta publica y matricula por QR/PIN; la credencial es el token/PIN rotativo. Exige red del campus, interruptor, correo institucional y limite de intentos por IP. No devuelve token de sesion."}
   ],
   "profiles": [
     {"name": "Administración institucional", "roles": ["ADMINISTRADOR"], "description": "Gestión institucional: facultades, decanos, parámetros, períodos, auditoría y cierre masivo."},
@@ -151,6 +153,9 @@
     {"method": "GET", "path": "/api/v1/grupos/{grupoId}/asistencias", "roles": ["ADMINISTRADOR", "COORDINADOR", "DOCENTE"], "access": "ROLES", "ownership": "DOCENTE solo grupos propios, COORDINADOR solo de su programa (Application + SP)."},
     {"method": "GET", "path": "/api/v1/grupos/{grupoId}/estudiantes", "roles": ["ADMINISTRADOR", "COORDINADOR", "DOCENTE"], "access": "ROLES", "ownership": "DOCENTE solo grupos propios, COORDINADOR solo de su programa (Application + SP)."},
     {"method": "POST", "path": "/api/v1/grupos/{grupoId}/estudiantes", "roles": ["COORDINADOR", "DOCENTE"], "access": "ROLES", "ownership": "DOCENTE solo grupos propios, COORDINADOR solo de su programa (Application + SP)."},
+    {"method": "POST", "path": "/api/v1/grupos/{grupoId}/matricula-qr", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo (Application + SP: RBAC DOCENTE y titularidad); el token solo viaja en la respuesta y en el SSE del titular."},
+    {"method": "POST", "path": "/api/v1/grupos/{grupoId}/matricula-qr/rotacion", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo (Application + SP: RBAC DOCENTE y titularidad); el token solo viaja en la respuesta y en el SSE del titular."},
+    {"method": "DELETE", "path": "/api/v1/grupos/{grupoId}/matricula-qr", "roles": ["DOCENTE"], "access": "ROLES", "ownership": "Docente titular del grupo (Application + SP: RBAC DOCENTE y titularidad); el token solo viaja en la respuesta y en el SSE del titular."},
     {"method": "DELETE", "path": "/api/v1/grupos/{grupoId}/estudiantes/{estudianteId}", "roles": ["ADMINISTRADOR", "COORDINADOR"], "access": "ROLES", "ownership": "DOCENTE solo grupos propios, COORDINADOR solo de su programa (Application + SP)."},
     {"method": "GET", "path": "/api/v1/grupos/{grupoId}/reportes/asistencia-excel", "roles": ["ADMINISTRADOR", "COORDINADOR", "DOCENTE"], "access": "ROLES", "ownership": "DOCENTE solo grupos propios, COORDINADOR solo de su programa (Application + SP)."},
     {"method": "PUT", "path": "/api/v1/grupos/{id}", "roles": ["ADMINISTRADOR", "COORDINADOR"], "access": "ROLES", "ownership": "DOCENTE solo grupos propios, COORDINADOR solo de su programa (Application + SP)."},
