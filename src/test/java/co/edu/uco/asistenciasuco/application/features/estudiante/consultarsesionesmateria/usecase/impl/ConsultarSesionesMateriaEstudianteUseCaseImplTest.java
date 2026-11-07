@@ -399,4 +399,30 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         assertEquals(1, result.size());
         assertEquals(sesion1, result.getFirst().id());
     }
+
+    @Test
+    void un_tamano_no_positivo_o_un_fallo_del_catalogo_usan_100() {
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100)).thenReturn(new PaginaResultado<>(List.of(), 1, 100, 0));
+        when(parametros.getParameter("PAGINACION", "TAMANO_MAXIMO")).thenReturn(Optional.of("0"))
+                .thenThrow(new ParameterCatalogPort.ParameterCatalogException("catalogo caido"));
+
+        useCase.execute(actor, asignatura);
+        useCase.execute(actor, asignatura);
+
+        verify(queryPort, times(2)).consultarSesionesMateria(actor, asignatura, 1, 100);
+    }
+
+    @Test
+    void con_pagina_explicita_un_total_mayor_es_normal_y_no_cambia_el_resultado() {
+        final var segunda = sesion(sesion2, 2, UUID.randomUUID());
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 2, 1)).thenReturn(new PaginaResultado<>(List.of(segunda), 2, 1, 5));
+        when(asistenciaPort.consultarAsistenciaSesiones(estudiante, asignatura)).thenReturn(List.of());
+
+        final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura, 2, 1);
+
+        assertEquals(1, result.size());
+        assertEquals(sesion2, result.getFirst().id());
+    }
 }

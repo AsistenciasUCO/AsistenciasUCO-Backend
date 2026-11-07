@@ -25,6 +25,7 @@ import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -141,15 +142,15 @@ class SesionMateriaEstudianteJpaRepositoryTest {
 
     @Test
     void los_rechazos_del_sp_se_traducen_con_su_http() {
-        when(query.getResultList()).thenThrow(new PersistenceException("x", new RuntimeException("DBCODE=PAG_001|paginacion")));
+        doThrow(new PersistenceException("x", new RuntimeException("DBCODE=PAG_001|paginacion"))).when(query).getResultList();
         assertThrows(ValidationException.class,
                 () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 0, 100));
 
-        when(query.getResultList()).thenThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil")));
+        doThrow(new PersistenceException("x", new RuntimeException("DBCODE=SEC_001|perfil"))).when(query).getResultList();
         assertThrows(ForbiddenException.class,
                 () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 1, 100));
 
-        when(query.getResultList()).thenThrow(new PersistenceException("db down"));
+        doThrow(new PersistenceException("db down")).when(query).getResultList();
         assertThrows(DatabaseOperationException.class,
                 () -> new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ACTOR, MATERIA, 1, 100));
     }

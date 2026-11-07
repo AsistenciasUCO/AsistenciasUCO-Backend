@@ -67,11 +67,15 @@ public final class EstudiantePortalController {
 
     @GetMapping("/materias/{materiaId}/sesiones")
     public ResponseEntity<ApiListResponse<SesionMateriaEstudianteResponse>> consultarSesionesMateria(
-            @PathVariable final UUID materiaId
+            @PathVariable final UUID materiaId,
+            @RequestParam(name = "pagina", required = false) final Integer pagina,
+            @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
         final var data = consultarSesionesMateriaEstudianteInputPort.execute(
                 authenticatedUserResolver.requireAuthenticatedUserId(),
-                materiaId
+                materiaId,
+                pagina,
+                tamano
         ).stream().map(SesionMateriaEstudianteResponse::from).toList();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
