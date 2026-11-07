@@ -179,6 +179,16 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
                     RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE);
             identityProviderPort.crearCuenta(requiereVerificacionCorreo ? cuenta.conVerificacionCorreo() : cuenta);
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (!requiereVerificacionCorreo) {
+                // CULM-001 A (E2E): la persona ya existia en BD con su cuenta y sus credenciales; que el proveedor no
+                // reconcilie esa cuenta no invalida la matricula ya confirmada. Se registra el desfase y se responde como
+                // en el alta nueva (nunca 500). Solo una cuenta nueva sin aprovisionar es un fallo del registro.
+                LOGGER.atWarn()
+                        .addKeyValue("eventType", "IDENTITY_PROVISIONING_DRIFT")
+                        .addKeyValue("idUsuario", usuarioCanonico.id())
+                        .log("La cuenta de identidad del estudiante existente no pudo reconciliarse; la matricula se conserva.");
+                return;
+            }
             throw new InternalApplicationException(
                     "No fue posible completar el aprovisionamiento de identidad del estudiante registrado.",
                     exception
