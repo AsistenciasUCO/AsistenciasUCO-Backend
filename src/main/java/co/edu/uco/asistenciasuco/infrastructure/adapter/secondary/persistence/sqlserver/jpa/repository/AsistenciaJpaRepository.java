@@ -73,6 +73,15 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
     static final String OP_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     static final String OP_SOLICITAR_REVISION_ASISTENCIA = "solicitarRevisionAsistencia";
     static final String OP_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
+    static final String OP_RETIRAR_SOLICITUD_REVISION = "retirarSolicitudRevisionAsistencia";
+
+    // CULM-001 A.2-7: retiro del reclamo propio pendiente (P -> X). Comando con el resultset canonico de 4 columnas.
+    static final String SQL_RETIRAR_SOLICITUD_REVISION = """
+            EXEC dbo.usp_retirar_solicitud_revision_asistencia
+                 @idSolicitudRevision = :idSolicitudRevision,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
 
     private static final String PARAM_GRUPO = "idGrupo";
     private static final String PARAM_SESION = "idSesion";
@@ -180,6 +189,20 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 
         procedureExecutor.execute(OP_RESOLVER_SOLICITUD_REVISION, SQL_RESOLVER_SOLICITUD_REVISION, parametros, correlationId);
+    }
+
+    @Override
+    public String retirarSolicitudRevision(final UUID idSolicitudRevision, final UUID usuarioEjecutor) {
+        if (ObjectHelper.isNull(idSolicitudRevision) || ObjectHelper.isNull(usuarioEjecutor)) {
+            throw new CrosscuttingException("La solicitud de revision y el usuario ejecutor son obligatorios para retirarla.");
+        }
+        final UUID correlationId = CorrelationIdContext.require();
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idSolicitudRevision", idSolicitudRevision);
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        return procedureExecutor.execute(OP_RETIRAR_SOLICITUD_REVISION, SQL_RETIRAR_SOLICITUD_REVISION, parametros, correlationId)
+                .getMensajeUsuarioResultado();
     }
 
     @Override

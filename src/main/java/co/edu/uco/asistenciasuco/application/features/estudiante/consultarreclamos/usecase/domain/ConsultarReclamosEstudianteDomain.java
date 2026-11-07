@@ -18,7 +18,8 @@ public record ConsultarReclamosEstudianteDomain(UUID actorUsuarioId, String codi
     private static final Map<String, String> CODIGO_POR_ESTADO = Map.of(
             "P", "P", "PENDIENTE", "P",
             "A", "A", "APROBADA", "A",
-            "R", "R", "RECHAZADA", "R"
+            "R", "R", "RECHAZADA", "R",
+            "X", "X", "RETIRADA", "X"
     );
 
     public static ConsultarReclamosEstudianteDomain of(

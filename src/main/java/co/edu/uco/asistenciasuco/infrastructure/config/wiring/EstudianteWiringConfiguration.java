@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.impl.RetirarReclamoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.RetirarReclamoUseCase;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.interactor.RetirarReclamoInteractor;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.RetirarReclamoInputPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.ConsultarEstudiantePorIdInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.interactor.ConsultarEstudiantePorIdInteractor;
@@ -117,6 +122,17 @@ public class EstudianteWiringConfiguration {
     @Bean
     ConsultarReclamosEstudianteInputPort consultarReclamosEstudianteInputPort(final ConsultarReclamosEstudianteUseCase useCase) {
         return new ConsultarReclamosEstudianteInteractor(useCase);
+    }
+
+    /** CULM-001 A.2-7: retiro del reclamo propio pendiente. */
+    @Bean
+    RetirarReclamoUseCase retirarReclamoUseCase(final InstitutionalScopePort scopePort, final AsistenciaRepositoryPort asistenciaRepositoryPort) {
+        return new RetirarReclamoUseCaseImpl(scopePort, asistenciaRepositoryPort);
+    }
+
+    @Bean
+    RetirarReclamoInputPort retirarReclamoInputPort(final RetirarReclamoUseCase useCase) {
+        return new RetirarReclamoInteractor(useCase);
     }
 
     /** HU008: oferta de grupos (con cupos) de los programas del estudiante. */
