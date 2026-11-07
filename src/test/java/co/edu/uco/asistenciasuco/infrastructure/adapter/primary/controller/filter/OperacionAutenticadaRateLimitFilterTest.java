@@ -48,7 +48,7 @@ class OperacionAutenticadaRateLimitFilterTest {
     private OperacionAutenticadaRateLimitFilter filtro(final int subidas, final int qrIp, final int qrEstudiante) {
         return new OperacionAutenticadaRateLimitFilter(
                 new SlidingWindowRateLimiter(Duration.ofSeconds(60), 100, Clock.fixed(Instant.parse("2026-11-07T10:00:00Z"), ZoneOffset.UTC)),
-                new NetworkClientIpResolver(Optional::empty), writer, () -> subidas, () -> qrIp, () -> qrEstudiante);
+                new NetworkClientIpResolver(Optional::empty), writer, () -> subidas);
     }
 
     private static MockHttpServletRequest peticion(final String uri, final String metodo, final String ip, final String usuario) {
@@ -89,16 +89,15 @@ class OperacionAutenticadaRateLimitFilterTest {
     }
 
     @Test
-    void asistencia_qr_por_ip_y_por_estudiante_responde_429() throws Exception {
-        final OperacionAutenticadaRateLimitFilter porIp = filtro(50, 1, 50);
-        assertEquals(true, pasa(porIp, peticion(OperacionAutenticadaRateLimitFilter.RUTA_ASISTENCIA_QR, "POST", "10.0.0.2", "a")));
-        assertEquals(false, pasa(porIp, peticion(OperacionAutenticadaRateLimitFilter.RUTA_ASISTENCIA_QR, "POST", "10.0.0.2", "b")));
-
-        final OperacionAutenticadaRateLimitFilter porEstudiante = filtro(50, 50, 1);
-        assertEquals(true, pasa(porEstudiante, peticion(OperacionAutenticadaRateLimitFilter.RUTA_ASISTENCIA_QR, "POST", "10.0.0.3", "e")));
-        assertEquals(false, pasa(porEstudiante, peticion(OperacionAutenticadaRateLimitFilter.RUTA_ASISTENCIA_QR, "POST", "10.0.0.4", "e")));
-        // Sin principal la clave es anonima (la cadena de seguridad ya habria rechazado la peticion en produccion).
-        assertEquals(true, pasa(porEstudiante, peticion(OperacionAutenticadaRateLimitFilter.RUTA_ASISTENCIA_QR, "POST", "10.0.0.5", null)));
+    void B2_la_asistencia_por_qr_ya_no_se_limita_en_este_filtro() throws Exception {
+        // CULM-001 B.2 ([SUPUESTO-B-12]): el limite por IP cuenta solo rechazos (AsistenciaQrRateLimitFilter) y los limites
+        // por estudiante y token viven en el caso de uso; este filtro deja pasar todos los intentos de la ruta.
+        final OperacionAutenticadaRateLimitFilter f = filtro(1, 1, 1);
+        for (int i = 0; i < 5; i++) {
+            assertEquals(true, pasa(f, peticion("/api/v1/estudiante/asistencia-qr", "POST", "10.0.0.2", "a")));
+        }
+        // Sin principal la clave de la subida es anonima (la cadena de seguridad ya habria rechazado la peticion).
+        assertEquals(true, pasa(f, peticion(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, "POST", "10.0.0.5", null)));
     }
 
     @Test

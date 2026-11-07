@@ -14,7 +14,6 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisi
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper.AsistenciaHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.ConsultarAsistenciasPorGrupoRequest;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaQrRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.error.GlobalExceptionHandler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -137,14 +136,6 @@ class AsistenciaControllerContractTest {
         assertEquals(ACTOR, AsistenciaHttpMapper.toApplicationDTO(empty, ACTOR).getUsuarioEjecutor());
         empty.setRegistros(java.util.Collections.singletonList(null));
         assertEquals(null, AsistenciaHttpMapper.toApplicationDTO(empty, ACTOR).getRegistros().getFirst().getEstudiante());
-
-        final RegistrarAsistenciaQrRequest qr = json.readValue(
-                "{\"sesionId\":\"" + SESSION + "\",\"codigoAcceso\":\"ABC123\"}",
-                RegistrarAsistenciaQrRequest.class);
-        final var mappedQr = AsistenciaHttpMapper.toApplicationDTO(qr, ACTOR);
-        assertEquals(SESSION, mappedQr.getSesion());
-        assertEquals("ABC123", mappedQr.getCodigoVerificacion());
-        assertEquals(ACTOR, mappedQr.getUsuario());
 
         final ConsultarAsistenciasPorGrupoRequest query = json.readValue(
                 "{\"grupo\":\"" + GROUP + "\",\"sesion\":\"" + SESSION + "\"}",

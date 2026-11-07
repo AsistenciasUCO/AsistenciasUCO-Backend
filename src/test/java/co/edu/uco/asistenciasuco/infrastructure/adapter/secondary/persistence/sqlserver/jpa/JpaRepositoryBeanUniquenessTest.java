@@ -34,7 +34,8 @@ class JpaRepositoryBeanUniquenessTest {
     // F3: + OfertaCreacionGruposDocenteJpaRepository (oferta de asignaturas del docente para crear grupos).
     // CULM-001 A: - SolicitudIngresoGrupoJpaRepository (HU053-HU055 descartadas).
     // Integracion CULM-001 (A + B.1): 56 - 1 (A) + 2 (B.1: SesionCancelacion y DiaFestivo) = 57.
-    private static final int EXPECTED_REPOSITORIES = 57;
+    // CULM-001 B.2: + TomaAsistenciaJpaRepository, AsistenciaQrJpaRepository y ResumenAsistenciaJpaRepository = 60.
+    private static final int EXPECTED_REPOSITORIES = 60;
 
     @Test
     void cada_port_tiene_exactamente_un_repository_activo_con_provider_sqlserver() {

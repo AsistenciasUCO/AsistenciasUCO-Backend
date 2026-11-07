@@ -100,7 +100,9 @@ class AsistenciaJpaRepositoryTest {
         final UUID estudiante = UUID.randomUUID();
         when(query.getResultList()).thenReturn(List.<Object>of(
                 new Object[]{asistencia, estudiante.toString(), GRUPO, SESION, null, null, null, 2},
-                new Object[]{UUID.randomUUID(), estudiante, GRUPO, SESION, Boolean.TRUE, "EX ", "Cita medica", 2}));
+                // CULM-001 B.2 ([SUPUESTO-B-15]): una fila por estudiante y sesion; la segunda fila es de otro estudiante (con el
+                // mismo estudiante serian dos tomas de la sesion y se consolidarian en una).
+                new Object[]{UUID.randomUUID(), UUID.randomUUID(), GRUPO, SESION, Boolean.TRUE, "EX ", "Cita medica", 2}));
 
         final List<AsistenciaRepositoryProjection> result = persistence.consultarAsistenciasPorGrupo(
                 new ConsultarAsistenciasPorGrupoRepositoryDTO(GRUPO, SESION, ACTOR));

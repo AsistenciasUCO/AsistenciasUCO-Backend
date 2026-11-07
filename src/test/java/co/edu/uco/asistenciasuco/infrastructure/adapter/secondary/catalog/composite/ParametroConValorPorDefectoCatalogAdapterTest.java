@@ -92,6 +92,12 @@ class ParametroConValorPorDefectoCatalogAdapterTest {
         esperado.put("ARCHIVOS:LIMITE_SUBIDAS_POR_MINUTO", "10");
         esperado.put("ASISTENCIA_QR:LIMITE_IP_POR_MINUTO", "20");
         esperado.put("ASISTENCIA_QR:LIMITE_ESTUDIANTE_POR_MINUTO", "5");
+        // CULM-001 B.2 (semilla 35; DEC-045 conserva el 5 de arriba).
+        esperado.put("ASISTENCIA_QR:HABILITADA", "true");
+        esperado.put("ASISTENCIA_QR:ROTACION_SEGUNDOS", "60");
+        esperado.put("ASISTENCIA_QR:LIMITE_FALLIDOS_IP_POR_MINUTO", "600");
+        esperado.put("ASISTENCIA_QR:LIMITE_TOKEN_POR_MINUTO", "120");
+        esperado.put("ASISTENCIA_QR:URL_BASE_FRONTEND", "http://localhost:4200");
         esperado.put("RECLAMO:ESTADO_PENDIENTE", "P");
         esperado.put("RECLAMO:ESTADO_RETIRADO", "X");
         esperado.put("MATRICULA:ESTADO_RETIRADA", "I");

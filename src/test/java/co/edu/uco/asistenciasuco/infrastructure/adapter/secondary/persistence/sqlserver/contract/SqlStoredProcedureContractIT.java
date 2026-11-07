@@ -373,6 +373,93 @@ class SqlStoredProcedureContractIT {
                         input("@idGrupo", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier"),
                         input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                // CULM-001 B.2 (CONTRACT 2.8, 3.11): tomas, QR de asistencia y resumenes por horas.
+                Arguments.of("usp_abrir_toma_asistencia", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@codigoModo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cerrar_toma_asistencia", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@marcarAusentes", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cerrar_tomas_vencidas", List.of(
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_asistencias_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@asistenciaJSON", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_abrir_qr_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_rotar_token_asistencia_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_rotar_token_asistencia_automatico", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@forzar", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_tomas_qr_por_rotar", List.of(
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cerrar_qr_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_asistencia_por_token", List.of(
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_tomas_sesion", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_faltantes_toma_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idToma", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_asistencias_toma_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idToma", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_resumen_asistencia_grupo_docente_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_resumen_asistencia_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
                 ))
         );
     }
