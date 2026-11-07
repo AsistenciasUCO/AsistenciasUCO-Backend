@@ -8,6 +8,8 @@ last-reviewed: 2026-10-27
 
 # PLAN — HU008: oferta de grupos y cupos para el estudiante
 
+> **CULM-001 A.1 (2026-11-07):** la solicitud de ingreso (HU053) se retiro; la oferta queda como consulta de oferta y cupos. La matricula se hace por QR/PIN (HU176B) o manualmente por el docente titular (HU050).
+
 ## 1. Identidad y objetivo
 
 - **Historia:** HU008. El enunciado original es "Ver la información de los grupos existentes"; el catálogo la llama "Consultar información de grupos y cupos".
