@@ -58,9 +58,10 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_128_codigos_de_usuario_de_los_seeds() throws Exception {
+    void el_catalogo_trae_los_134_codigos_de_usuario_de_los_seeds() throws Exception {
         // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
-        assertEquals(128, catalogo().size());
+        // CULM-001 A.2: + SES_017, REV_006, REV_007, REV_008, DEC_002 y DEC_003 (seed 33_culm001_a_mensajes).
+        assertEquals(134, catalogo().size());
     }
 
     @Test

@@ -38,7 +38,8 @@ class ConsultarHorariosEstudianteUseCaseImplTest {
         final UUID estudiante = UUID.randomUUID();
         final UUID id = UUID.randomUUID();
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarHorarioEstudiante(estudiante)).thenReturn(List.of(new HorarioEstudianteProjection(
+        // CULM-001 A.2-11: el SP recibe el USUARIO ejecutor y resuelve el estudiante (solo matricula A).
+        when(queryPort.consultarHorarioEstudiante(actor)).thenReturn(List.of(new HorarioEstudianteProjection(
                 id, estudiante, UUID.randomUUID(), "MAT-01", "Calculo", "G1", "LUNES",
                 LocalTime.of(8, 0), LocalTime.of(10, 0), "Docente Uno")));
 

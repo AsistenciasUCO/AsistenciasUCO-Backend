@@ -1,5 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante;
 
+import java.util.Arrays;
+import org.springframework.web.bind.annotation.PostMapping;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.dto.RetirarReclamoDTO;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.RetirarReclamoInputPort;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.ConsultarReclamosEstudianteInputPort;
@@ -22,6 +28,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -40,9 +48,10 @@ class EstudiantePortalControllerTest {
     private final ConsultarHorariosEstudianteInputPort horarios = mock(ConsultarHorariosEstudianteInputPort.class);
     private final ConsultarSesionesMateriaEstudianteInputPort sesiones = mock(ConsultarSesionesMateriaEstudianteInputPort.class);
     private final ConsultarReclamosEstudianteInputPort reclamos = mock(ConsultarReclamosEstudianteInputPort.class);
+    private final RetirarReclamoInputPort retirarReclamo = mock(RetirarReclamoInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final EstudiantePortalController controller =
-            new EstudiantePortalController(materias, horarios, sesiones, reclamos, identity);
+            new EstudiantePortalController(materias, horarios, sesiones, reclamos, retirarReclamo, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -157,17 +166,36 @@ class EstudiantePortalControllerTest {
         mvc.perform(get("/api/v1/estudiante/reclamos")).andExpect(status().isForbidden());
     }
 
+    // CULM-001 A.2-7 (A2-B-12): DELETE /estudiante/reclamos/{id} deja de ser 501.
     @Test
-    void endpoints_no_implementados_lanzan_featureUnavailable() {
-        final List<Executable> operations = List.of(
-                controller::crearReclamo,
-                () -> controller.eliminarReclamo(MATERIA)
-        );
-        // HU176B (CONTRACT §3.5): POST /estudiante/matricular-grupo sale de 501; ver EstudianteMatriculaQrControllerTest.
+    void retirarReclamo_usa_el_actor_del_token_y_responde_200_con_el_mensaje() throws Exception {
+        when(retirarReclamo.execute(new RetirarReclamoDTO(MATERIA, ACTOR))).thenReturn("La solicitud de revision fue retirada.");
 
-        for (final var operation : operations) {
-            assertEquals("FEATURE_UNAVAILABLE",
-                    assertThrows(FeatureUnavailableException.class, operation).getCode());
-        }
+        mvc.perform(delete("/api/v1/estudiante/reclamos/{id}", MATERIA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.mensaje").value("La solicitud de revision fue retirada."));
+    }
+
+    @Test
+    void retirarReclamo_ajeno_o_inexistente_responde_404_y_no_pendiente_409() throws Exception {
+        when(retirarReclamo.execute(new RetirarReclamoDTO(MATERIA, ACTOR)))
+                .thenThrow(new ResourceNotFoundException("La solicitud de revision no existe."));
+        mvc.perform(delete("/api/v1/estudiante/reclamos/{id}", MATERIA)).andExpect(status().isNotFound());
+
+        final UUID otro = UUID.randomUUID();
+        when(retirarReclamo.execute(new RetirarReclamoDTO(otro, ACTOR)))
+                .thenThrow(new ConflictException("Solo se puede retirar una solicitud de revision pendiente."));
+        mvc.perform(delete("/api/v1/estudiante/reclamos/{id}", otro)).andExpect(status().isConflict());
+    }
+
+    // CULM-001 A.2-14 (A2-B-16): POST /estudiante/reclamos (501) se retira; el reclamo se radica por
+    // POST /api/v1/asistencias/revisiones. La prueba de 501 se sustituye por la ausencia de ruta.
+    @Test
+    void post_reclamos_retirado_no_tiene_ruta() {
+        final boolean hayPost = Arrays.stream(EstudiantePortalController.class.getDeclaredMethods())
+                .anyMatch(metodo -> metodo.isAnnotationPresent(PostMapping.class));
+
+        assertFalse(hayPost);
     }
 }

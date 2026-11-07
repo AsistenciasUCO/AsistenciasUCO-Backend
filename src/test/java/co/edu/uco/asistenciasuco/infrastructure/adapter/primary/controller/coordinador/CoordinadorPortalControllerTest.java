@@ -175,16 +175,18 @@ class CoordinadorPortalControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // CULM-001 A.2-14 (A2-B-16): los stubs 501 DELETE /planes-estudio/{planId}/asignaturas/{asigId} y
+    // PATCH /periodos-academicos/{id}/estado se retiran; la lista de 501 queda vacia y su caso se sustituye por este.
     @Test
-    void unavailableEndpointsRemainExplicitlyUnavailable() throws Exception {
-        final List<org.junit.jupiter.api.function.Executable> operations = List.of(
-                () -> controller.eliminarAsignaturaPlan(PLAN, SUBJECT),
-                () -> controller.toggleEstadoPeriodoAcademico(PLAN)
-        );
-        for (final var operation : operations) {
-            assertEquals("FEATURE_UNAVAILABLE",
-                    assertThrows(FeatureUnavailableException.class, operation).getCode());
-        }
+    void stubs_501_de_asignatura_del_plan_y_estado_del_periodo_retirados_no_tienen_ruta() {
+        final List<String> rutas = Arrays.stream(CoordinadorPortalController.class.getDeclaredMethods())
+                .filter(metodo -> metodo.isAnnotationPresent(DeleteMapping.class) || metodo.isAnnotationPresent(PatchMapping.class))
+                .flatMap(CoordinadorPortalControllerTest::rutasDe)
+                .toList();
+
+        assertTrue(rutas.stream().noneMatch(ruta -> ruta.equals("/planes-estudio/{planId}/asignaturas/{asigId}")
+                        || ruta.equals("/periodos-academicos/{id}/estado")),
+                () -> "Stubs retirados aun mapeados: " + rutas);
     }
 
     // CULM-001 A.1 (B-RED-03): HU053/HU054 descartadas y F-COO-004 (el coordinador no matricula). Las rutas de

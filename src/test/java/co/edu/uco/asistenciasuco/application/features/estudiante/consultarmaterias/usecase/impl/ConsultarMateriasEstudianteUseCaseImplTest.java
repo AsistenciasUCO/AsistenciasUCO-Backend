@@ -37,7 +37,8 @@ class ConsultarMateriasEstudianteUseCaseImplTest {
         final UUID estudiante = UUID.randomUUID();
         final UUID asignatura = UUID.randomUUID();
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarMateriasEstudiante(estudiante)).thenReturn(List.of(
+        // CULM-001 A.2-11: el SP recibe el USUARIO ejecutor y resuelve el estudiante (solo matricula A).
+        when(queryPort.consultarMateriasEstudiante(actor)).thenReturn(List.of(
                 new MateriaEstudianteProjection(asignatura, "Calculo", UUID.randomUUID(), "Grupo 1")));
 
         final List<MateriaEstudianteDomain> result = useCase.execute(actor);

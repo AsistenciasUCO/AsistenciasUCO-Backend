@@ -45,7 +45,7 @@ class GrupoControllerTest {
     void consultarGrupos_responde_lista_publica_sin_correlacion() throws Exception {
         final RegistrarEstudianteInputPort registrarPort = mock(RegistrarEstudianteInputPort.class);
         final ConsultarGruposInputPort consultarPort = mock(ConsultarGruposInputPort.class);
-        when(consultarPort.execute()).thenReturn(List.of(new GrupoDTO(
+        when(consultarPort.execute(org.mockito.ArgumentMatchers.any())).thenReturn(List.of(new GrupoDTO(
                 GRUPO,
                 "G1",
                 "Grupo 1",
@@ -80,7 +80,7 @@ class GrupoControllerTest {
             dtoCapturado.set(dto);
             return new RegistrarEstudianteResultadoDTO(true, "Estudiante registrado.");
         };
-        final ConsultarGruposInputPort consultarPort = List::of;
+        final ConsultarGruposInputPort consultarPort = actor -> List.of();
         final MockMvc mockMvc = mockMvc(registrarPort, consultarPort);
 
         mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
@@ -101,7 +101,7 @@ class GrupoControllerTest {
             dtoCapturado.set(dto);
             return new RegistrarEstudianteResultadoDTO(true, "Estudiante registrado.");
         };
-        final MockMvc mockMvc = mockMvc(registrarPort, List::of);
+        final MockMvc mockMvc = mockMvc(registrarPort, actor -> List.of());
 
         mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -132,7 +132,7 @@ class GrupoControllerTest {
                         mock(CrearGrupoInputPort.class),
                         mock(ActualizarGrupoInputPort.class),
                         registrarPort,
-                        List::of,
+                        actor -> List.of(),
                         consultarEstudiantesPort,
                         AUTHENTICATED_USER_RESOLVER
                 ))
@@ -152,7 +152,7 @@ class GrupoControllerTest {
 
     @Test
     void registrarEstudiante_retorna_badRequest_cuando_grupoId_no_es_uuid() throws Exception {
-        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), List::of)
+        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), actor -> List.of())
                 .perform(post("/api/v1/grupos/no-es-uuid/estudiantes")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodyValido()))
@@ -163,7 +163,7 @@ class GrupoControllerTest {
 
     @Test
     void registrarEstudiante_retorna_badRequest_cuando_json_es_ilegible() throws Exception {
-        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), List::of)
+        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), actor -> List.of())
                 .perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -179,7 +179,7 @@ class GrupoControllerTest {
 
     @Test
     void registrarEstudiante_retorna_badRequest_cuando_tipo_json_no_coincide() throws Exception {
-        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), List::of)
+        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), actor -> List.of())
                 .perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -200,7 +200,7 @@ class GrupoControllerTest {
 
     @Test
     void registrarEstudiante_retorna_badRequest_cuando_email_es_invalido() throws Exception {
-        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), List::of)
+        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), actor -> List.of())
                 .perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(bodyValido().replace("ana.perez@uco.edu.co", "correo-invalido")))
@@ -210,7 +210,7 @@ class GrupoControllerTest {
 
     @Test
     void registrarEstudiante_retorna_badRequest_cuando_campo_requerido_esta_ausente() throws Exception {
-        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), List::of)
+        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), actor -> List.of())
                 .perform(post("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content("""
@@ -284,5 +284,40 @@ class GrupoControllerTest {
                 .toList();
 
         org.junit.jupiter.api.Assertions.assertTrue(metodos.isEmpty(), () -> "DeleteMapping retirado aun presente: " + metodos);
+    }
+
+    // CULM-001 A.2-2 (A2-B-04): el SP valida el ambito; un grupo ajeno o inexistente responde 403 en GET /estudiantes.
+    @Test
+    void estudiantes_de_un_grupo_fuera_de_ambito_responde_403() throws Exception {
+        final org.springframework.test.web.servlet.MockMvc mvc = MockMvcBuilders.standaloneSetup(new GrupoController(
+                        mock(CrearGrupoInputPort.class),
+                        mock(ActualizarGrupoInputPort.class),
+                        mock(RegistrarEstudianteInputPort.class),
+                        actor -> List.of(),
+                        dto -> {
+                            throw new co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException(
+                                    "SEC_002", "No tiene ambito sobre el grupo.");
+                        },
+                        AUTHENTICATED_USER_RESOLVER
+                ))
+                .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty()))
+                .build();
+
+        mvc.perform(get("/api/v1/grupos/{grupoId}/estudiantes", GRUPO)).andExpect(status().isForbidden());
+    }
+
+    @Test
+    void listar_grupos_pasa_el_ejecutor_autenticado() throws Exception {
+        final AtomicReference<UUID> actor = new AtomicReference<>();
+        final ConsultarGruposInputPort consultar = usuario -> {
+            actor.set(usuario);
+            return List.of();
+        };
+
+        mockMvc(dto -> new RegistrarEstudianteResultadoDTO(true, "ok"), consultar)
+                .perform(get("/api/v1/grupos"))
+                .andExpect(status().isOk());
+
+        assertEquals(AUTHENTICATED_USER_RESOLVER.requireAuthenticatedUserId(), actor.get());
     }
 }

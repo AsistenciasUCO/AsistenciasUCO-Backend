@@ -23,6 +23,7 @@ class ConsultarEstudiantesDomainTest {
                 null,
                 null,
                 null,
+                null,
                 null
         );
 
@@ -56,7 +57,8 @@ class ConsultarEstudiantesDomainTest {
                         null,
                         null,
                         0,
-                        20
+                        20,
+                null
                 )
         );
 
@@ -77,7 +79,8 @@ class ConsultarEstudiantesDomainTest {
                         null,
                         null,
                         page,
-                        size
+                        size,
+                null
                 )
         );
 

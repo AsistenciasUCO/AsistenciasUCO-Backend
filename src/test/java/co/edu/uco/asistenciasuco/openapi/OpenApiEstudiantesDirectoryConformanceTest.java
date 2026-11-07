@@ -159,7 +159,7 @@ class OpenApiEstudiantesDirectoryConformanceTest {
     void controllerSuccessStatusIsTheDeclared200() {
         final ConsultarEstudiantesInputPort port = mock(ConsultarEstudiantesInputPort.class);
         when(port.execute(any())).thenReturn(new EstudiantePaginaDTO(List.of(), 0L, 0, 0, 20));
-        final EstudianteController controller = new EstudianteController(port, mock(ConsultarEstudiantePorIdInputPort.class));
+        final EstudianteController controller = new EstudianteController(port, mock(ConsultarEstudiantePorIdInputPort.class), java.util.UUID::randomUUID);
         final int status = controller.consultarEstudiantes(null, null, null, null, null, null, null, null, null, 0, 20)
                 .getStatusCode().value();
         assertEquals(200, status);

@@ -43,7 +43,8 @@ class ConsultarGruposUseCaseImplTest {
             }
 
             @Override
-            public List<GrupoRepositoryProjection> consultarGrupos() {
+            public List<GrupoRepositoryProjection> consultarGrupos(final UUID usuarioEjecutor) {
+                assertEquals(DOCENTE, usuarioEjecutor);
                 return List.of(new GrupoRepositoryProjection(
                         GRUPO,
                         "G1",
@@ -62,17 +63,30 @@ class ConsultarGruposUseCaseImplTest {
             }
 
             @Override
-            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId) {
+            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
+                throw new UnsupportedOperationException("No usado por este test.");
+            }
+
+            @Override
+            public java.util.Optional<co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection> buscarEstudiantePorDocumento(
+                    final UUID grupoId, final UUID tipoIdentificacionId, final Integer numeroIdentificacion, final UUID usuarioEjecutor) {
                 throw new UnsupportedOperationException("No usado por este test.");
             }
         };
         final ConsultarGruposUseCaseImpl useCase = new ConsultarGruposUseCaseImpl(repositoryPort);
 
-        final List<GrupoEntity> resultado = useCase.execute();
+        final List<GrupoEntity> resultado = useCase.execute(DOCENTE);
 
         assertEquals(1, resultado.size());
         assertEquals(GRUPO, resultado.getFirst().getId());
         assertEquals("Backend", resultado.getFirst().getNombreAsignatura());
         assertTrue(resultado.getFirst().isGrupoHabilitado());
+    }
+
+    @Test
+    void execute_sin_ejecutor_lanza_excepcion_sin_consultar() {
+        final ConsultarGruposUseCaseImpl useCase = new ConsultarGruposUseCaseImpl(org.mockito.Mockito.mock(GrupoRepositoryPort.class));
+        org.junit.jupiter.api.Assertions.assertThrows(co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException.class,
+                () -> useCase.execute(null));
     }
 }

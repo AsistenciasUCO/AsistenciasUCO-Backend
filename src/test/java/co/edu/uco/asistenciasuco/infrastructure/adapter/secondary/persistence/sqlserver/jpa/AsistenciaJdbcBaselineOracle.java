@@ -252,7 +252,9 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
             throw new CrosscuttingException("No fue posible serializar los registros de asistencia.", exception);
         }
     }
+
+    @Override
+    public String retirarSolicitudRevision(final java.util.UUID idSolicitudRevision, final java.util.UUID usuarioEjecutor) {
+        throw new UnsupportedOperationException("CULM-001 A.2-7: el retiro del reclamo no forma parte de este doble de prueba.");
+    }
 }
-
-
-

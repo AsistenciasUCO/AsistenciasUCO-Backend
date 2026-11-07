@@ -555,13 +555,19 @@ class RegistrarEstudianteUseCaseImplTest {
             }
 
             @Override
-            public List<GrupoRepositoryProjection> consultarGrupos() {
+            public List<GrupoRepositoryProjection> consultarGrupos(final UUID usuarioEjecutor) {
                 return List.of();
             }
 
             @Override
-            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId) {
+            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
                 throw new UnsupportedOperationException("No usado por este test.");
+            }
+
+            @Override
+            public Optional<co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection> buscarEstudiantePorDocumento(
+                    final UUID grupoId, final UUID tipoIdentificacionId, final Integer numeroIdentificacion, final UUID usuarioEjecutor) {
+                throw new UnsupportedOperationException("Con correo informado no se busca por documento.");
             }
         };
     }
@@ -587,6 +593,11 @@ class RegistrarEstudianteUseCaseImplTest {
     ) {
         final Iterator<UUID> secuencia = secuenciaPorIdentificacion.iterator();
         return new UsuarioRepositoryPort() {
+            @Override
+            public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
+                throw new UnsupportedOperationException("Con correo informado no se resuelve el correo por estudiante.");
+            }
+
             @Override
             public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
                 throw new UnsupportedOperationException("No usado por este test.");

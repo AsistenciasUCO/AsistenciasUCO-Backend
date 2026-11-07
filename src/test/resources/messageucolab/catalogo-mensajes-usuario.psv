@@ -127,3 +127,9 @@ VCE_004|VCE004|Funcional|Error|VCE_004 - El estudiante no pertenece a un grupo�
 VCE_005|VCE005|Funcional|Error|VCE_005 - El correo de este estudiante ya fue…|El correo de este estudiante ya fue verificado.
 VCE_006|VCE006|Funcional|Confirmación|VCE_006 - Su correo fue verificado. Ya puede…|Su correo fue verificado. Ya puede iniciar sesión.
 VCE_007|VCE007|Funcional|Error|VCE_007 - El usuario no existe o no está activo.|El usuario no existe o no está activo.
+SES_017|SES017|Funcional|Error|SES_017 - La sesión se cruza con otra sesión del…|La sesión se cruza con otra sesión del grupo o del docente en ese horario.
+REV_006|REV006|Funcional|Error|REV_006 - La solicitud de revisión no existe.|La solicitud de revisión no existe.
+REV_007|REV007|Funcional|Error|REV_007 - Solo se puede retirar una solicitud de…|Solo se puede retirar una solicitud de revisión pendiente.
+REV_008|REV008|Funcional|Confirmación|REV_008 - La solicitud de revisión fue retirada.|La solicitud de revisión fue retirada.
+DEC_002|DEC002|Funcional|Error|DEC_002 - No se puede desactivar al decano de una…|No se puede desactivar al decano de una facultad con programas activos.
+DEC_003|DEC003|Funcional|Confirmación|DEC_003 - Se actualizó el estado del decano.|Se actualizó el estado del decano.
