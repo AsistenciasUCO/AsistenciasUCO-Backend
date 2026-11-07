@@ -133,6 +133,29 @@ class SmtpNotificacionChannelSenderTest {
     }
 
     @Test
+    @DisplayName("CULM-001 A.1 (B-RED-09): una notificacion de un tipo retirado (SOLICITUD_INGRESO_*) reencolada no se envia: fallo definitivo")
+    void B_RED_09_tipo_retirado_reencolado_no_se_envia_y_es_fallo_definitivo() {
+        final UUID u1 = UUID.randomUUID();
+        when(contactoResolver.consultarContactos(any())).thenReturn(List.of(new ContactoDestinatario(u1, "u1@uco.edu.co", true)));
+        final SmtpNotificacionChannelSender sender = crearSender(crearProps(50, false),
+                new TopeEnvios(60, 500, Clock.systemUTC(), meterRegistry));
+        final NotificacionPersistida reencolada = new NotificacionPersistida(
+                UUID.randomUUID(),
+                "SOLICITUD_INGRESO_REGISTRADA",
+                "Nueva solicitud de ingreso al grupo G01",
+                "Un estudiante solicito ingresar al grupo G01.",
+                List.of(new DestinatarioRef("DOCENTE", u1)),
+                Map.of("grupo", "G01", "estudiante", "Ana"),
+                1,
+                Instant.now()
+        );
+
+        assertFalse(PlantillaPorDefectoCatalogo.TIPOS_CONOCIDOS.contains("SOLICITUD_INGRESO_REGISTRADA"));
+        assertThrows(NotificacionNoEntregableException.class, () -> sender.enviar(reencolada));
+        assertTrue(transport.enviados.isEmpty());
+    }
+
+    @Test
     @DisplayName("BE-S01: notificacion con 3 destinatarios validos -> 1 mensaje, To=remitente, 3 BCC, multipart texto+HTML, Message-ID derivado del id")
     void BE_S01_envia_un_mensaje_con_to_remitente_y_3_bcc() throws Exception {
         final UUID u1 = UUID.randomUUID();
@@ -506,7 +529,7 @@ class SmtpNotificacionChannelSenderTest {
                 new ContactoDestinatario(u2, "real2@uco.edu.co", true),
                 new ContactoDestinatario(u3, "real3@uco.edu.co", true)
         ));
-        when(plantillaRepository.consultarActiva("SOLICITUD_INGRESO_RESUELTA", "es")).thenReturn(Optional.empty());
+        when(plantillaRepository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es")).thenReturn(Optional.empty());
 
         final SmtpNotificacionChannelSender sender = crearSender(
                 crearPropsModoPrueba(50, "qa@prueba.test"),
@@ -515,15 +538,15 @@ class SmtpNotificacionChannelSenderTest {
 
         final NotificacionPersistida notif = new NotificacionPersistida(
                 UUID.randomUUID(),
-                "SOLICITUD_INGRESO_RESUELTA",
-                "Solicitud resuelta",
+                "RETIRO_ESTUDIANTE_GRUPO",
+                "Retiro registrado",
                 "Mensaje guardado",
                 List.of(
                         new DestinatarioRef("ESTUDIANTE", u1),
                         new DestinatarioRef("ESTUDIANTE", u2),
                         new DestinatarioRef("DOCENTE", u3)
                 ),
-                Map.of("grupo", "G02 de Cálculo", "resultado", "aceptada"),
+                Map.of("grupo", "G02 de Cálculo", "estudiante", "Ana Ruiz"),
                 1,
                 Instant.now()
         );

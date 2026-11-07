@@ -234,9 +234,7 @@ class NotificacionSmtpGreenMailIT {
         trackedTemplateIds.clear();
         jdbcTemplate.update(
                 "UPDATE dbo.PlantillaNotificacion SET activa = 1 " +
-                        "WHERE idioma = 'es' AND version = 1 AND tipo IN (" +
-                        "'RETIRO_ESTUDIANTE_GRUPO','SOLICITUD_INGRESO_REGISTRADA'," +
-                        "'SOLICITUD_INGRESO_RESUELTA','SOLICITUD_INGRESO_RETIRADA')"
+                        "WHERE idioma = 'es' AND version = 1 AND tipo IN ('RETIRO_ESTUDIANTE_GRUPO')"
         );
     }
 
@@ -587,7 +585,7 @@ class NotificacionSmtpGreenMailIT {
 
     @Test
     @Order(9)
-    @DisplayName("IT-E09: Los 4 tipos producen correo legible y distinguible")
+    @DisplayName("IT-E09: 4 avisos de retiro producen correos legibles y distinguibles por grupo (CULM-001 A: tipos SOLICITUD_INGRESO_* retirados)")
     void ITE09_los_4_tipos_producen_correo_legible_y_distinguible() throws Exception {
         UUID d1 = crearUsuarioPrueba("d1.ite09@uco.edu.co", true, true);
         UUID d2 = crearUsuarioPrueba("d2.ite09@uco.edu.co", true, true);
@@ -600,17 +598,17 @@ class NotificacionSmtpGreenMailIT {
                 Map.of("grupo", "G-901", "estudiante", "Est Uno", "notif002aIt", "true")
         ));
         outboxNotificacionAdapter.notificar(new Notificacion(
-                "SOLICITUD_INGRESO_REGISTRADA", "A2", "M2",
+                "RETIRO_ESTUDIANTE_GRUPO", "A2", "M2",
                 List.of(new Notificacion.Destinatario("DOCENTE", d2, null, null)),
                 Map.of("grupo", "G-902", "estudiante", "Est Dos", "notif002aIt", "true")
         ));
         outboxNotificacionAdapter.notificar(new Notificacion(
-                "SOLICITUD_INGRESO_RESUELTA", "A3", "M3",
+                "RETIRO_ESTUDIANTE_GRUPO", "A3", "M3",
                 List.of(new Notificacion.Destinatario("ESTUDIANTE", d3, null, null)),
-                Map.of("grupo", "G-903", "resultado", "aprobada", "notif002aIt", "true")
+                Map.of("grupo", "G-903", "estudiante", "Est Tres", "notif002aIt", "true")
         ));
         outboxNotificacionAdapter.notificar(new Notificacion(
-                "SOLICITUD_INGRESO_RETIRADA", "A4", "M4",
+                "RETIRO_ESTUDIANTE_GRUPO", "A4", "M4",
                 List.of(new Notificacion.Destinatario("DOCENTE", d4, null, null)),
                 Map.of("grupo", "G-904", "estudiante", "Est Cuatro", "notif002aIt", "true")
         ));
@@ -633,9 +631,9 @@ class NotificacionSmtpGreenMailIT {
                 .toList();
 
         assertTrue(subjects.contains("Retiro del grupo G-901"));
-        assertTrue(subjects.contains("Nueva solicitud de ingreso al grupo G-902"));
-        assertTrue(subjects.contains("Respuesta a tu solicitud de ingreso al grupo G-903"));
-        assertTrue(subjects.contains("Solicitud de ingreso retirada del grupo G-904"));
+        assertTrue(subjects.contains("Retiro del grupo G-902"));
+        assertTrue(subjects.contains("Retiro del grupo G-903"));
+        assertTrue(subjects.contains("Retiro del grupo G-904"));
     }
 
     @Test

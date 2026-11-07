@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface HorarioEstudianteQueryPort {
 
-    List<HorarioEstudianteProjection> consultarHorarioEstudiante(UUID idEstudiante);
+    /** CULM-001 A.2-11: recibe el USUARIO ejecutor; el SP resuelve el estudiante y solo cuenta la matricula inscrita (A). */
+    List<HorarioEstudianteProjection> consultarHorarioEstudiante(UUID usuarioEjecutor);
 }

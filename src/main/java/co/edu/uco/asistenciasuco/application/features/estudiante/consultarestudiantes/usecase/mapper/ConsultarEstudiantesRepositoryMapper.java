@@ -31,7 +31,8 @@ public final class ConsultarEstudiantesRepositoryMapper {
                 domain.grupoId(),
                 domain.activo(),
                 domain.page(),
-                domain.size()
+                domain.size(),
+                domain.actorUsuarioId()
         );
     }
 

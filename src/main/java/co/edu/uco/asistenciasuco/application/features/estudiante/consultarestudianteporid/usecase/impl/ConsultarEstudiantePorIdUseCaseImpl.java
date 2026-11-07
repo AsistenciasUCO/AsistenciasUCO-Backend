@@ -25,7 +25,11 @@ public final class ConsultarEstudiantePorIdUseCaseImpl implements ConsultarEstud
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio para consultar estudiante por ID es obligatorio.");
         }
-        return estudianteRepositoryPort.consultarEstudiantePorId(domain.estudianteId())
+        if (ObjectHelper.isNull(domain.actorUsuarioId())) {
+            throw new CrosscuttingException("El usuario ejecutor de la consulta del estudiante es obligatorio.");
+        }
+        // CULM-001 A.2-1: fuera del ambito del ejecutor el SP no devuelve filas y se responde 404 (no se revela la existencia).
+        return estudianteRepositoryPort.consultarEstudiantePorId(domain.estudianteId(), domain.actorUsuarioId())
                 .map(ConsultarEstudiantePorIdRepositoryMapper::toUseCaseEntity)
                 .orElseThrow(() -> new ResourceNotFoundException(EstudianteErrorCode.ERR_ESTUDIANTE_NO_EXISTE));
     }

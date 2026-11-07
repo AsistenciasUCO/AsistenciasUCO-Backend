@@ -168,20 +168,26 @@ class AcademicQueryJpaParityIT {
 
         final UUID idEstudiante = uuidDe("SELECT TOP 1 idEstudiante FROM dbo.uv_horario_estudiante ORDER BY id");
         assumeTrue(idEstudiante != null, "No hay horarios de estudiante vivos.");
+        // CULM-001 A.2-11: el SP recibe el usuario del estudiante y solo cuenta la matricula inscrita (A).
+        final List<UUID> inscritos = gruposInscritos(idEstudiante);
         final List<HorarioEstudianteProjection> estudianteBefore = new HorarioEstudianteJdbcBaseline(named)
-                .consultarHorarioEstudiante(idEstudiante);
+                .consultarHorarioEstudiante(idEstudiante).stream().filter(h -> inscritos.contains(h.idGrupo())).toList();
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
         assertEquals(estudianteBefore,
-                new HorarioEstudianteJpaRepository(entityManager).consultarHorarioEstudiante(idEstudiante));
+                new HorarioEstudianteJpaRepository(entityManager).consultarHorarioEstudiante(usuarioDe(idEstudiante)));
     }
 
     @Test
     void materias_y_asignaturas_de_docente_conservan_distinct_y_orden() {
         final UUID idEstudiante = uuidDe("SELECT TOP 1 idEstudiante FROM dbo.uv_estudiante_grupo ORDER BY id");
         assumeTrue(idEstudiante != null, "No hay estudiantes en grupo vivos.");
+        // CULM-001 A.2-11: el SP recibe el usuario del estudiante y solo cuenta la matricula inscrita (A).
+        final List<UUID> inscritos = gruposInscritos(idEstudiante);
         final List<MateriaEstudianteProjection> materiasBefore = new MateriaEstudianteJdbcBaseline(named)
-                .consultarMateriasEstudiante(idEstudiante);
+                .consultarMateriasEstudiante(idEstudiante).stream().filter(m -> inscritos.contains(m.idGrupo())).toList();
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
         assertEquals(materiasBefore, new MateriaEstudianteJpaRepository(entityManager)
-                .consultarMateriasEstudiante(idEstudiante));
+                .consultarMateriasEstudiante(usuarioDe(idEstudiante)));
 
         final UUID idDocente = uuidDe("SELECT TOP 1 id FROM dbo.uv_docente ORDER BY id");
         assumeTrue(idDocente != null, "No hay asignaciones de docente vivas.");
@@ -223,8 +229,16 @@ class AcademicQueryJpaParityIT {
         final List<UUID> rows = jdbc.query(sql, (rs, row) -> rs.getObject(1, UUID.class));
         return rows.isEmpty() ? null : rows.getFirst();
     }
+
+    private UUID usuarioDe(final UUID idEstudiante) {
+        return uuidDe("SELECT usuario FROM dbo.Estudiante WHERE id = '" + idEstudiante + "'");
+    }
+
+    private List<UUID> gruposInscritos(final UUID idEstudiante) {
+        return jdbc.query("""
+                SELECT eg.grupo FROM dbo.EstudianteGrupo eg
+                INNER JOIN dbo.uv_estado_estudiante_grupo es ON es.id = eg.estado
+                WHERE eg.estudiante = ? AND es.codigo = 'A'
+                """, (rs, row) -> UUID.fromString(rs.getString(1)), idEstudiante);
+    }
 }
-
-
-
-

@@ -52,6 +52,11 @@ class EstudianteAcademicFilterJpaParityIT {
     @BeforeEach
     void setUp() {
         estudiantes = new EstudianteJpaRepository(entityManager);
+        final List<UUID> administradores = jdbc.query("SELECT TOP 1 a.usuario FROM dbo.Administrador a ORDER BY a.usuario",
+                (rs, row) -> UUID.fromString(rs.getString(1)));
+        assumeFalse(administradores.isEmpty(), "No hay administrador para consultar el directorio.");
+        actor = administradores.getFirst();
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
     }
 
     @Test
@@ -126,9 +131,12 @@ class EstudianteAcademicFilterJpaParityIT {
         return all;
     }
 
-    private static ConsultarEstudiantesRepositoryDTO dto(final UUID institucion, final UUID facultad,
+    private UUID actor;
+
+    private ConsultarEstudiantesRepositoryDTO dto(final UUID institucion, final UUID facultad,
                                                          final UUID programa, final UUID grupo, final int pagina) {
+        // CULM-001 A.2-1: el SP acota el tamano a 1..100 (A2-C3 solo exime a los SP de grupo).
         return new ConsultarEstudiantesRepositoryDTO(null, null, null, null, institucion, facultad, programa, grupo,
-                null, pagina, 500);
+                null, pagina, 100, actor);
     }
 }

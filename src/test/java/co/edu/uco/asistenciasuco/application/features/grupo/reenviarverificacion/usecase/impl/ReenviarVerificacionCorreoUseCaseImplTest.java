@@ -61,6 +61,11 @@ class ReenviarVerificacionCorreoUseCaseImplTest {
     private static UsuarioRepositoryPort usuarios(final Optional<UsuarioIdentidadRepositoryProjection> usuario) {
         return new UsuarioRepositoryPort() {
             @Override
+            public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
                 throw new UnsupportedOperationException();
             }

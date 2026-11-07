@@ -26,7 +26,8 @@ public record ConsultarEstudiantesDomain(
         UUID grupoId,
         Boolean activo,
         int page,
-        int size
+        int size,
+        UUID actorUsuarioId
 ) {
 
     private static final UUID EMPTY_UUID = new UUID(0L, 0L);
@@ -46,7 +47,8 @@ public record ConsultarEstudiantesDomain(
             final UUID grupoId,
             final Boolean activo,
             final Integer page,
-            final Integer size
+            final Integer size,
+            final UUID actorUsuarioId
     ) {
         final int pageValue = page == null ? DEFAULT_PAGE : page;
         final int sizeValue = size == null ? DEFAULT_SIZE : size;
@@ -68,7 +70,8 @@ public record ConsultarEstudiantesDomain(
                 validarUuidOpcional(grupoId, GrupoErrorCode.ERR_GRUPO_INVALIDO),
                 activo,
                 pageValue,
-                sizeValue
+                sizeValue,
+                actorUsuarioId
         );
     }
 

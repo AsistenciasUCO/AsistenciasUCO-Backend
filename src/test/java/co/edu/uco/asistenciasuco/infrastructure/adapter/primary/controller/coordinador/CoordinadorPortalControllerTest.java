@@ -22,12 +22,23 @@ import org.junit.jupiter.api.Test;
 import org.mockito.ArgumentCaptor;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.DeleteMapping;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PatchMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 
+import java.lang.reflect.Method;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.List;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
@@ -164,19 +175,43 @@ class CoordinadorPortalControllerTest {
                 .andExpect(status().isNotFound());
     }
 
+    // CULM-001 A.2-14 (A2-B-16): los stubs 501 DELETE /planes-estudio/{planId}/asignaturas/{asigId} y
+    // PATCH /periodos-academicos/{id}/estado se retiran; la lista de 501 queda vacia y su caso se sustituye por este.
     @Test
-    void unavailableEndpointsRemainExplicitlyUnavailable() throws Exception {
-        final List<org.junit.jupiter.api.function.Executable> operations = List.of(
-                () -> controller.eliminarAsignaturaPlan(PLAN, SUBJECT),
-                () -> controller.toggleEstadoPeriodoAcademico(PLAN),
-                controller::consultarSolicitudesMatricula, () -> controller.resolverSolicitudMatricula(PLAN),
-                () -> controller.matricularEstudianteEnGrupo(PLAN),
-                () -> controller.retirarEstudianteDeGrupo(PLAN, SUBJECT)
-        );
-        for (final var operation : operations) {
-            assertEquals("FEATURE_UNAVAILABLE",
-                    assertThrows(FeatureUnavailableException.class, operation).getCode());
-        }
+    void stubs_501_de_asignatura_del_plan_y_estado_del_periodo_retirados_no_tienen_ruta() {
+        final List<String> rutas = Arrays.stream(CoordinadorPortalController.class.getDeclaredMethods())
+                .filter(metodo -> metodo.isAnnotationPresent(DeleteMapping.class) || metodo.isAnnotationPresent(PatchMapping.class))
+                .flatMap(CoordinadorPortalControllerTest::rutasDe)
+                .toList();
+
+        assertTrue(rutas.stream().noneMatch(ruta -> ruta.equals("/planes-estudio/{planId}/asignaturas/{asigId}")
+                        || ruta.equals("/periodos-academicos/{id}/estado")),
+                () -> "Stubs retirados aun mapeados: " + rutas);
+    }
+
+    // CULM-001 A.1 (B-RED-03): HU053/HU054 descartadas y F-COO-004 (el coordinador no matricula). Las rutas de
+    // solicitudes de matricula y de matricula/retiro del coordinador se retiran (404 sin handler).
+    @Test
+    void solicitudes_y_matricula_del_coordinador_retiradas_no_tienen_ruta() {
+        final List<String> rutas = Arrays.stream(CoordinadorPortalController.class.getDeclaredMethods())
+                .flatMap(CoordinadorPortalControllerTest::rutasDe)
+                .toList();
+
+        assertFalse(rutas.isEmpty());
+        assertTrue(rutas.stream().noneMatch(ruta -> ruta.startsWith("/solicitudes-matricula")
+                        || ruta.startsWith("/grupos/{grupoId}/estudiantes")),
+                () -> "Rutas retiradas aun mapeadas: " + rutas);
+    }
+
+    static Stream<String> rutasDe(final Method metodo) {
+        return Stream.of(
+                        Optional.ofNullable(metodo.getAnnotation(GetMapping.class)).map(GetMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(PostMapping.class)).map(PostMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(PutMapping.class)).map(PutMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(PatchMapping.class)).map(PatchMapping::value),
+                        Optional.ofNullable(metodo.getAnnotation(DeleteMapping.class)).map(DeleteMapping::value))
+                .flatMap(Optional::stream)
+                .flatMap(Arrays::stream);
     }
 
     private static AsignaturaDTO subject() {

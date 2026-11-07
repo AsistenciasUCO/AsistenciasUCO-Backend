@@ -35,6 +35,14 @@ public class OfertaGruposEstudianteJpaRepository implements OfertaGruposEstudian
 
     static final String OP_OFERTA = "consultarOfertaGruposEstudiante";
 
+    /**
+     * Columnas del resultset posicional de usp_consultar_oferta_grupos_estudiante (CULM-001 A.1: 19, sin las columnas de
+     * solicitud de ingreso). Un desfase entre BD y backend falla de forma visible en vez de desordenar campos.
+     */
+    static final int COLUMNAS_OFERTA = 19;
+    private static final int COLUMNA_COMPONENTE = 17;
+    private static final int COLUMNA_TOTAL = 18;
+
     private final EntityManager entityManager;
 
     public OfertaGruposEstudianteJpaRepository(final EntityManager entityManager) {
@@ -59,8 +67,9 @@ public class OfertaGruposEstudianteJpaRepository implements OfertaGruposEstudian
                             .setParameter("idUsuarioEjecutor", usuarioEjecutor)
                             .getResultList()).stream()
                             .map(Object[].class::cast)
+                            .map(OfertaGruposEstudianteJpaRepository::validarColumnas)
                             .toList();
-                    final long total = filas.isEmpty() ? 0 : valor(filas.getFirst()[20]);
+                    final long total = filas.isEmpty() ? 0 : valor(filas.getFirst()[COLUMNA_TOTAL]);
                     return new OfertaGruposEstudiantePagina(
                             filas.stream().map(OfertaGruposEstudianteJpaRepository::toProjection).toList(), total);
                 }
@@ -71,7 +80,15 @@ public class OfertaGruposEstudianteJpaRepository implements OfertaGruposEstudian
         return new GrupoOfertaEstudianteProjection(
                 NativeRowValues.uuid(f[0]), entero(f[1]), texto(f[2]), NativeRowValues.uuid(f[3]), texto(f[4]), texto(f[5]), texto(f[6]), NativeRowValues.uuid(f[7]),
                 texto(f[8]), fecha(f[9]), fecha(f[10]), texto(f[11]), texto(f[12]), valor(f[13]), valor(f[14]), valor(f[15]),
-                Boolean.TRUE.equals(f[16]), NativeRowValues.uuid(f[17]), texto(f[18]), texto(f[19]));
+                Boolean.TRUE.equals(f[16]), texto(f[COLUMNA_COMPONENTE]));
+    }
+
+    private static Object[] validarColumnas(final Object[] fila) {
+        if (fila.length != COLUMNAS_OFERTA) {
+            throw new IllegalStateException("La oferta de grupos devolvio " + fila.length + " columnas; se esperaban "
+                    + COLUMNAS_OFERTA + ".");
+        }
+        return fila;
     }
 
     /**

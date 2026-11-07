@@ -14,9 +14,10 @@ public final class ConsultarHorariosEstudianteUseCaseImpl implements ConsultarHo
         this.scopePort = Objects.requireNonNull(scopePort); this.queryPort = Objects.requireNonNull(queryPort);
     }
     @Override public List<HorarioEstudianteDomain> execute(final UUID actorUsuarioId) {
-        final UUID idEstudiante = scopePort.findEstudianteIdByUsuario(actorUsuarioId)
+        // CULM-001 A.2-11: sin estudiante, 403; el SP recibe el usuario y solo devuelve matriculas inscritas (A).
+        scopePort.findEstudianteIdByUsuario(actorUsuarioId)
                 .orElseThrow(() -> new ForbiddenException("No fue posible resolver el estudiante autenticado."));
-        return queryPort.consultarHorarioEstudiante(idEstudiante).stream()
+        return queryPort.consultarHorarioEstudiante(actorUsuarioId).stream()
                 .map(ConsultarHorariosEstudianteRepositoryMapper::toDomain)
                 .toList();
     }

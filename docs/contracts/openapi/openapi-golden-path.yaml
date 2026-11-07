@@ -2,7 +2,7 @@ openapi: 3.1.2
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: AsistenciasUCO — Golden Path API
-  version: 1.1.0
+  version: 1.2.0
   description: |
     Contrato canónico LB-001C.1 para el Golden Path del backend AsistenciasUCO.
     Sigue el estilo PRAGMATIC_RESOURCE_PLUS_BUSINESS_COMMAND. HTTP/DB es la fuente
@@ -178,10 +178,11 @@ paths:
         Devuelve identidades distintas de estudiante desde uv_estudiante_identidad + uv_usuario;
         los filtros académicos usan EXISTS sobre uv_estudiante, de modo que un estudiante
         inscrito en varios grupos aparece una sola vez. Orden fijo: primerApellido,
-        primerNombre, numeroIdentificacion, id. No se abre a DOCENTE (usa
-        /api/v1/grupos/{grupoId}/estudiantes) ni a ESTUDIANTE. Todos los filtros son
-        opcionales y se combinan con AND. Respuesta sin envoltorio exitoso/datos.
-      x-roles: [COORDINADOR, ADMINISTRADOR]
+        primerNombre, numeroIdentificacion, id. DOCENTE solo ve a los estudiantes de sus
+        grupos (ámbito en usp_consultar_directorio_estudiantes_paginado); no se abre a
+        ESTUDIANTE. Todos los filtros son opcionales y se combinan con AND. Respuesta sin
+        envoltorio exitoso/datos.
+      x-roles: [DOCENTE, COORDINADOR, ADMINISTRADOR]
       x-idempotency: YES
       security:
         - bearerAuth: []

@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.o
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.outbox.NotificacionPersistida;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.ContenidoRenderizado;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.MarcadorDinamicoProvider;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaPorDefectoCatalogo;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template.PlantillaRenderer;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.SmtpNotificationProperties;
 import io.micrometer.core.instrument.Counter;
@@ -123,6 +124,13 @@ public class SmtpNotificacionChannelSender implements NotificacionChannelSender 
     @Override
     public void enviar(final NotificacionPersistida notificacion) throws NotificacionNoEntregableException {
         Objects.requireNonNull(notificacion, "NotificacionPersistida es obligatoria.");
+        if (!PlantillaPorDefectoCatalogo.TIPOS_CONOCIDOS.contains(notificacion.tipo())) {
+            // CULM-001 A.1 (B-RED-09): un tipo retirado (p. ej. SOLICITUD_INGRESO_*) reencolado por el administrador no se
+            // entrega con el asunto guardado: es un fallo definitivo que el despachador registra.
+            LOGGER.warn("Notificacion de tipo no entregable: idNotificacion={}, tipo={}, outcome=permanent",
+                    notificacion.id(), notificacion.tipo());
+            throw new NotificacionNoEntregableException("El tipo de notificacion no esta entre los tipos entregables.");
+        }
 
         final List<UUID> idsSolicitados = extraerIdsUsuarios(notificacion.destinatarios());
         final int totalSolicitados = idsSolicitados.size();

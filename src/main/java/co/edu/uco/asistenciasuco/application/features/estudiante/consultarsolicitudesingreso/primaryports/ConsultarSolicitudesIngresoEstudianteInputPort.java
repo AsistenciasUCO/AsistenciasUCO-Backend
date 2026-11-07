@@ -1,9 +1,0 @@
-package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.primaryports;
-
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.primaryports.dto.ConsultarSolicitudesIngresoEstudianteDTO;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.primaryports.dto.SolicitudesIngresoEstudiantePaginaDTO;
-
-public interface ConsultarSolicitudesIngresoEstudianteInputPort {
-
-    SolicitudesIngresoEstudiantePaginaDTO execute(ConsultarSolicitudesIngresoEstudianteDTO dto);
-}

@@ -95,4 +95,9 @@ public final class AsistenciaRepositoryMockAdapter implements AsistenciaReposito
             throw new CrosscuttingException("El dominio para resolver revision de asistencia es obligatorio.");
         }
     }
+
+    @Override
+    public String retirarSolicitudRevision(final java.util.UUID idSolicitudRevision, final java.util.UUID usuarioEjecutor) {
+        throw new UnsupportedOperationException("CULM-001 A.2-7: el retiro del reclamo no forma parte de este doble de prueba.");
+    }
 }

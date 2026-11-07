@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenExcepti
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DbExceptionTranslator;
 import jakarta.persistence.PersistenceException;
 
 /**
@@ -46,7 +47,8 @@ final class DbCodeTranslator {
             case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
             // HU112/HU128/HU143/HU157: el SP de lectura exige el perfil del ejecutor.
             case "SEC_001" -> new ForbiddenException("SEC_001", "No tiene el perfil requerido para esta consulta.");
-            default -> exception;
+            // CULM-001 A.2-9: el resto (SEC_002 -> 403, NTF_002 -> 404...) usa la tabla unica de DbFailureClassifier.
+            default -> DbExceptionTranslator.translateDbCode(codigo, null).orElse(exception);
         };
     }
 

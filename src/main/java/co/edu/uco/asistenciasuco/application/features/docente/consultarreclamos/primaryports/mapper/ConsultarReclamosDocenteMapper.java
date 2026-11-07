@@ -84,6 +84,8 @@ public final class ConsultarReclamosDocenteMapper {
             case "P" -> "PENDIENTE";
             case "A" -> "APROBADA";
             case "R" -> "RECHAZADA";
+            // CULM-001 A.2-7: reclamo retirado por el estudiante (estado X de dbo.Estado).
+            case "X" -> "RETIRADA";
             default -> codigo;
         };
     }

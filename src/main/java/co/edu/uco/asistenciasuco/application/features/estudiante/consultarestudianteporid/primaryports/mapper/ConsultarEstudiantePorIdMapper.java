@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.dto.ConsultarEstudiantePorIdDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.dto.EstudianteContextoAcademicoDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.dto.EstudianteDetalleDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.usecase.domain.ConsultarEstudiantePorIdDomain;
@@ -17,8 +18,11 @@ public final class ConsultarEstudiantePorIdMapper {
     private ConsultarEstudiantePorIdMapper() {
     }
 
-    public static ConsultarEstudiantePorIdDomain toDomain(final UUID estudianteId) {
-        return ConsultarEstudiantePorIdDomain.crear(estudianteId);
+    public static ConsultarEstudiantePorIdDomain toDomain(final ConsultarEstudiantePorIdDTO dto) {
+        if (ObjectHelper.isNull(dto)) {
+            throw new CrosscuttingException("El DTO para consultar estudiante por ID es obligatorio.");
+        }
+        return ConsultarEstudiantePorIdDomain.crear(dto.estudianteId(), dto.actorUsuarioId());
     }
 
     public static EstudianteDetalleDTO toDTO(final EstudianteDetalleEntity entity) {

@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.dto.CambiarEstadoDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.CambiarEstadoDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.dto.AreaDTO;
@@ -76,9 +78,10 @@ class AdminPortalControllerTest {
     private final CambiarEstadoFacultadInputPort cambiarEstadoFacultad = mock(CambiarEstadoFacultadInputPort.class);
     private final ConsultarAreasInputPort consultarAreas = mock(ConsultarAreasInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
+    private final CambiarEstadoDecanoInputPort cambiarEstadoDecano = mock(CambiarEstadoDecanoInputPort.class);
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
             consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad,
-            actualizarFacultad, cambiarEstadoFacultad, consultarAreas, identity);
+            actualizarFacultad, cambiarEstadoFacultad, consultarAreas, cambiarEstadoDecano, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -318,7 +321,6 @@ class AdminPortalControllerTest {
     @Test
     void endpoints_no_implementados_lanzan_featureUnavailable() {
         final List<Executable> operations = List.of(
-                () -> controller.toggleDecano(FACULTAD),
                 () -> controller.actualizarParametro(FACULTAD)
         );
 
@@ -326,5 +328,32 @@ class AdminPortalControllerTest {
             assertEquals("FEATURE_UNAVAILABLE",
                     assertThrows(FeatureUnavailableException.class, operation).getCode());
         }
+    }
+
+    // CULM-001 A.2-8 (A2-B-13): PATCH /decanos/{id}/toggle deja de ser 501 y devuelve la fila del decano con su estado nuevo.
+    @Test
+    void toggleDecano_devuelve_la_fila_con_el_estado_nuevo() throws Exception {
+        final UUID decano = UUID.randomUUID();
+        when(cambiarEstadoDecano.execute(new CambiarEstadoDecanoDTO(decano, ACTOR)))
+                .thenReturn(new DecanoDTO(decano, UUID.randomUUID(), "123456", "Ana Perez", FACULTAD, "Ingenieria", false));
+
+        mvc.perform(patch("/api/v1/admin/decanos/" + decano + "/toggle"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.id").value(decano.toString()))
+                .andExpect(jsonPath("$.datos.estaActivoDecano").value(false));
+    }
+
+    @Test
+    void toggleDecano_con_programas_activos_responde_409_y_ajeno_404() throws Exception {
+        final UUID decano = UUID.randomUUID();
+        when(cambiarEstadoDecano.execute(new CambiarEstadoDecanoDTO(decano, ACTOR)))
+                .thenThrow(new ConflictException("No se puede desactivar al decano de una facultad con programas activos."));
+        mvc.perform(patch("/api/v1/admin/decanos/" + decano + "/toggle")).andExpect(status().isConflict());
+
+        final UUID ajeno = UUID.randomUUID();
+        when(cambiarEstadoDecano.execute(new CambiarEstadoDecanoDTO(ajeno, ACTOR)))
+                .thenThrow(new co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException("El decano no existe."));
+        mvc.perform(patch("/api/v1/admin/decanos/" + ajeno + "/toggle")).andExpect(status().isNotFound());
     }
 }

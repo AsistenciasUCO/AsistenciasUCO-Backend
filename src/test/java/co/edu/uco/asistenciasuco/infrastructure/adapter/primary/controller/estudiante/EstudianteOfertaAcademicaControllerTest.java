@@ -44,7 +44,7 @@ class EstudianteOfertaAcademicaControllerTest {
     private static GrupoOfertaDTO grupo() {
         return new GrupoOfertaDTO(UUID.randomUUID(), 7, "Grupo 7", UUID.randomUUID(), "MAT1", "Algebra", "Ana Perez", UUID.randomUUID(),
                 "2026-2", LocalDate.of(2026, 7, 20), LocalDate.of(2026, 12, 10), "PROXIMO", "Lunes 08:00-10:00", 30, 25, 5, false,
-                UUID.randomUUID(), "PENDIENTE", "INSTITUCIONAL", true);
+                "INSTITUCIONAL", true);
     }
 
     @Test
@@ -58,7 +58,9 @@ class EstudianteOfertaAcademicaControllerTest {
                 .andExpect(jsonPath("$.datos[0].nombreAsignatura").value("Algebra"))
                 .andExpect(jsonPath("$.datos[0].cuposDisponibles").value(5))
                 .andExpect(jsonPath("$.datos[0].estadoPeriodo").value("PROXIMO"))
-                .andExpect(jsonPath("$.datos[0].estadoSolicitud").value("PENDIENTE"))
+                // CULM-001 A.1 (B-RED-08): sin idSolicitudAbierta ni estadoSolicitud (HU053-HU055 descartadas).
+                .andExpect(jsonPath("$.datos[0].idSolicitudAbierta").doesNotExist())
+                .andExpect(jsonPath("$.datos[0].estadoSolicitud").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].matriculado").value(false))
                 .andExpect(jsonPath("$.datos[0].tipoAsignatura").value("INSTITUCIONAL"))
                 .andExpect(jsonPath("$.datos[0].transversal").value(true));

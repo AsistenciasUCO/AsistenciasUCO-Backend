@@ -26,12 +26,13 @@ class ConsultarEstudiantesMappingContractTest {
     private static final UUID FACULTY = UUID.randomUUID();
     private static final UUID PROGRAM = UUID.randomUUID();
     private static final UUID GROUP = UUID.randomUUID();
+    private static final UUID ACTOR = UUID.randomUUID();
 
     @Test
     void searchFiltersAreNormalizedAndPreservedAcrossRepositoryBoundary() {
         final ConsultarEstudiantesDTO request = new ConsultarEstudiantesDTO(TYPE, 12345678,
                 "  Ana  ", " ANA@EXAMPLE.COM ", INSTITUTION, FACULTY, PROGRAM, GROUP,
-                true, 2, 25);
+                true, 2, 25, ACTOR);
         final ConsultarEstudiantesDomain domain = ConsultarEstudiantesMapper.toDomain(request);
         final var repository = ConsultarEstudiantesRepositoryMapper.toRepositoryDTO(domain);
 
@@ -46,9 +47,10 @@ class ConsultarEstudiantesMappingContractTest {
         assertTrue(repository.activo());
         assertEquals(2, repository.page());
         assertEquals(25, repository.size());
+        assertEquals(ACTOR, repository.actorUsuarioId());
 
         final var defaults = ConsultarEstudiantesMapper.toDomain(new ConsultarEstudiantesDTO(
-                null, null, null, null, null, null, null, null, null, null, null));
+                null, null, null, null, null, null, null, null, null, null, null, ACTOR));
         assertEquals(0, defaults.page());
         assertEquals(20, defaults.size());
     }
@@ -105,6 +107,6 @@ class ConsultarEstudiantesMappingContractTest {
                 (co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudiantes.usecase.entity.EstudianteResumenEntity) null));
         assertThrows(ValidationException.class, () -> ConsultarEstudiantesMapper.toDomain(
                 new ConsultarEstudiantesDTO(null, null, null, null, null, null, null, null,
-                        null, -1, 20)));
+                        null, -1, 20, ACTOR)));
     }
 }

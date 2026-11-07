@@ -43,7 +43,7 @@ class GrupoWiringConfigurationTest {
                 mock(co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort.class));
         assertInstanceOf(RegistrarEstudianteUseCaseImpl.class, registrarEstudianteUseCase);
         assertInstanceOf(RegistrarEstudianteInteractor.class, config.registrarEstudianteInputPort(
-                registrarEstudianteUseCase, mock(UsuarioRepositoryPort.class), mock(co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort.class)));
+                registrarEstudianteUseCase, mock(co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort.class)));
 
         final var consultarGruposUseCase = config.consultarGruposUseCase(grupoRepositoryPort);
         assertInstanceOf(ConsultarGruposUseCaseImpl.class, consultarGruposUseCase);

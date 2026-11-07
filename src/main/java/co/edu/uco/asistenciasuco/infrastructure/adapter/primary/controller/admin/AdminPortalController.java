@@ -1,5 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.dto.CambiarEstadoDecanoDTO;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.CambiarEstadoDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.ActualizarFacultadInputPort;
@@ -53,6 +56,7 @@ public final class AdminPortalController {
     private final ActualizarFacultadInputPort actualizarFacultadInputPort;
     private final CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort;
     private final ConsultarAreasInputPort consultarAreasInputPort;
+    private final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
 
     public AdminPortalController(
@@ -66,6 +70,7 @@ public final class AdminPortalController {
             final ActualizarFacultadInputPort actualizarFacultadInputPort,
             final CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort,
             final ConsultarAreasInputPort consultarAreasInputPort,
+            final CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarDecanosInputPort = consultarDecanosInputPort;
@@ -78,6 +83,7 @@ public final class AdminPortalController {
         this.actualizarFacultadInputPort = actualizarFacultadInputPort;
         this.cambiarEstadoFacultadInputPort = cambiarEstadoFacultadInputPort;
         this.consultarAreasInputPort = consultarAreasInputPort;
+        this.cambiarEstadoDecanoInputPort = cambiarEstadoDecanoInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
@@ -97,9 +103,12 @@ public final class AdminPortalController {
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiMessageResponse(true, "Decano creado correctamente."));
     }
 
+    /** CULM-001 A.2-8 (F-ADM-002): 200 con la fila del decano y su estado nuevo; 409 DEC_002; 404 DEC_001. */
     @PatchMapping("/decanos/{id}/toggle")
-    public ResponseEntity<ApiDataResponse<Void>> toggleDecano(@PathVariable final UUID id) {
-        throw unavailable("cambiar estado de decano");
+    @AuditableOperation(action = "CAMBIAR_ESTADO_DECANO", resourceType = "DECANO", resourceIdPathVariable = "id")
+    public ResponseEntity<ApiDataResponse<DecanoDTO>> toggleDecano(@PathVariable final UUID id) {
+        return ResponseEntity.ok(new ApiDataResponse<>(true, cambiarEstadoDecanoInputPort.execute(
+                new CambiarEstadoDecanoDTO(id, authenticatedUserResolver.requireAuthenticatedUserId()))));
     }
 
     // HU020/HU140 descartadas (decision de John 2026-11-06): sedes y espacios fisicos no se piden; se retiran sus stubs 501.

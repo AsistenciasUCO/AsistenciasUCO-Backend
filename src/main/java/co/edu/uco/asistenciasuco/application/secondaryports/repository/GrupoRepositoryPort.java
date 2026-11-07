@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.secondaryports.repository;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection;
+import java.util.Optional;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarEstudianteRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
@@ -22,7 +24,16 @@ public interface GrupoRepositoryPort {
 
     RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(RegistrarEstudianteRepositoryDTO dto);
 
-    List<GrupoRepositoryProjection> consultarGrupos();
+    /** CULM-001 A.2-2: listado completo dentro del ambito del ejecutor (usp_consultar_grupos_paginado). */
+    List<GrupoRepositoryProjection> consultarGrupos(UUID usuarioEjecutor);
 
-    List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(UUID grupoId);
+    /** CULM-001 A.2-2: grupo fuera de ambito o inexistente: ForbiddenException (403, SEC_002). */
+    List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(UUID grupoId, UUID usuarioEjecutor);
+
+    /**
+     * CULM-001 A.2-15 (DEC-027): busqueda exacta por documento de un usuario con fila Estudiante, sin vinculos o de la
+     * institucion del grupo, solo para el docente titular (SEC_002 -> 403). 0 o 1 resultado.
+     */
+    Optional<EstudianteBusquedaRepositoryProjection> buscarEstudiantePorDocumento(
+            UUID grupoId, UUID tipoIdentificacionId, Integer numeroIdentificacion, UUID usuarioEjecutor);
 }

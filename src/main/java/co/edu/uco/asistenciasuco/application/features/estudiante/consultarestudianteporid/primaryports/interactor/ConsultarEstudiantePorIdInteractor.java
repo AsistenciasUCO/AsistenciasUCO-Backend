@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.dto.ConsultarEstudiantePorIdDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.ConsultarEstudiantePorIdInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.dto.EstudianteDetalleDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.mapper.ConsultarEstudiantePorIdMapper;
@@ -17,7 +18,7 @@ public final class ConsultarEstudiantePorIdInteractor implements ConsultarEstudi
     }
 
     @Override
-    public EstudianteDetalleDTO execute(final UUID estudianteId) {
-        return ConsultarEstudiantePorIdMapper.toDTO(useCase.execute(ConsultarEstudiantePorIdMapper.toDomain(estudianteId)));
+    public EstudianteDetalleDTO execute(final ConsultarEstudiantePorIdDTO dto) {
+        return ConsultarEstudiantePorIdMapper.toDTO(useCase.execute(ConsultarEstudiantePorIdMapper.toDomain(dto)));
     }
 }

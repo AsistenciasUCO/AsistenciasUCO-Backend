@@ -31,7 +31,8 @@ public final class ConsultarEstudiantesMapper {
                 dto.grupoId(),
                 dto.activo(),
                 dto.page(),
-                dto.size()
+                dto.size(),
+                dto.actorUsuarioId()
         );
     }
 

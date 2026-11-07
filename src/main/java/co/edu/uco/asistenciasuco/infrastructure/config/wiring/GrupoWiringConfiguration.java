@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.impl.BuscarEstudiantePorDocumentoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.BuscarEstudiantePorDocumentoUseCase;
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.interactor.BuscarEstudiantePorDocumentoInteractor;
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.BuscarEstudiantePorDocumentoInputPort;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
@@ -82,12 +86,22 @@ public class GrupoWiringConfiguration {
     @Bean
     public RegistrarEstudianteInputPort registrarEstudianteInputPort(
             final RegistrarEstudianteUseCase registrarEstudianteUseCase,
-            final UsuarioRepositoryPort usuarioRepositoryPort,
             final EstudianteRepositoryPort estudianteRepositoryPort
     ) {
         return new RegistrarEstudianteInteractor(
-                registrarEstudianteUseCase, usuarioRepositoryPort, estudianteRepositoryPort
+                registrarEstudianteUseCase, estudianteRepositoryPort
         );
+    }
+
+    /** CULM-001 A.2-15 (DEC-027): busqueda del estudiante por documento exacto en el grupo del docente titular. */
+    @Bean
+    public BuscarEstudiantePorDocumentoUseCase buscarEstudiantePorDocumentoUseCase(final GrupoRepositoryPort grupoRepositoryPort) {
+        return new BuscarEstudiantePorDocumentoUseCaseImpl(grupoRepositoryPort);
+    }
+
+    @Bean
+    public BuscarEstudiantePorDocumentoInputPort buscarEstudiantePorDocumentoInputPort(final BuscarEstudiantePorDocumentoUseCase useCase) {
+        return new BuscarEstudiantePorDocumentoInteractor(useCase);
     }
 
     @Bean

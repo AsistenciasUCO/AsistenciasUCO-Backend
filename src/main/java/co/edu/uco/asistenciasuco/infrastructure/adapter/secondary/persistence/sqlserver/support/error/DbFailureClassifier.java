@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.exception.Asist
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
@@ -91,7 +92,8 @@ final class DbFailureClassifier {
             // NTF-002B: administracion de plantillas y cola outbox (marcadores invalidos, version inexistente,
             // notificacion fuera de un estado reintentable).
             case "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
-            case "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            // CULM-001 A.2-6: NTF_002 notificacion inexistente al reintentar desde la cola (antes ERR_DB_UNCLASSIFIED, 500).
+            case "NTF_002", "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "NTF_008" -> CommonErrorCode.CONFLICT;
             case "IDE_001" -> CommonErrorCode.VALIDATION_ERROR;
             case "IDE_003" -> CommonErrorCode.CONFLICT;
@@ -107,12 +109,6 @@ final class DbFailureClassifier {
             case "VCE_002" -> VerificacionCorreoErrorCode.VCE_002;
             case "VCE_005" -> VerificacionCorreoErrorCode.VCE_005;
             case "VCE_007" -> VerificacionCorreoErrorCode.VCE_007;
-            // HU053-HU055: solicitudes de ingreso a grupo. SIG_001 no es estudiante; SIG_002/SIG_007 no encontrado (las
-            // solicitudes ajenas son indistinguibles); periodo, duplicados, ya resuelta o sin cupo son conflicto.
-            case "SIG_001" -> SecurityErrorCode.FORBIDDEN;
-            case "SIG_002", "SIG_007" -> CommonErrorCode.RESOURCE_NOT_FOUND;
-            case "SIG_003", "SIG_004", "SIG_005", "SIG_008", "SIG_013" -> CommonErrorCode.CONFLICT;
-            case "SIG_009", "SIG_010" -> CommonErrorCode.VALIDATION_ERROR;
             // FAC_002: el decano ya es titular de otra facultad activa (HU117/HU111).
             case "FAC_002" -> CommonErrorCode.CONFLICT;
             case "VAL_007" -> classifyVal007(operation);
@@ -123,6 +119,16 @@ final class DbFailureClassifier {
             case "REV_003" -> AsistenciaErrorCode.ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE;
             case "REV_004" -> AsistenciaErrorCode.ERR_RECLAMO_SIN_DETALLE_ASISTENCIA;
             case "REV_005" -> AsistenciaErrorCode.ERR_RECLAMO_NO_EXISTE;
+            // CULM-001 A.2-7: retiro del reclamo propio. REV_006 inexistente o ajeno (indistinguibles); REV_007 no pendiente.
+            case "REV_006" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "REV_007" -> CommonErrorCode.CONFLICT;
+            // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
+            // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
+            case "DEC_002" -> DecanoErrorCode.DEC_002;
+            // CULM-001 A.2-10: sesion solapada en el grupo o con otro grupo del docente. 400 como SES_004: el OpenAPI de
+            // POST/PATCH/PUT /api/v1/sesiones y POST /api/v2/sesiones declara 400 y no 409 (§8.1 del contrato). Con su
+            // codigo de catalogo para que el formulario muestre el texto del solape (A2-F-09, N11, F-A-S04).
+            case "SES_017" -> SesionErrorCode.SES_017;
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;

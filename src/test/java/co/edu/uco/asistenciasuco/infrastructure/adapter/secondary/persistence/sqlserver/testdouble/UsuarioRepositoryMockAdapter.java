@@ -41,4 +41,9 @@ public final class UsuarioRepositoryMockAdapter implements UsuarioRepositoryPort
     ) {
         return Optional.empty();
     }
+
+    @Override
+    public java.util.Optional<String> consultarCorreoPorEstudiante(final java.util.UUID idEstudiante) {
+        return java.util.Optional.empty();
+    }
 }

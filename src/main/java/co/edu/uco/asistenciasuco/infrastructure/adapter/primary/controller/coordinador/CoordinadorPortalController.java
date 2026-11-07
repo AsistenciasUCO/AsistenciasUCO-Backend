@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.common.dto.AsignaturaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarestudiantesprograma.primaryports.dto.EstudianteProgramaDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarperiodosacademicos.primaryports.dto.PeriodoAcademicoDTO;
@@ -133,8 +132,8 @@ public final class CoordinadorPortalController {
                 asigId, planId, request, authenticatedUserResolver.requireAuthenticatedUserId()));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
-    @DeleteMapping("/planes-estudio/{planId}/asignaturas/{asigId}")
-    public ResponseEntity<ApiDataResponse<Void>> eliminarAsignaturaPlan(@PathVariable final UUID planId, @PathVariable final UUID asigId) { throw unavailable(); }
+    // CULM-001 A.2-14: el stub 501 DELETE /planes-estudio/{planId}/asignaturas/{asigId} se retira; B2 la recrea con
+    // usp_desvincular_asignatura_plan.
 
     @GetMapping("/asignaturas")
     public ResponseEntity<ApiListResponse<AsignaturaDTO>> listarTodasAsignaturas() {
@@ -153,26 +152,13 @@ public final class CoordinadorPortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
     // HU096/HU097/HU098: el periodo es unico por institucion; crearlo, modificarlo y eliminarlo es del ADMINISTRADOR
-    // (AdminPeriodoAcademicoController, /api/v1/admin/periodos-academicos). Aqui solo se consulta.
-    @PatchMapping("/periodos-academicos/{id}/estado")
-    public ResponseEntity<ApiDataResponse<Void>> toggleEstadoPeriodoAcademico(@PathVariable final UUID id) { throw unavailable(); }
+    // (AdminPeriodoAcademicoController, /api/v1/admin/periodos-academicos). Aqui solo se consulta (CULM-001 A.2-14: el
+    // stub 501 PATCH /periodos-academicos/{id}/estado se retira).
 
     @GetMapping("/estudiantes")
     public ResponseEntity<ApiListResponse<EstudianteProgramaDTO>> consultarEstudiantesPrograma() {
         final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
-    }
-    @GetMapping("/solicitudes-matricula")
-    public ResponseEntity<ApiListResponse<Void>> consultarSolicitudesMatricula() { throw unavailable(); }
-    @PatchMapping("/solicitudes-matricula/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> resolverSolicitudMatricula(@PathVariable final UUID id) { throw unavailable(); }
-    @PostMapping("/grupos/{grupoId}/estudiantes")
-    public ResponseEntity<ApiDataResponse<Void>> matricularEstudianteEnGrupo(@PathVariable final UUID grupoId) { throw unavailable(); }
-    @DeleteMapping("/grupos/{grupoId}/estudiantes/{estudianteId}")
-    public ResponseEntity<ApiDataResponse<Void>> retirarEstudianteDeGrupo(@PathVariable final UUID grupoId, @PathVariable final UUID estudianteId) { throw unavailable(); }
-
-    private static FeatureUnavailableException unavailable() {
-        return new FeatureUnavailableException("La operacion de coordinador no esta disponible con el contrato DB publico actual.");
     }
 
     private static GuardarAsignaturaDTO toAsignaturaDTO(
