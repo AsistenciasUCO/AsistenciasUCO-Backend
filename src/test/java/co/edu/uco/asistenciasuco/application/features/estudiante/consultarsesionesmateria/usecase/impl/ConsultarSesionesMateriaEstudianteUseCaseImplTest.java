@@ -3,7 +3,9 @@ package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesio
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.EstadoAsistenciaSesion;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.SesionMateriaEstudianteDomain;
+import co.edu.uco.asistenciasuco.application.features.asistencia.common.PaginaResultado;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaSesionEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.AsistenciaSesionEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
@@ -25,6 +27,7 @@ import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyInt;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.times;
@@ -37,8 +40,9 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     private final SesionMateriaEstudianteQueryPort queryPort = mock(SesionMateriaEstudianteQueryPort.class);
     private final AsistenciaSesionEstudianteQueryPort asistenciaPort = mock(AsistenciaSesionEstudianteQueryPort.class);
     private final SesionProcedenciaQueryPort procedenciaPort = mock(SesionProcedenciaQueryPort.class);
+    private final ParameterCatalogPort parametros = mock(ParameterCatalogPort.class);
     private final ConsultarSesionesMateriaEstudianteUseCaseImpl useCase =
-            new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort, procedenciaPort);
+            new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort, procedenciaPort, parametros);
 
     private final UUID actor = UUID.randomUUID();
     private final UUID estudiante = UUID.randomUUID();
@@ -64,7 +68,8 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
     private void dado(final List<SesionMateriaEstudianteProjection> sesiones,
                       final List<AsistenciaSesionEstudianteProjection> hechos) {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
-        when(queryPort.consultarSesionesMateria(estudiante, asignatura)).thenReturn(sesiones);
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
+                .thenReturn(new PaginaResultado<>(sesiones, 1, 100, sesiones.size()));
         when(asistenciaPort.consultarAsistenciaSesiones(estudiante, asignatura)).thenReturn(hechos);
     }
 
@@ -73,7 +78,7 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
         when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.empty());
 
         assertThrows(ForbiddenException.class, () -> useCase.execute(actor, asignatura));
-        verify(queryPort, never()).consultarSesionesMateria(any(), any());
+        verify(queryPort, never()).consultarSesionesMateria(any(), any(), anyInt(), anyInt());
         verify(asistenciaPort, never()).consultarAsistenciaSesiones(any(), any());
     }
 
@@ -312,5 +317,86 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
 
         assertTrue(useCase.execute(actor, asignatura).isEmpty());
         verify(procedenciaPort, never()).consultarSesionesPorGrupo(any());
+    }
+
+    // ---- CULM-001 D.1 (HU026B): pagina, tamano por defecto, usuario ejecutor y fecha limite ----
+
+    @Test
+    void el_puerto_recibe_el_usuario_autenticado_y_la_pagina_por_defecto() {
+        dado(List.of(sesion(sesion1, 1, UUID.randomUUID())), List.of());
+
+        useCase.execute(actor, asignatura);
+
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, 1, 100);
+    }
+
+    @Test
+    void el_tamano_por_defecto_sale_del_parametro_paginacion_tamano_maximo() {
+        when(parametros.getParameter("PAGINACION", "TAMANO_MAXIMO")).thenReturn(Optional.of(" 50 "));
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 50)).thenReturn(new PaginaResultado<>(List.of(), 1, 50, 0));
+
+        assertTrue(useCase.execute(actor, asignatura, null, null).isEmpty());
+
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, 1, 50);
+    }
+
+    @Test
+    void un_parametro_de_tamano_ausente_o_mal_formado_usa_100_como_la_semilla() {
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100)).thenReturn(new PaginaResultado<>(List.of(), 1, 100, 0));
+        when(parametros.getParameter("PAGINACION", "TAMANO_MAXIMO")).thenReturn(Optional.of("abc"), Optional.of(""), Optional.empty());
+
+        useCase.execute(actor, asignatura);
+        useCase.execute(actor, asignatura);
+        useCase.execute(actor, asignatura);
+
+        verify(queryPort, times(3)).consultarSesionesMateria(actor, asignatura, 1, 100);
+    }
+
+    @Test
+    void la_pagina_y_el_tamano_explicitos_llegan_al_puerto() {
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 2, 10)).thenReturn(new PaginaResultado<>(List.of(), 2, 10, 0));
+
+        useCase.execute(actor, asignatura, 2, 10);
+
+        verify(queryPort).consultarSesionesMateria(actor, asignatura, 2, 10);
+    }
+
+    @Test
+    void la_fecha_limite_y_el_plazo_vigente_del_sp_llegan_al_dominio_sin_recalcularse() {
+        final LocalDateTime limite = LocalDateTime.of(2026, 11, 10, 5, 0);
+        final var vigente = new SesionMateriaEstudianteProjection(sesion1, "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "1",
+                "Grupo 001", LocalDateTime.of(2026, 11, 4, 12, 0), LocalDateTime.of(2026, 11, 4, 13, 0), limite, true);
+        final var vencida = new SesionMateriaEstudianteProjection(sesion2, "Sesion 2", 2, "SES-02", 2, UUID.randomUUID(), "1",
+                "Grupo 001", LocalDateTime.of(2026, 8, 17, 13, 0), LocalDateTime.of(2026, 8, 17, 15, 0),
+                LocalDateTime.of(2026, 8, 23, 5, 0), false);
+        final var sinParametro = new SesionMateriaEstudianteProjection(UUID.randomUUID(), "Sesion 3", 3, "SES-03", 3,
+                UUID.randomUUID(), "1", "Grupo 001", LocalDateTime.of(2026, 8, 18, 13, 0), LocalDateTime.of(2026, 8, 18, 15, 0), null, false);
+        dado(List.of(vigente, vencida, sinParametro), List.of());
+
+        final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
+
+        assertEquals(limite, result.get(0).fechaLimiteJustificacionUtc());
+        assertTrue(result.get(0).plazoJustificacionVigente());
+        assertEquals(LocalDateTime.of(2026, 8, 23, 5, 0), result.get(1).fechaLimiteJustificacionUtc());
+        assertFalse(result.get(1).plazoJustificacionVigente());
+        assertNull(result.get(2).fechaLimiteJustificacionUtc());
+        assertFalse(result.get(2).plazoJustificacionVigente());
+    }
+
+    @Test
+    void si_el_total_supera_la_pagina_se_devuelve_la_primera_pagina_sin_fallar() {
+        final var primera = sesion(sesion1, 1, UUID.randomUUID());
+        when(scopePort.findEstudianteIdByUsuario(actor)).thenReturn(Optional.of(estudiante));
+        when(queryPort.consultarSesionesMateria(actor, asignatura, 1, 100))
+                .thenReturn(new PaginaResultado<>(List.of(primera), 1, 100, 250));
+        when(asistenciaPort.consultarAsistenciaSesiones(estudiante, asignatura)).thenReturn(List.of());
+
+        final List<SesionMateriaEstudianteDomain> result = useCase.execute(actor, asignatura);
+
+        assertEquals(1, result.size());
+        assertEquals(sesion1, result.getFirst().id());
     }
 }
