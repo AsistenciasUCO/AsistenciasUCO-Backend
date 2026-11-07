@@ -9,7 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.matriculaqr.primaryports.V
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.MatriculaQrRateLimitFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.NetworkClientIpResolver;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.SlidingWindowRateLimiter;
+import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
 import org.junit.jupiter.api.BeforeEach;

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
+import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;

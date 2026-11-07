@@ -1,4 +1,4 @@
-package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
+package co.edu.uco.asistenciasuco.infrastructure.ratelimit;
 
 import org.junit.jupiter.api.Test;
 
@@ -109,6 +109,56 @@ class SlidingWindowRateLimiterTest {
         assertThrows(NullPointerException.class, () -> new SlidingWindowRateLimiter(unMinuto, 10, null));
         final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(unMinuto, 10, clock);
         assertThrows(IllegalArgumentException.class, () -> limiter.tryAcquire("ip", 0));
+    }
+
+    @Test
+    void B2_superaLimite_solo_lee_y_no_consume_cupo() {
+        final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(Duration.ofSeconds(60), 10, new MutableClock());
+
+        for (int i = 0; i < 5; i++) {
+            assertFalse(limiter.superaLimite("ip:1", 1));
+        }
+        assertTrue(limiter.tryAcquire("ip:1", 1), "superaLimite no debe registrar intentos");
+        assertEquals(1, limiter.clavesActivas());
+    }
+
+    @Test
+    void B2_registrar_y_superaLimite_en_el_borde() {
+        final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(Duration.ofSeconds(60), 10, new MutableClock());
+
+        limiter.registrar("ip:1");
+        limiter.registrar("ip:1");
+        assertFalse(limiter.superaLimite("ip:1", 3));
+        limiter.registrar("ip:1");
+        assertTrue(limiter.superaLimite("ip:1", 3));
+        assertFalse(limiter.superaLimite("ip:2", 3));
+        limiter.registrar(null);
+        assertTrue(limiter.superaLimite(null, 1));
+    }
+
+    @Test
+    void B2_superaLimite_poda_la_ventana() {
+        final MutableClock clock = new MutableClock();
+        final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(Duration.ofSeconds(60), 10, clock);
+        limiter.registrar("ip:1");
+        limiter.registrar("ip:1");
+        assertTrue(limiter.superaLimite("ip:1", 2));
+
+        clock.avanzar(Duration.ofSeconds(61));
+
+        assertFalse(limiter.superaLimite("ip:1", 2));
+    }
+
+    @Test
+    void B2_registrar_respeta_el_maximo_de_claves_y_valida_el_limite() {
+        final SlidingWindowRateLimiter limiter = new SlidingWindowRateLimiter(Duration.ofSeconds(60), 2, new MutableClock());
+        limiter.registrar("a");
+        limiter.registrar("b");
+        limiter.registrar("c");
+
+        assertEquals(2, limiter.clavesActivas());
+        assertFalse(limiter.superaLimite("a", 1), "la clave menos reciente fue desalojada");
+        assertThrows(IllegalArgumentException.class, () -> limiter.superaLimite("a", 0));
     }
 
     /** Reloj controlable para las pruebas. */
