@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
+import jakarta.servlet.DispatcherType;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import org.springframework.beans.factory.ObjectProvider;
@@ -96,6 +97,9 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
+                // CULM-001 A.2-5: un error lanzado en un filtro se despacha a /error; ese despacho muestra el estado real (y el
+                // PEP ya exime /error, SecurityPublicEndpoints.ERROR_VIEW) en vez de un 401 falso por no estar autenticado.
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
