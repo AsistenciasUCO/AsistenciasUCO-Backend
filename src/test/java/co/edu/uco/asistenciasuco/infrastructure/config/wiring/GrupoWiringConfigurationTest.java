@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.interactor.ActualizarGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.usecase.impl.ActualizarGrupoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.interactor.ConsultarGruposInteractor;
@@ -27,11 +28,11 @@ class GrupoWiringConfigurationTest {
 
     @Test
     void todos_los_beans_se_construyen_con_el_adapter_esperado() {
-        final var crearGrupoUseCase = config.crearGrupoUseCase(grupoRepositoryPort);
+        final var crearGrupoUseCase = config.crearGrupoUseCase(grupoRepositoryPort, mock(AsegurarFestivosPeriodoInputPort.class));
         assertInstanceOf(CrearGrupoUseCaseImpl.class, crearGrupoUseCase);
         assertInstanceOf(CrearGrupoInteractor.class, config.crearGrupoInputPort(crearGrupoUseCase));
 
-        final var actualizarGrupoUseCase = config.actualizarGrupoUseCase(grupoRepositoryPort);
+        final var actualizarGrupoUseCase = config.actualizarGrupoUseCase(grupoRepositoryPort, mock(AsegurarFestivosPeriodoInputPort.class));
         assertInstanceOf(ActualizarGrupoUseCaseImpl.class, actualizarGrupoUseCase);
         assertInstanceOf(ActualizarGrupoInteractor.class, config.actualizarGrupoInputPort(actualizarGrupoUseCase));
 

@@ -33,6 +33,8 @@ class CoreViewJpaQueryErrorSemanticsTest {
     void errores_de_provider_conservan_database_operation_exception_en_las_seis_capabilities() {
         final EntityManager entityManager = mock(EntityManager.class);
         when(entityManager.createQuery(anyString(), eq(UvSesionEntity.class))).thenThrow(new PersistenceException("db"));
+        // CULM-001 B.1: la lectura de sesiones se une a uv_sesion_estado y consulta Object[].
+        when(entityManager.createQuery(anyString(), eq(Object[].class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvGrupoEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvUsuarioEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvDocenteIdentidadEntity.class))).thenThrow(new PersistenceException("db"));

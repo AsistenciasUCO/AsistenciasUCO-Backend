@@ -312,6 +312,67 @@ class SqlStoredProcedureContractIT {
                         input("@codigoEstado", "nvarchar"),
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
+                )),
+                // CULM-001 B.1: cancelacion de sesion (HU047), festivos y generacion v2 que invoca el backend.
+                Arguments.of("usp_cancelar_sesion", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_sesion_cancelada", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cargar_dias_festivos", List.of(
+                        input("@anio", "int"),
+                        input("@festivosJSON", "nvarchar"),
+                        input("@fuente", "nvarchar"),
+                        input("@diferenciasCalculoLocal", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cargar_dias_festivos_automatico", List.of(
+                        input("@anio", "int"),
+                        input("@festivosJSON", "nvarchar"),
+                        input("@fuente", "nvarchar"),
+                        input("@diferenciasCalculoLocal", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_aplicar_festivos_periodo", List.of(
+                        input("@idPeriodoAcademico", "uniqueidentifier"),
+                        input("@anio", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_aplicar_festivos_automatico", List.of(
+                        input("@anio", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_carga_festivos_anio", List.of(
+                        input("@anio", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_dias_festivos", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@anio", "int"),
+                        input("@incluirInactivos", "bit"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_sesiones_festivo_con_asistencia_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@anio", "int"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_generar_sesiones_grupo_v2", List.of(
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
                 ))
         );
     }

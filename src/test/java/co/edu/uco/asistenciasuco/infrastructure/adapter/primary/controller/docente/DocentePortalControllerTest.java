@@ -1,6 +1,8 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
+import co.edu.uco.asistenciasuco.application.features.sesioncancelacion.cancelarsesion.primaryports.CancelarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.dto.ResolverSolicitudRevisionAsistenciaDTO;
@@ -50,9 +52,10 @@ class DocentePortalControllerTest {
     private final ConsultarReclamosDocenteInputPort reclamos = mock(ConsultarReclamosDocenteInputPort.class);
     private final ConsultarDetalleReclamoDocenteInputPort detalleReclamo =
             mock(ConsultarDetalleReclamoDocenteInputPort.class);
+    private final CancelarSesionInputPort cancelarSesion = mock(CancelarSesionInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
-    private final DocentePortalController controller =
-            new DocentePortalController(horarios, asignaturas, resolverReclamo, reclamos, detalleReclamo, identity);
+    private final DocentePortalController controller = new DocentePortalController(
+            horarios, asignaturas, resolverReclamo, reclamos, detalleReclamo, cancelarSesion, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -219,10 +222,57 @@ class DocentePortalControllerTest {
         verify(horarios).execute(ACTOR);
     }
 
+    // CULM-001 B.1 (HU047): PATCH /docente/sesiones/{id}/cancelar deja de responder 501 (cambio formal del contrato B).
     @Test
-    void cancelarSesion_no_implementado_lanza_featureUnavailable() {
-        assertEquals("FEATURE_UNAVAILABLE",
-                assertThrows(FeatureUnavailableException.class, () -> controller.cancelarSesion(RECLAMO)).getCode());
+    void cancelarSesion_delega_con_el_motivo_y_el_actor_y_responde_200_con_la_cancelacion() throws Exception {
+        final UUID sesion = UUID.randomUUID();
+        final UUID grupo = UUID.randomUUID();
+        when(cancelarSesion.execute(new CancelarSesionInputPort.Comando(sesion, "  Calamidad domestica del docente ", ACTOR)))
+                .thenReturn(new CancelarSesionInputPort.Resultado(sesion, grupo, EstadoSesion.CANCELADA,
+                        new CancelacionSesionDTO("DOCENTE", "Calamidad domestica del docente", null,
+                                java.time.Instant.parse("2026-11-10T14:00:00Z")), 38));
+
+        mvc.perform(patch("/api/v1/docente/sesiones/{id}/cancelar", sesion)
+                        .contentType("application/json")
+                        .content("{\"motivo\":\"  Calamidad domestica del docente \"}"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.datos.idSesion").value(sesion.toString()))
+                .andExpect(jsonPath("$.datos.idGrupo").value(grupo.toString()))
+                .andExpect(jsonPath("$.datos.estado").value("CANCELADA"))
+                .andExpect(jsonPath("$.datos.cancelacion.tipo").value("DOCENTE"))
+                .andExpect(jsonPath("$.datos.cancelacion.motivo").value("Calamidad domestica del docente"))
+                .andExpect(jsonPath("$.datos.cancelacion.nombreFestivo").value(org.hamcrest.Matchers.nullValue()))
+                .andExpect(jsonPath("$.datos.cancelacion.fechaCancelacionUtc").value("2026-11-10T14:00:00Z"))
+                .andExpect(jsonPath("$.datos.estudiantesNotificados").value(38));
+    }
+
+    @Test
+    void cancelarSesion_sin_cuerpo_o_sin_motivo_responde_400_sin_invocar_el_caso_de_uso() throws Exception {
+        final UUID sesion = UUID.randomUUID();
+        mvc.perform(patch("/api/v1/docente/sesiones/{id}/cancelar", sesion).contentType("application/json").content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"));
+        mvc.perform(patch("/api/v1/docente/sesiones/{id}/cancelar", sesion).contentType("application/json")
+                        .content("{\"motivo\":\"   \"}"))
+                .andExpect(status().isBadRequest());
+        mvc.perform(patch("/api/v1/docente/sesiones/{id}/cancelar", sesion).contentType("application/json")
+                        .content("{\"motivo\":\"" + "x".repeat(501) + "\"}"))
+                .andExpect(status().isBadRequest());
+        org.mockito.Mockito.verifyNoInteractions(cancelarSesion);
+    }
+
+    @Test
+    void cancelarSesion_traduce_los_rechazos_de_la_db_a_409_con_su_codigo() throws Exception {
+        final UUID sesion = UUID.randomUUID();
+        when(cancelarSesion.execute(org.mockito.ArgumentMatchers.any()))
+                .thenThrow(new co.edu.uco.asistenciasuco.application.exception.business.ConflictException(
+                        co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode.SES_011));
+
+        mvc.perform(patch("/api/v1/docente/sesiones/{id}/cancelar", sesion).contentType("application/json")
+                        .content("{\"motivo\":\"Motivo suficientemente largo\"}"))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.code").value("SES_011"));
     }
 
     @Test
