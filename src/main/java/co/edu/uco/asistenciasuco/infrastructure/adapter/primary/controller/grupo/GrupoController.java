@@ -73,7 +73,7 @@ public final class GrupoController {
 
     @GetMapping
     public ResponseEntity<ApiListResponse<GrupoDTO>> listarGrupos() {
-        final List<GrupoDTO> grupos = consultarGruposInputPort.execute();
+        final List<GrupoDTO> grupos = consultarGruposInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, grupos, grupos.size()));
     }
 

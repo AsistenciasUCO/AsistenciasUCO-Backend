@@ -49,7 +49,7 @@ public final class RegistrarEstudianteInteractor implements RegistrarEstudianteI
     private void resolverEstudianteExistenteSiAplica(final RegistrarEstudianteDTO dto) {
         if (dto.getEstudianteId() != null && estudianteRepositoryPort != null) {
             final EstudianteDetalleRepositoryProjection estudiante = estudianteRepositoryPort
-                    .consultarEstudiantePorId(dto.getEstudianteId())
+                    .consultarEstudiantePorId(dto.getEstudianteId(), dto.getUsuarioEjecutor())
                     .orElseThrow(() -> new ResourceNotFoundException("El estudiante especificado no se encuentra registrado."));
             final EstudianteResumenRepositoryProjection datos = estudiante.datosPersonales();
             dto.setTipoIdentificacionId(datos.tipoIdentificacionId());

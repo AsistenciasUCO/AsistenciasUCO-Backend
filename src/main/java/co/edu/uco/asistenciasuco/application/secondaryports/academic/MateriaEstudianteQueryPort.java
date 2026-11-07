@@ -7,5 +7,6 @@ import java.util.UUID;
 
 public interface MateriaEstudianteQueryPort {
 
-    List<MateriaEstudianteProjection> consultarMateriasEstudiante(UUID idEstudiante);
+    /** CULM-001 A.2-11: recibe el USUARIO ejecutor; el SP resuelve el estudiante y solo cuenta la matricula inscrita (A). */
+    List<MateriaEstudianteProjection> consultarMateriasEstudiante(UUID usuarioEjecutor);
 }

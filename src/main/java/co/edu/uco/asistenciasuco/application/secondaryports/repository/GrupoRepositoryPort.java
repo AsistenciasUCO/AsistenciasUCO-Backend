@@ -22,7 +22,10 @@ public interface GrupoRepositoryPort {
 
     RegistrarEstudianteRepositoryProjection registrarEstudianteEnGrupo(RegistrarEstudianteRepositoryDTO dto);
 
-    List<GrupoRepositoryProjection> consultarGrupos();
+    /** CULM-001 A.2-2: listado completo dentro del ambito del ejecutor (usp_consultar_grupos_paginado). */
+    List<GrupoRepositoryProjection> consultarGrupos(UUID usuarioEjecutor);
 
-    List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(UUID grupoId);
+    /** CULM-001 A.2-2: grupo fuera de ambito o inexistente: ForbiddenException (403, SEC_002). */
+    List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(UUID grupoId, UUID usuarioEjecutor);
+
 }

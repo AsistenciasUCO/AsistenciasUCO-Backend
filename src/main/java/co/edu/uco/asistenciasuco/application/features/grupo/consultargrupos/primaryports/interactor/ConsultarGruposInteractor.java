@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.interactor;
 
+import java.util.UUID;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.ConsultarGruposInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.dto.GrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.mapper.ConsultarGruposMapper;
@@ -20,7 +21,7 @@ public final class ConsultarGruposInteractor implements ConsultarGruposInputPort
     }
 
     @Override
-    public List<GrupoDTO> execute() {
-        return ConsultarGruposMapper.toDTOs(useCase.execute());
+    public List<GrupoDTO> execute(final UUID usuarioEjecutor) {
+        return ConsultarGruposMapper.toDTOs(useCase.execute(usuarioEjecutor));
     }
 }
