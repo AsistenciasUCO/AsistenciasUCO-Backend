@@ -179,7 +179,21 @@ class CoreViewQueriesJpaParityIT {
                 SELECT COUNT_BIG(e.id)
                 FROM dbo.uv_estudiante_identidad e
                 INNER JOIN dbo.uv_usuario u ON e.idUsuario = u.id
-                """, Long.class);
+                    WHERE e.id IN (SELECT eg.estudiante FROM dbo.Administrador ad
+                            INNER JOIN dbo.Facultad f ON f.institucion = ad.institucion
+                            INNER JOIN dbo.Programa p ON p.facultad = f.id
+                            INNER JOIN dbo.PlanEstudio pe ON pe.programa = p.id
+                            INNER JOIN dbo.SemestrePlanEstudio spe ON spe.planEstudio = pe.id
+                            INNER JOIN dbo.Asignatura a ON a.semestrePlanEstudio = spe.id
+                            INNER JOIN dbo.Grupo g ON g.asignatura = a.id
+                            INNER JOIN dbo.EstudianteGrupo eg ON eg.grupo = g.id
+                            WHERE ad.usuario = '%s'
+                        UNION SELECT ep.estudiante FROM dbo.Administrador ad
+                            INNER JOIN dbo.Facultad f ON f.institucion = ad.institucion
+                            INNER JOIN dbo.Programa p ON p.facultad = f.id
+                            INNER JOIN dbo.EstudiantePrograma ep ON ep.programa = p.id
+                            WHERE ad.usuario = '%s')
+                """.formatted(actorAdministrador(), actorAdministrador()), Long.class);
         assertNotNull(total);
         // A three-page integration test must not pass vacuously on an empty or
         // tiny database. Populate an isolated SQL Server fixture (at least 11
@@ -196,9 +210,23 @@ class CoreViewQueriesJpaParityIT {
                            u.nombreCompleto, u.correo, u.estaActivoUsuario
                     FROM dbo.uv_estudiante_identidad e
                     INNER JOIN dbo.uv_usuario u ON e.idUsuario = u.id
+                    WHERE e.id IN (SELECT eg.estudiante FROM dbo.Administrador ad
+                            INNER JOIN dbo.Facultad f ON f.institucion = ad.institucion
+                            INNER JOIN dbo.Programa p ON p.facultad = f.id
+                            INNER JOIN dbo.PlanEstudio pe ON pe.programa = p.id
+                            INNER JOIN dbo.SemestrePlanEstudio spe ON spe.planEstudio = pe.id
+                            INNER JOIN dbo.Asignatura a ON a.semestrePlanEstudio = spe.id
+                            INNER JOIN dbo.Grupo g ON g.asignatura = a.id
+                            INNER JOIN dbo.EstudianteGrupo eg ON eg.grupo = g.id
+                            WHERE ad.usuario = '%s'
+                        UNION SELECT ep.estudiante FROM dbo.Administrador ad
+                            INNER JOIN dbo.Facultad f ON f.institucion = ad.institucion
+                            INNER JOIN dbo.Programa p ON p.facultad = f.id
+                            INNER JOIN dbo.EstudiantePrograma ep ON ep.programa = p.id
+                            WHERE ad.usuario = '%s')
                     ORDER BY u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id
                     OFFSET ? ROWS FETCH NEXT ? ROWS ONLY
-                    """, (rs, row) -> studentJdbc(rs), pageNumber * pageSize, pageSize);
+                    """.formatted(actorAdministrador(), actorAdministrador()), (rs, row) -> studentJdbc(rs), pageNumber * pageSize, pageSize);
             final EstudiantePaginaRepositoryProjection actual =
                     estudiantes.consultarEstudiantes(new ConsultarEstudiantesRepositoryDTO(
                             null, null, null, null, null, null, null, null, null,
@@ -228,8 +256,22 @@ class CoreViewQueriesJpaParityIT {
                        u.nombreCompleto, u.correo, u.estaActivoUsuario
                 FROM dbo.uv_estudiante_identidad e
                 INNER JOIN dbo.uv_usuario u ON e.idUsuario = u.id
+                    WHERE e.id IN (SELECT eg.estudiante FROM dbo.Administrador ad
+                            INNER JOIN dbo.Facultad f ON f.institucion = ad.institucion
+                            INNER JOIN dbo.Programa p ON p.facultad = f.id
+                            INNER JOIN dbo.PlanEstudio pe ON pe.programa = p.id
+                            INNER JOIN dbo.SemestrePlanEstudio spe ON spe.planEstudio = pe.id
+                            INNER JOIN dbo.Asignatura a ON a.semestrePlanEstudio = spe.id
+                            INNER JOIN dbo.Grupo g ON g.asignatura = a.id
+                            INNER JOIN dbo.EstudianteGrupo eg ON eg.grupo = g.id
+                            WHERE ad.usuario = '%s'
+                        UNION SELECT ep.estudiante FROM dbo.Administrador ad
+                            INNER JOIN dbo.Facultad f ON f.institucion = ad.institucion
+                            INNER JOIN dbo.Programa p ON p.facultad = f.id
+                            INNER JOIN dbo.EstudiantePrograma ep ON ep.programa = p.id
+                            WHERE ad.usuario = '%s')
                 ORDER BY u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id
-                """, (rs, row) -> studentJdbc(rs));
+                """.formatted(actorAdministrador(), actorAdministrador()), (rs, row) -> studentJdbc(rs));
         // Recorre todas las paginas (tamano 100): el oraculo JDBC completo debe coincidir fila a fila y en orden con
         // la concatenacion de paginas, con cualquier volumen de datos (seed minimo o fixtures de 5000 estudiantes).
         final List<List<Object>> paged = new java.util.ArrayList<>();

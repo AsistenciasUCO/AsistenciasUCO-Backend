@@ -102,13 +102,15 @@ class AsistenciaQueryJpaParityIT {
         final UUID grupoInexistente = UUID.fromString("00000000-0000-0000-0000-00000000c0df");
 
         final int mismatchesGrupoValido = compare("C1", fixture.grupo(), sesionInexistente);
-        final int mismatchesGrupoInexistente = compare("C2", grupoInexistente, null);
 
-        assertEquals(0, mismatchesGrupoValido + mismatchesGrupoInexistente);
-        assertTrue(jpaRoutedPort.consultarAsistenciasPorGrupo(
-                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupo(), sesionInexistente)).isEmpty());
-        assertTrue(jpaRoutedPort.consultarAsistenciasPorGrupo(
-                new ConsultarAsistenciasPorGrupoRepositoryDTO(grupoInexistente, null)).isEmpty());
+        assertEquals(0, mismatchesGrupoValido);
+        assertTrue(jpaRoutedPort.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(
+                fixture.grupo(), sesionInexistente, titular(fixture.grupo()))).isEmpty());
+        // CULM-001 A.2-2 (A2-C2): un grupo inexistente o fuera de ambito ya no es una lista vacia sino 403 (SEC_002).
+        org.junit.jupiter.api.Assertions.assertThrows(
+                co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException.class,
+                () -> jpaRoutedPort.consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(
+                        grupoInexistente, null, titular(fixture.grupo()))));
     }
 
     @Test
@@ -117,7 +119,7 @@ class AsistenciaQueryJpaParityIT {
 
         final int mismatches = compare("D", fixture.grupoMultifila(), null);
         final List<AsistenciaRepositoryProjection> rows = jpaRoutedPort.consultarAsistenciasPorGrupo(
-                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoMultifila(), null));
+                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoMultifila(), null, titular(fixture.grupoMultifila())));
 
         assertEquals(0, mismatches);
         assertTrue(rows.size() > 1, "El fixture multi-fila debe tener N>1 filas.");
@@ -135,7 +137,7 @@ class AsistenciaQueryJpaParityIT {
         final Fixture fixture = Fixture.discover(jdbcTemplate);
 
         final List<AsistenciaRepositoryProjection> rows = jpaRoutedPort.consultarAsistenciasPorGrupo(
-                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupo(), fixture.sesion()));
+                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupo(), fixture.sesion(), titular(fixture.grupo())));
 
         assertFalse(rows.isEmpty());
         rows.forEach(row -> assertEquals(fixture.sesion(), row.getSesion()));
@@ -145,7 +147,7 @@ class AsistenciaQueryJpaParityIT {
     void query_unica_sin_n_mas_1_delta_de_prepared_statements_es_uno() {
         final Fixture fixture = Fixture.discover(jdbcTemplate);
         final ConsultarAsistenciasPorGrupoRepositoryDTO dto =
-                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoMultifila(), null);
+                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoMultifila(), null, titular(fixture.grupoMultifila()));
         final Statistics statistics = entityManagerFactory.unwrap(SessionFactory.class).getStatistics();
         statistics.setStatisticsEnabled(true);
         try {
@@ -163,8 +165,14 @@ class AsistenciaQueryJpaParityIT {
         }
     }
 
+    // CULM-001 A.2-2: la consulta por SP exige la correlacion de la peticion.
+    @org.junit.jupiter.api.BeforeEach
+    void correlacion() {
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
+    }
+
     private int compare(final String scenario, final UUID grupo, final UUID sesion) {
-        final ConsultarAsistenciasPorGrupoRepositoryDTO dto = new ConsultarAsistenciasPorGrupoRepositoryDTO(grupo, sesion);
+        final ConsultarAsistenciasPorGrupoRepositoryDTO dto = new ConsultarAsistenciasPorGrupoRepositoryDTO(grupo, sesion, titular(grupo));
         final List<AsistenciaRepositoryProjection> jdbc = jdbcBaseline().consultarAsistenciasPorGrupo(dto)
                 .stream().sorted(STABLE_ORDER).toList();
         final List<AsistenciaRepositoryProjection> jpa = jpaRoutedPort.consultarAsistenciasPorGrupo(dto)
@@ -219,5 +227,13 @@ class AsistenciaQueryJpaParityIT {
                     UUID.fromString(String.valueOf(mejor.get("sesion"))),
                     UUID.fromString(String.valueOf(grupos.getFirst().get("grupo"))));
         }
+    }
+
+    /** CULM-001 A.2-2: la consulta por grupo exige el ejecutor; el docente titular ve todas las filas del grupo. */
+    private UUID titular(final UUID grupo) {
+        final java.util.List<UUID> ids = jdbcTemplate.query(
+                "SELECT d.usuario FROM dbo.Grupo g INNER JOIN dbo.Docente d ON d.id = g.docente WHERE g.id = ?",
+                (rs, row) -> UUID.fromString(rs.getString(1)), grupo);
+        return ids.isEmpty() ? UUID.fromString("00000000-0000-0000-0000-0000000000a1") : ids.getFirst();
     }
 }
