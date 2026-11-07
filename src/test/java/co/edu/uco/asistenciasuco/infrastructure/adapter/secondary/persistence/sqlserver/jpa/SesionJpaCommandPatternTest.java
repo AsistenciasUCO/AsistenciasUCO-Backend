@@ -113,9 +113,15 @@ class SesionJpaCommandPatternTest {
 
     @Test
     void SES_PAT_004_generar_sesiones_grupo_usa_native_query_exec_y_binding_nombrado() {
-        command.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(GRUPO, EJECUTOR));
+        // CULM-001 B.1 (2.7.6): usp_generar_sesiones_grupo_v2 agrega sesionesCanceladasPorFestivo y sesionesFestivoConAsistencia.
+        when(query.getResultList()).thenReturn(Collections.singletonList(
+                new Object[]{CORRELATION, "Operacion exitosa.", "", true, 2, 1}));
 
-        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_generar_sesiones_grupo"));
+        final var generacion = command.generarSesionesGrupo(new GenerarSesionesGrupoRepositoryDTO(GRUPO, EJECUTOR));
+
+        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_generar_sesiones_grupo_v2"));
+        assertEquals(2, generacion.sesionesCanceladasPorFestivo());
+        assertEquals(1, generacion.sesionesFestivoConAsistencia());
         verify(query).setParameter("idGrupo", GRUPO);
         verify(query).setParameter("idCorrelacion", CORRELATION);
         verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);

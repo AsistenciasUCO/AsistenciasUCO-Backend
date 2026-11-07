@@ -79,10 +79,11 @@ class JpaQueryAdapterContractTest {
     void sesiones_por_id_y_por_grupo() {
         final UvSesionEntity sesion = HydratedViewRow.of(UvSesionEntity.class, Map.of("id", ID, "idGrupo", OTHER,
                 "nombre", "Parcial", "fechaHoraInicio", LocalDateTime.of(2026, 10, 8, 13, 0)));
-        final TypedQuery<UvSesionEntity> porId = query(SesionJpaRepository.HQL_POR_ID, UvSesionEntity.class,
-                List.of(sesion));
-        final TypedQuery<UvSesionEntity> porGrupo = query(SesionJpaRepository.HQL_POR_GRUPO, UvSesionEntity.class,
-                List.of(sesion, sesion));
+        // CULM-001 B.1 (3.2.4): la lectura v1 se une a uv_sesion_estado y cada fila es [UvSesionEntity, UvSesionEstadoEntity].
+        final TypedQuery<Object[]> porId = query(SesionJpaRepository.HQL_POR_ID, Object[].class,
+                List.<Object[]>of(new Object[]{sesion, null}));
+        final TypedQuery<Object[]> porGrupo = query(SesionJpaRepository.HQL_POR_GRUPO, Object[].class,
+                List.<Object[]>of(new Object[]{sesion, null}, new Object[]{sesion, null}));
         final SesionJpaRepository repository = new SesionJpaRepository(manager, new JpaProcedureExecutor(manager));
 
         assertEquals(LocalDateTime.of(2026, 10, 8, 13, 0),
@@ -95,7 +96,7 @@ class JpaQueryAdapterContractTest {
 
     @Test
     void sesion_inexistente_conserva_null_y_entradas_nulas_se_rechazan() {
-        query(SesionJpaRepository.HQL_POR_ID, UvSesionEntity.class, List.of());
+        query(SesionJpaRepository.HQL_POR_ID, Object[].class, List.of());
         final SesionJpaRepository repository = new SesionJpaRepository(manager, new JpaProcedureExecutor(manager));
 
         assertNull(repository.consultarSesion(new ConsultarSesionRepositoryDTO(ID)));

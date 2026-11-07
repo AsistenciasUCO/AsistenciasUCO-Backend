@@ -31,6 +31,8 @@ public record Notificacion(
     public static final String TIPO_ALERTA_PERDIDA_INASISTENCIA = "ALERTA_PERDIDA_INASISTENCIA";
     /** HU174: el administrador institucional ejecuta el cierre masivo del periodo academico. */
     public static final String TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO = "CIERRE_MASIVO_PERIODO_EJECUTADO";
+    /** CULM-001 B.1 (HU047): el docente titular cancelo una sesion (aviso a cada estudiante activo del grupo). */
+    public static final String TIPO_SESION_CANCELADA = "SESION_CANCELADA";
 
     public Notificacion {
         Objects.requireNonNull(tipo, "El tipo de notificacion es obligatorio.");

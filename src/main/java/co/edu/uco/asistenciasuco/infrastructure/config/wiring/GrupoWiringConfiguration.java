@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepord
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.BuscarEstudiantePorDocumentoUseCase;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.interactor.BuscarEstudiantePorDocumentoInteractor;
 import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.BuscarEstudiantePorDocumentoInputPort;
+import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
@@ -41,8 +42,11 @@ import org.springframework.context.annotation.Configuration;
 public class GrupoWiringConfiguration {
 
     @Bean
-    public CrearGrupoUseCase crearGrupoUseCase(final GrupoRepositoryPort grupoRepositoryPort) {
-        return new CrearGrupoUseCaseImpl(grupoRepositoryPort);
+    public CrearGrupoUseCase crearGrupoUseCase(
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final AsegurarFestivosPeriodoInputPort asegurarFestivosPeriodoInputPort
+    ) {
+        return new CrearGrupoUseCaseImpl(grupoRepositoryPort, asegurarFestivosPeriodoInputPort);
     }
 
     @Bean
@@ -51,8 +55,11 @@ public class GrupoWiringConfiguration {
     }
 
     @Bean
-    public ActualizarGrupoUseCase actualizarGrupoUseCase(final GrupoRepositoryPort grupoRepositoryPort) {
-        return new ActualizarGrupoUseCaseImpl(grupoRepositoryPort);
+    public ActualizarGrupoUseCase actualizarGrupoUseCase(
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final AsegurarFestivosPeriodoInputPort asegurarFestivosPeriodoInputPort
+    ) {
+        return new ActualizarGrupoUseCaseImpl(grupoRepositoryPort, asegurarFestivosPeriodoInputPort);
     }
 
     @Bean

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.ConsultarAsistenciaProgramaInputPort;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.AsistenciaSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.GrupoProgramaDTO;
@@ -38,7 +39,8 @@ public final class ConsultarAsistenciaProgramaInteractor implements ConsultarAsi
         return aDTO(useCase.consultarSesionesGrupo(usuario, idGrupo, desde, hasta, pagina, tamano), pagina, tamano,
                 s -> new SesionGrupoDTO(s.id(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(), s.nombre(), s.numero(),
                         s.codigo(), s.numeroSemana(), s.fechaHoraInicio(), s.fechaHoraFin(), s.fechaHoraInicioUtc(),
-                        s.fechaHoraFinUtc(), s.estadoTemporal().name()));
+                        s.fechaHoraFinUtc(), s.estadoTemporal().name(),
+                        EstadoSesion.de(s.cancelacion() != null).name(), s.cancelacion()));
     }
 
     @Override

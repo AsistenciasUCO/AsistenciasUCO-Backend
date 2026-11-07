@@ -118,7 +118,8 @@ public final class ConsultarFacultadDecanoUseCaseImpl implements ConsultarFacult
                 sesion.nombrePrograma(),
                 aplica ? procedencia.fechaHoraInicioUtc() : null,
                 aplica ? procedencia.fechaHoraFinUtc() : null,
-                aplica ? procedencia.estadoTemporal() : EstadoHorarioSesion.INDETERMINADA);
+                aplica ? procedencia.estadoTemporal() : EstadoHorarioSesion.INDETERMINADA,
+                aplica ? procedencia.cancelacion() : null);
     }
 
     private void exigirDecano(final UUID usuario) {

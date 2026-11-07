@@ -213,6 +213,22 @@ class RegistrarAsistenciasSesionUseCaseImplTest {
         verify(asistenciaRepositoryPort).registrarAsistenciasSesion(any(RegistrarAsistenciasSesionRepositoryDTO.class));
     }
 
+    // CULM-001 B.1 (3.2.9, NB-1): una sesion cancelada responde 409 ERR_SESION_CANCELADA aunque este dentro de la ventana.
+    @Test
+    void una_sesion_cancelada_rechaza_con_conflicto_sin_persistir_ni_publicar() {
+        darTitularidadAlDocente(new SesionProcedenciaRepositoryProjection(
+                SESION, GRUPO, "Sesion 1", 1, "S01", 1, "G01", "Grupo 1", INICIO_UTC, FIN_UTC, "UTC_V2",
+                new co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection(
+                        "DOCENTE", "Motivo de la cancelacion", null, INICIO_UTC.minusDays(1))));
+
+        final ConflictException exception = assertThrows(ConflictException.class,
+                () -> useCaseEn(DURANTE).execute(dominioValido()));
+
+        assertEquals(AsistenciaErrorCode.ERR_SESION_CANCELADA.code(), exception.getCode());
+        verifyNoInteractions(asistenciaRepositoryPort);
+        verify(realtimePublisherPort, never()).publish(any());
+    }
+
     private RegistrarAsistenciasSesionUseCaseImpl useCaseEn(final Instant instante) {
         return new RegistrarAsistenciasSesionUseCaseImpl(
                 asistenciaRepositoryPort, sesionProcedenciaQueryPort, institutionalScopePort, realtimePublisherPort,

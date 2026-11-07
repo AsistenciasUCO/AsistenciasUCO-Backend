@@ -25,5 +25,12 @@ public interface SesionRepositoryPort {
 
     void cerrarSesion(CerrarSesionRepositoryDTO dto);
 
-    void generarSesionesGrupo(GenerarSesionesGrupoRepositoryDTO dto);
+    /**
+     * CULM-001 B.1: {@code usp_generar_sesiones_grupo_v2} (genera con el SP congelado y cancela por festivo las sesiones
+     * nuevas que caen en un dia festivo activo).
+     */
+    GeneracionSesiones generarSesionesGrupo(GenerarSesionesGrupoRepositoryDTO dto);
+
+    record GeneracionSesiones(int sesionesCanceladasPorFestivo, int sesionesFestivoConAsistencia) {
+    }
 }

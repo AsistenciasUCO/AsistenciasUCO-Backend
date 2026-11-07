@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.decano;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.CancelacionSesionResponse;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.dto.ConsultasFacultadDecanoDTO.SesionFacultadDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpUtcInstantCodec;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -30,14 +31,17 @@ public record SesionFacultadDecanoResponse(
         String nombrePrograma,
         String fechaHoraInicioUtc,
         String fechaHoraFinUtc,
-        String estadoTemporal
+        String estadoTemporal,
+        String estado,
+        CancelacionSesionResponse cancelacion
 ) {
 
     public static SesionFacultadDecanoResponse from(final SesionFacultadDTO dto) {
         return new SesionFacultadDecanoResponse(dto.id(), dto.nombre(), dto.codigo(), dto.numeroSemana(),
                 dto.fechaHoraInicio(), dto.fechaHoraFin(), dto.idGrupo(), dto.codigoGrupo(), dto.nombreGrupo(),
                 dto.idAsignatura(), dto.nombreAsignatura(), dto.idPrograma(), dto.nombrePrograma(),
-                utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal());
+                utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal(), dto.estado(),
+                CancelacionSesionResponse.from(dto.cancelacion()));
     }
 
     private static String utc(final LocalDateTime value) {

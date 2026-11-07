@@ -77,6 +77,7 @@ public final class RegistrarAsistenciasSesionUseCaseImpl implements RegistrarAsi
         final SesionProcedenciaRepositoryProjection sesion = resolverSesion(domain.getSesion());
         final UUID grupoId = sesion.grupo();
         autorizarTitularidadDocente(domain.getUsuarioEjecutor(), grupoId);
+        rechazarSesionCancelada(sesion);
         validarVentanaDeRegistro(sesion);
 
         asistenciaRepositoryPort.registrarAsistenciasSesion(
@@ -106,6 +107,16 @@ public final class RegistrarAsistenciasSesionUseCaseImpl implements RegistrarAsi
         }
         if (!ahoraUtc.isBefore(sesion.fechaHoraFin())) {
             throw new ConflictException(AsistenciaErrorCode.ERR_SESION_CERRADA);
+        }
+    }
+
+    /**
+     * CULM-001 B.1 (3.2.9, NB-1): una sesion cancelada no admite registro (409 ERR_SESION_CANCELADA). La DB lo repite
+     * bajo el bloqueo de la sesion (SES_010), porque la cancelacion puede ocurrir entre esta lectura y el registro.
+     */
+    private static void rechazarSesionCancelada(final SesionProcedenciaRepositoryProjection sesion) {
+        if (sesion.cancelacion() != null) {
+            throw new ConflictException(AsistenciaErrorCode.ERR_SESION_CANCELADA);
         }
     }
 

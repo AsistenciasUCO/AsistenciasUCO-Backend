@@ -1,9 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionEstadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionV2Entity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import jakarta.persistence.EntityManager;
@@ -21,9 +23,11 @@ import java.util.UUID;
 @Repository
 public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPort {
 
+    // CULM-001 B.1 (§3.2.4): cada sesion se une a su fila de uv_sesion_estado (una por sesion) para exponer la cancelacion.
     private static final String SELECT_ROW = """
-            select s
+            select s, e
             from UvSesionV2Entity s
+            join UvSesionEstadoEntity e on e.idSesion = s.id
             """;
     static final String HQL_POR_ID = SELECT_ROW + " where s.id = :idSesion order by s.id";
     // Mismo orden que v1 (uv_sesion), con id como desempate estable para filas sin numero distinto.
@@ -42,7 +46,7 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
         return JpaQueryExecutor.execute(
                 "consultarSesionV2",
                 "No fue posible consultar la sesion v2 desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_ID, UvSesionV2Entity.class)
+                () -> entityManager.createQuery(HQL_POR_ID, Object[].class)
                         .setParameter("idSesion", sesionId)
                         .setMaxResults(1)
                         .getResultList().stream()
@@ -57,7 +61,7 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
         return JpaQueryExecutor.execute(
                 "consultarSesionesPorGrupoV2",
                 "No fue posible consultar las sesiones v2 del grupo desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_GRUPO, UvSesionV2Entity.class)
+                () -> entityManager.createQuery(HQL_POR_GRUPO, Object[].class)
                         .setParameter("idGrupo", grupoId)
                         .getResultList().stream()
                         .map(SesionProcedenciaJpaRepository::toProjection)
@@ -65,12 +69,24 @@ public class SesionProcedenciaJpaRepository implements SesionProcedenciaQueryPor
         );
     }
 
-    static SesionProcedenciaRepositoryProjection toProjection(final UvSesionV2Entity row) {
+    static SesionProcedenciaRepositoryProjection toProjection(final Object[] fila) {
+        return toProjection((UvSesionV2Entity) fila[0], (UvSesionEstadoEntity) fila[1]);
+    }
+
+    static SesionProcedenciaRepositoryProjection toProjection(final UvSesionV2Entity row, final UvSesionEstadoEntity estado) {
         return new SesionProcedenciaRepositoryProjection(
                 row.id(), row.idGrupo(), row.nombre(), row.numero(), row.codigo(), row.numeroSemana(),
                 row.codigoGrupo() == null ? null : String.valueOf(row.codigoGrupo()), row.nombreGrupo(),
-                row.fechaHoraInicio(), row.fechaHoraFin(), row.procedenciaTemporal()
+                row.fechaHoraInicio(), row.fechaHoraFin(), row.procedenciaTemporal(), cancelacion(estado)
         );
+    }
+
+    static CancelacionSesionProjection cancelacion(final UvSesionEstadoEntity estado) {
+        if (estado == null || !estado.estaCancelada()) {
+            return null;
+        }
+        return new CancelacionSesionProjection(estado.codigoTipoCancelacion(), estado.motivoCancelacion(),
+                estado.nombreDiaFestivo(), estado.fechaCancelacionUtc());
     }
 
     private static void require(final Object value, final String message) {

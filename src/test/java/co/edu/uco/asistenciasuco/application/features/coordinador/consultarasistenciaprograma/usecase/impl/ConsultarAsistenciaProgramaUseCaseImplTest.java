@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.interactor.ConsultarAsistenciaProgramaInteractor;
@@ -253,6 +254,38 @@ class ConsultarAsistenciaProgramaUseCaseImplTest {
         final var asistencias = interactor.consultarAsistenciasSesion(COORDINADOR, SESION, null, null, null);
         assertEquals("Ana Ruiz", asistencias.elementos().getFirst().nombreCompleto());
         assertEquals("INJ", asistencias.elementos().getFirst().codigoRazonCausa());
+    }
+
+    // CULM-001 B.1 (3.2.4): el cronograma del coordinador muestra la sesion cancelada con su cancelacion.
+    @Test
+    void T_B1_01_sesion_cancelada_expone_estado_y_cancelacion_hasta_el_dto() {
+        final ConsultarAsistenciaProgramaInteractor interactor = new ConsultarAsistenciaProgramaInteractor(useCase);
+        when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(sesion()), 1));
+        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
+                SESION, GRUPO, "Sesion 1", 1, "S-01", 2, "1", "Grupo 1", LocalDateTime.of(2026, 2, 3, 12, 0),
+                LocalDateTime.of(2026, 2, 3, 14, 0), "UTC_V2",
+                new CancelacionSesionProjection("FESTIVO", "Dia festivo: San Jose", "San Jose", LocalDateTime.of(2026, 1, 2, 5, 0)))));
+
+        final var sesion = interactor.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null).elementos().getFirst();
+
+        assertEquals("CANCELADA", sesion.estado());
+        assertEquals("FESTIVO", sesion.cancelacion().tipo());
+        assertEquals("San Jose", sesion.cancelacion().nombreFestivo());
+        assertEquals(java.time.Instant.parse("2026-01-02T05:00:00Z"), sesion.cancelacion().fechaCancelacionUtc());
+    }
+
+    @Test
+    void T_B1_02_sesion_sin_procedencia_queda_programada() {
+        final ConsultarAsistenciaProgramaInteractor interactor = new ConsultarAsistenciaProgramaInteractor(useCase);
+        when(queryPort.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(sesion()), 1));
+        when(procedenciaPort.consultarSesionesPorGrupo(GRUPO)).thenReturn(List.of());
+
+        final var sesion = interactor.consultarSesionesGrupo(COORDINADOR, GRUPO, null, null, null, null).elementos().getFirst();
+
+        assertEquals("PROGRAMADA", sesion.estado());
+        assertNull(sesion.cancelacion());
     }
 
     @Test

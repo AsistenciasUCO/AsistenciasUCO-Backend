@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.ActualizarSesionInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.interactor.ActualizarSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.ActualizarSesionUseCase;
@@ -137,8 +138,11 @@ public class SesionWiringConfiguration {
     }
 
     @Bean
-    public GenerarSesionesGrupoUseCase generarSesionesGrupoUseCase(final SesionRepositoryPort sesionRepositoryPort) {
-        return new GenerarSesionesGrupoUseCaseImpl(sesionRepositoryPort);
+    public GenerarSesionesGrupoUseCase generarSesionesGrupoUseCase(
+            final SesionRepositoryPort sesionRepositoryPort,
+            final AsegurarFestivosPeriodoInputPort asegurarFestivosPeriodoInputPort
+    ) {
+        return new GenerarSesionesGrupoUseCaseImpl(sesionRepositoryPort, asegurarFestivosPeriodoInputPort);
     }
 
     @Bean

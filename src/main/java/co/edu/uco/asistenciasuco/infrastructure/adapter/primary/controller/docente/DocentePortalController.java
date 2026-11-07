@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.dto.ResolverSolicitudRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.docente.consultarasignaturas.primaryports.ConsultarAsignaturasDocenteInputPort;
@@ -15,7 +14,13 @@ import co.edu.uco.asistenciasuco.application.features.docente.consultarasignatur
 import co.edu.uco.asistenciasuco.application.features.docente.consultarhorarios.primaryports.dto.HorarioDocenteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.mapper.DetalleReclamoDocenteHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.mapper.ReclamoDocenteHttpMapper;
+import co.edu.uco.asistenciasuco.application.features.sesioncancelacion.cancelarsesion.primaryports.CancelarSesionInputPort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.CancelarSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.request.ResolverReclamoRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.SesionCanceladaResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.validation.CancelarSesionRequestValidator;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.DetalleReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.docente.response.ReclamoDocenteResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
@@ -41,7 +46,10 @@ public final class DocentePortalController {
     private final ResolverSolicitudRevisionAsistenciaInputPort resolverSolicitudRevisionAsistenciaInputPort;
     private final ConsultarReclamosDocenteInputPort consultarReclamosDocenteInputPort;
     private final ConsultarDetalleReclamoDocenteInputPort consultarDetalleReclamoDocenteInputPort;
+    private final CancelarSesionInputPort cancelarSesionInputPort;
     private final AuthenticatedUserResolver authenticatedUserResolver;
+
+    private static final CancelarSesionRequestValidator CANCELAR_SESION_VALIDATOR = new CancelarSesionRequestValidator();
 
     public DocentePortalController(
             final ConsultarHorariosDocenteInputPort consultarHorariosDocenteInputPort,
@@ -49,6 +57,7 @@ public final class DocentePortalController {
             final ResolverSolicitudRevisionAsistenciaInputPort resolverSolicitudRevisionAsistenciaInputPort,
             final ConsultarReclamosDocenteInputPort consultarReclamosDocenteInputPort,
             final ConsultarDetalleReclamoDocenteInputPort consultarDetalleReclamoDocenteInputPort,
+            final CancelarSesionInputPort cancelarSesionInputPort,
             final AuthenticatedUserResolver authenticatedUserResolver
     ) {
         this.consultarHorariosDocenteInputPort = consultarHorariosDocenteInputPort;
@@ -56,6 +65,7 @@ public final class DocentePortalController {
         this.resolverSolicitudRevisionAsistenciaInputPort = resolverSolicitudRevisionAsistenciaInputPort;
         this.consultarReclamosDocenteInputPort = consultarReclamosDocenteInputPort;
         this.consultarDetalleReclamoDocenteInputPort = consultarDetalleReclamoDocenteInputPort;
+        this.cancelarSesionInputPort = cancelarSesionInputPort;
         this.authenticatedUserResolver = authenticatedUserResolver;
     }
 
@@ -110,18 +120,25 @@ public final class DocentePortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
+    /**
+     * CULM-001 B.1 (HU047): el docente titular cancela una sesion futura o sin asistencia, con un motivo. La titularidad
+     * se valida en Application y en la DB; se avisa a los estudiantes activos y al canal SSE del grupo.
+     */
     @PatchMapping("/sesiones/{sesionId}/cancelar")
-    public ResponseEntity<ApiDataResponse<Void>> cancelarSesion(@PathVariable final UUID sesionId) {
-        throw unavailable("cancelar sesion");
+    @AuditableOperation(action = "CANCELAR_SESION", resourceType = "SESION", resourceIdPathVariable = "sesionId")
+    public ResponseEntity<ApiDataResponse<SesionCanceladaResponse>> cancelarSesion(
+            @PathVariable final UUID sesionId,
+            @RequestBody(required = false) final CancelarSesionRequest request
+    ) {
+        RequestValidationGuard.validate(CANCELAR_SESION_VALIDATOR.validate(request));
+        final CancelarSesionInputPort.Resultado resultado = cancelarSesionInputPort.execute(new CancelarSesionInputPort.Comando(
+                sesionId, request.getMotivo(), authenticatedUserResolver.requireAuthenticatedUserId()));
+        return ResponseEntity.ok(new ApiDataResponse<>(true, SesionCanceladaResponse.from(resultado)));
     }
 
     @GetMapping("/asignaturas")
     public ResponseEntity<ApiListResponse<AsignaturaDocenteDTO>> consultarAsignaturas() {
         final var data = consultarAsignaturasDocenteInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
-    }
-
-    private FeatureUnavailableException unavailable(final String operation) {
-        return new FeatureUnavailableException("La operacion docente no esta disponible: " + operation + ".");
     }
 }

@@ -31,7 +31,9 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     // SES-01: ventana de registro ordinario [inicio, fin) contra el reloj del servidor; DB: SES_007 / SES_008 / SES_009.
     ERR_SESION_NO_INICIADA("ERR_SESION_NO_INICIADA", "La sesion aun no ha iniciado; la asistencia solo se registra durante la sesion.", ErrorKind.CONFLICT),
     ERR_SESION_CERRADA("ERR_SESION_CERRADA", "La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.", ErrorKind.CONFLICT),
-    ERR_SESION_HORARIO_INDETERMINADO("ERR_SESION_HORARIO_INDETERMINADO", "El horario de la sesion no esta confirmado; no es posible registrar asistencia.", ErrorKind.CONFLICT);
+    ERR_SESION_HORARIO_INDETERMINADO("ERR_SESION_HORARIO_INDETERMINADO", "El horario de la sesion no esta confirmado; no es posible registrar asistencia.", ErrorKind.CONFLICT),
+    // CULM-001 B.1 (NB-1): la sesion fue cancelada (DB: SES_010); no admite registro de asistencia.
+    ERR_SESION_CANCELADA("ERR_SESION_CANCELADA", "La sesión fue cancelada; no admite registro de asistencia.", ErrorKind.CONFLICT);
 
     private final String code;
     private final String defaultMessage;

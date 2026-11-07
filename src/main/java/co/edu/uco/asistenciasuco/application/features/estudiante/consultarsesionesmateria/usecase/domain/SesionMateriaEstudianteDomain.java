@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
 
 import java.time.LocalDateTime;
@@ -16,5 +17,18 @@ public record SesionMateriaEstudianteDomain(UUID id, String nombre, Integer nume
                                             LocalDateTime fechaHoraInicioUtc, LocalDateTime fechaHoraFinUtc,
                                             EstadoHorarioSesion estadoTemporal,
                                             EstadoAsistenciaSesion estadoAsistencia, String estadoSolicitudRevision,
-                                            boolean reclamable) {
+                                            boolean reclamable, CancelacionSesionDTO cancelacion) {
+
+    /** Sesion programada (sin cancelacion). */
+    public SesionMateriaEstudianteDomain(final UUID id, final String nombre, final Integer numero, final String codigo,
+                                         final Integer numeroSemana, final UUID idGrupo, final String codigoGrupo,
+                                         final String nombreGrupo, final LocalDateTime fechaHoraInicio,
+                                         final LocalDateTime fechaHoraFin, final LocalDateTime fechaHoraInicioUtc,
+                                         final LocalDateTime fechaHoraFinUtc, final EstadoHorarioSesion estadoTemporal,
+                                         final EstadoAsistenciaSesion estadoAsistencia,
+                                         final String estadoSolicitudRevision, final boolean reclamable) {
+        this(id, nombre, numero, codigo, numeroSemana, idGrupo, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin,
+                fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, estadoAsistencia, estadoSolicitudRevision, reclamable,
+                null);
+    }
 }

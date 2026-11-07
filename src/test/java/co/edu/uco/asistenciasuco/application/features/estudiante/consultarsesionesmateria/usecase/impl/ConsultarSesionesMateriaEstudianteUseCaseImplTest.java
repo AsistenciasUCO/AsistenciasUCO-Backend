@@ -240,6 +240,28 @@ class ConsultarSesionesMateriaEstudianteUseCaseImplTest {
                 LocalDateTime.of(2026, 8, 17, 13, 0), LocalDateTime.of(2026, 8, 17, 15, 0), procedenciaTemporal);
     }
 
+    // CULM-001 B.1 (3.2.4): una sesion cancelada no muestra asistencia ni es reclamable aunque tenga una falta registrada.
+    @Test
+    void sesion_cancelada_es_no_disponible_no_reclamable_y_trae_su_cancelacion() {
+        final UUID grupo = UUID.randomUUID();
+        dado(List.of(sesion(sesion1, 1, grupo)), List.of(hecho(sesion1, 1, Boolean.FALSE, "SJC")));
+        when(procedenciaPort.consultarSesionesPorGrupo(grupo)).thenReturn(List.of(new SesionProcedenciaRepositoryProjection(
+                sesion1, grupo, "Sesion", 1, "SES", 1, "1", "Grupo 001", LocalDateTime.of(2026, 8, 17, 13, 0),
+                LocalDateTime.of(2026, 8, 17, 15, 0), "UTC_V2",
+                new co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection(
+                        "DOCENTE", "Calamidad domestica", null, LocalDateTime.of(2026, 8, 16, 20, 0)))));
+
+        final SesionMateriaEstudianteDomain result = useCase.execute(actor, asignatura).getFirst();
+
+        assertEquals(EstadoAsistenciaSesion.NO_DISPONIBLE, result.estadoAsistencia());
+        assertFalse(result.reclamable());
+        assertEquals("DOCENTE", result.cancelacion().tipo());
+        final var dto = co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.mapper
+                .ConsultarSesionesMateriaEstudianteMapper.toDTO(result);
+        assertEquals("CANCELADA", dto.estado());
+        assertEquals("Calamidad domestica", dto.cancelacion().motivo());
+    }
+
     @Test
     void app04_sesion_con_procedencia_confirmada_expone_instantes_utc() {
         final UUID grupo = UUID.randomUUID();

@@ -93,7 +93,8 @@ public final class ConsultarAsistenciaProgramaUseCaseImpl implements ConsultarAs
                 s.numero(), s.codigo(), s.numeroSemana(), s.fechaHoraInicio(), s.fechaHoraFin(),
                 conProcedencia ? procedencia.fechaHoraInicioUtc() : null,
                 conProcedencia ? procedencia.fechaHoraFinUtc() : null,
-                conProcedencia ? procedencia.estadoTemporal() : EstadoHorarioSesion.INDETERMINADA);
+                conProcedencia ? procedencia.estadoTemporal() : EstadoHorarioSesion.INDETERMINADA,
+                conProcedencia ? procedencia.cancelacion() : null);
     }
 
     @Override
