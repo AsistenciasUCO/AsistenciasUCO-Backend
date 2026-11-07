@@ -109,6 +109,7 @@ class OpenApiGoldenPathConformanceTest {
         addMapping(controllerMappings, SesionController.class, "actualizarSesion", UUID.class, ActualizarSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesionLegacy", UUID.class, ActualizarSesionRequest.class);
         // MAINT-003F: contrato 1.1.0 agrega UTC v2 de sesiones (UTC-D01: POST, PATCH, GET id, GET grupo; sin PUT).
+        // CULM-001 A.2 (DEC-032): contrato 1.2.0 solo cambia x-roles y descripcion de GET /api/v1/estudiantes (DOCENTE con ambito).
         addMapping(controllerMappings, SesionV2Controller.class, "crearSesion", Map.class);
         addMapping(controllerMappings, SesionV2Controller.class, "actualizarSesion", UUID.class, Map.class);
         addMapping(controllerMappings, SesionV2ConsultaController.class, "consultarSesion", UUID.class);
