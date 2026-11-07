@@ -32,8 +32,18 @@ public class PlantillaPorDefectoCatalogo {
             Notificacion.TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO
     );
 
-    private static final java.util.regex.Pattern TIPO_VALIDO = java.util.regex.Pattern.compile("[A-Z0-9_]{3,60}");
-    private static final java.util.regex.Pattern IDIOMA_VALIDO = java.util.regex.Pattern.compile("[a-z]{2}");
+    private static final String IDIOMA_SOPORTADO = "es";
+
+    private final List<String> tiposPermitidos;
+
+    public PlantillaPorDefectoCatalogo() {
+        this(TIPOS_CONOCIDOS);
+    }
+
+    /** Solo para pruebas: restringe la lista blanca de tipos cuyos recursos pueden cargarse. */
+    PlantillaPorDefectoCatalogo(final List<String> tiposPermitidos) {
+        this.tiposPermitidos = List.copyOf(tiposPermitidos);
+    }
 
     private final Map<String, Optional<PlantillaNotificacion>> cache = new ConcurrentHashMap<>();
 
@@ -52,10 +62,12 @@ public class PlantillaPorDefectoCatalogo {
     }
 
     private Optional<PlantillaNotificacion> cargarRecurso(final String tipo, final String idioma) {
-        if (!TIPO_VALIDO.matcher(tipo).matches() || !IDIOMA_VALIDO.matcher(idioma).matches()) {
+        // Lista blanca: la ruta del recurso se arma solo con constantes conocidas, nunca con la entrada.
+        final String tipoConocido = tiposPermitidos.stream().filter(conocido -> conocido.equals(tipo)).findFirst().orElse(null);
+        if (tipoConocido == null || !IDIOMA_SOPORTADO.equals(idioma)) {
             return Optional.empty();
         }
-        final String path = String.format(RESOURCE_PATTERN, tipo, idioma);
+        final String path = String.format(RESOURCE_PATTERN, tipoConocido, IDIOMA_SOPORTADO);
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try (InputStream stream = classLoader.getResourceAsStream(path)) {
             if (stream == null) {

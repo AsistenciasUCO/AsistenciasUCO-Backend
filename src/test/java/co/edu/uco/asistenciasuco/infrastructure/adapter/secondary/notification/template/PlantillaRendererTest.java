@@ -503,7 +503,8 @@ class PlantillaRendererTest {
                 }
             });
 
-            final PlantillaPorDefectoCatalogo cat = new PlantillaPorDefectoCatalogo();
+            final PlantillaPorDefectoCatalogo cat = new PlantillaPorDefectoCatalogo(
+                    List.of("SIN_ASUNTO", "SIN_CUERPO", "IO_FALLO", "CSV_HUECOS"));
             assertTrue(cat.obtener("SIN_ASUNTO", "es").isEmpty());
             assertTrue(cat.obtener("SIN_CUERPO", "es").isEmpty());
             assertTrue(cat.obtener("IO_FALLO", "es").isEmpty());
