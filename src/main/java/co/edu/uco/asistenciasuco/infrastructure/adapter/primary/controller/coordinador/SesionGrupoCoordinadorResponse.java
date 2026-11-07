@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.coordinador;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.CancelacionSesionResponse;
 import co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto.ConsultasAsistenciaProgramaDTO.SesionGrupoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpUtcInstantCodec;
 import com.fasterxml.jackson.annotation.JsonInclude;
@@ -27,13 +28,16 @@ public record SesionGrupoCoordinadorResponse(
         LocalDateTime fechaHoraFin,
         String fechaHoraInicioUtc,
         String fechaHoraFinUtc,
-        String estadoTemporal
+        String estadoTemporal,
+        String estado,
+        CancelacionSesionResponse cancelacion
 ) {
 
     public static SesionGrupoCoordinadorResponse from(final SesionGrupoDTO dto) {
         return new SesionGrupoCoordinadorResponse(dto.id(), dto.idGrupo(), dto.codigoGrupo(), dto.nombreGrupo(),
                 dto.nombre(), dto.numero(), dto.codigo(), dto.numeroSemana(), dto.fechaHoraInicio(),
-                dto.fechaHoraFin(), utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal());
+                dto.fechaHoraFin(), utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal(),
+                dto.estado(), CancelacionSesionResponse.from(dto.cancelacion()));
     }
 
     private static String utc(final LocalDateTime value) {

@@ -7,6 +7,7 @@ import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.p
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesionv2.primaryports.dto.ConsultarSesionV2DTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.CancelacionSesionResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpUtcInstantCodec;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.ResponseEntity;
@@ -69,7 +70,8 @@ public final class SesionV2ConsultaController {
                 dto.sesion(), dto.grupo(), dto.nombre(), dto.numero(), dto.codigo(), dto.numeroSemana(),
                 dto.codigoGrupo(), dto.nombreGrupo(),
                 instante(dto.fechaHoraInicioUtc()), instante(dto.fechaHoraFinUtc()),
-                dto.estadoTemporal(), dto.procedenciaTemporal()
+                dto.estadoTemporal(), dto.procedenciaTemporal(),
+                dto.estado(), CancelacionSesionResponse.from(dto.cancelacion())
         );
     }
 
