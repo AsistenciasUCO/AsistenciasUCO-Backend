@@ -178,12 +178,10 @@ public class SecurityConfig {
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                // Matricula de estudiante en grupo: la DB controla titularidad (DOCENTE titular del
-                // grupo O COORDINADOR del programa, ver usp_registrar_estudiante_en_grupo, SEC_002).
-                // ADMINISTRADOR no tiene bypass en la DB para esta operacion; por eso no se incluye
-                // aqui, a diferencia de crear/actualizar grupo.
+                // F-COO-004 (CULM-001 A): matricula solo del DOCENTE titular (la DB valida titularidad, SEC_002).
+                // COORDINADOR y ADMINISTRADOR no matriculan (usp_registrar_estudiante_en_grupo exige perfil DOCENTE).
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes", "/api/v1/grupos/{grupoId}/estudiantes")
-                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
+                    .hasRole(ROLE_DOCENTE)
                 // IDENT-001: reenvio del enlace de verificacion de correo. Mismo criterio que la matricula manual: la DB valida
                 // que el ejecutor sea docente titular del grupo o coordinador de su programa.
                 // HU176B: el docente abre (POST), regenera (POST /rotacion) y cierra (DELETE) la ventana de matricula por QR de su

@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.grupo;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.ActualizarGrupoInputPort;
 import co.edu.uco.asistenciasuco.application.features.grupo.actualizargrupo.primaryports.dto.ActualizarGrupoResultadoDTO;
 import co.edu.uco.asistenciasuco.application.features.grupo.consultargrupos.primaryports.ConsultarGruposInputPort;
@@ -25,7 +24,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
@@ -123,15 +121,5 @@ public final class GrupoController {
                 )
         );
         return ResponseEntity.status(HttpStatus.CREATED).body(resultado);
-    }
-
-    @DeleteMapping("/{grupoId}/estudiantes/{estudianteId}")
-    public ResponseEntity<ApiDataResponse<Boolean>> retirarEstudiante(
-            @PathVariable final UUID grupoId,
-            @PathVariable final UUID estudianteId
-    ) {
-        throw new FeatureUnavailableException(
-                "El retiro de estudiantes del grupo requiere un command publico de DB que aun no esta disponible."
-        );
     }
 }

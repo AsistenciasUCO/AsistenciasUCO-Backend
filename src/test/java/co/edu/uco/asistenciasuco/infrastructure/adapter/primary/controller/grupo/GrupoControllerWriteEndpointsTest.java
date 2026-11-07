@@ -288,7 +288,9 @@ class GrupoControllerWriteEndpointsTest {
     // vigente es POST /api/v1/docente/grupos/{grupoId}/estudiantes/{estudianteId}/retiro (HU051).
     @Test
     void retirar_estudiante_por_delete_ya_no_tiene_ruta() throws Exception {
+        // Montaje standalone: sin handler no hay NoResourceFoundException (el 404 HTTP real lo fija
+        // RutasSolicitudesRetiradasWebMvcTest); aqui se comprueba que ningun handler atiende la ruta.
         mockMvc.perform(delete("/api/v1/grupos/{grupoId}/estudiantes/{estudianteId}", GRUPO, ESTUDIANTE))
-                .andExpect(status().isNotFound());
+                .andExpect(result -> assertNull(result.getHandler()));
     }
 }

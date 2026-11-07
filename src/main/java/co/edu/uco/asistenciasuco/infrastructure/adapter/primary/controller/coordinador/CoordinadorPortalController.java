@@ -162,10 +162,6 @@ public final class CoordinadorPortalController {
         final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @PostMapping("/grupos/{grupoId}/estudiantes")
-    public ResponseEntity<ApiDataResponse<Void>> matricularEstudianteEnGrupo(@PathVariable final UUID grupoId) { throw unavailable(); }
-    @DeleteMapping("/grupos/{grupoId}/estudiantes/{estudianteId}")
-    public ResponseEntity<ApiDataResponse<Void>> retirarEstudianteDeGrupo(@PathVariable final UUID grupoId, @PathVariable final UUID estudianteId) { throw unavailable(); }
 
     private static FeatureUnavailableException unavailable() {
         return new FeatureUnavailableException("La operacion de coordinador no esta disponible con el contrato DB publico actual.");
