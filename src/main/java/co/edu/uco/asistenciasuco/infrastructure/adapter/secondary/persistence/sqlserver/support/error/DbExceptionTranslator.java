@@ -25,6 +25,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.Map;
+import java.util.Optional;
 import java.util.Set;
 
 /**
@@ -100,6 +101,26 @@ public final class DbExceptionTranslator {
     );
 
     private DbExceptionTranslator() {
+    }
+
+    /**
+     * CULM-001 A.2-9: traduce un codigo DBCODE de un SP de consulta (lanzado con {@code THROW}) con la misma tabla de
+     * {@link DbFailureClassifier} que los comandos. Vacio si el codigo no esta clasificado (sigue siendo fallo tecnico).
+     */
+    public static Optional<RuntimeException> translateDbCode(final String dbCode, final String operation) {
+        if (TextHelper.isNullOrBlank(dbCode)) {
+            return Optional.empty();
+        }
+        final ErrorDefinition code = DbFailureClassifier.classify(null, "DBCODE=" + dbCode.strip() + "|", operation);
+        if (DatabaseErrorCode.FEATURE_UNAVAILABLE.equals(code)) {
+            return Optional.of(new FeatureUnavailableException(code.defaultMessage()));
+        }
+        for (final Map.Entry<Set<ErrorDefinition>, ExceptionFactory> entry : EXCEPTION_BY_CODES.entrySet()) {
+            if (entry.getKey().contains(code)) {
+                return Optional.of(entry.getValue().create(code));
+            }
+        }
+        return Optional.empty();
     }
 
     public static void throwIfFailed(

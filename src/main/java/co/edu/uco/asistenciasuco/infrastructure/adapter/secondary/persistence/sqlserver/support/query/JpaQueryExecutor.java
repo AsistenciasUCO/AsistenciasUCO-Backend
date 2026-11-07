@@ -6,6 +6,7 @@ import jakarta.persistence.PersistenceException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.function.Function;
 import java.util.function.Supplier;
 
 /**
@@ -40,6 +41,30 @@ public final class JpaQueryExecutor {
                     CorrelationIdContext.getAsString()
             );
             throw new DatabaseOperationException(errorMessage, exception);
+        }
+    }
+
+    /**
+     * CULM-001 A.2-9: como {@link #execute(String, String, Supplier)}, pero una {@link PersistenceException} pasa antes por
+     * {@code traductor} (p. ej. {@code DbCodeTranslator::traducir}): si devuelve otra excepcion (403, 404, 400...) se lanza
+     * esa; si la devuelve sin traducir, se trata como fallo tecnico.
+     */
+    public static <T> T execute(
+            final String operation,
+            final String errorMessage,
+            final Supplier<T> query,
+            final Function<PersistenceException, RuntimeException> traductor
+    ) {
+        try {
+            return execute(operation, errorMessage, query);
+        } catch (final DatabaseOperationException exception) {
+            if (exception.getCause() instanceof PersistenceException persistence) {
+                final RuntimeException traducida = traductor.apply(persistence);
+                if (traducida != null && traducida != persistence) {
+                    throw traducida;
+                }
+            }
+            throw exception;
         }
     }
 }
