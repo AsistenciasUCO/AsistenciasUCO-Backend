@@ -119,10 +119,14 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/admin/areas", "/api/v1/admin/areas/**")
                     .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/admin/**").hasRole(ROLE_ADMINISTRADOR)
-                .requestMatchers("/api/v1/decano/**").hasAnyRole(ROLE_DECANO, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
+                // CULM-001 A.2-3 (F-TRX-018, DEC-022 §2): el ADMINISTRADOR no opera las vistas de decano ni de coordinador.
+                .requestMatchers("/api/v1/decano/**").hasRole(ROLE_DECANO)
+                // Unica excepcion: el catalogo de periodos lo consume la pantalla del administrador (admin-periodos, admin-system).
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/periodos-academicos")
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers("/api/v1/coordinador/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
+                    .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR)
+                .requestMatchers("/api/v1/coordinador/**").hasRole(ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/docente/**").hasRole(ROLE_DOCENTE)
                 // Directorio general de docentes (crear/consultar/asignar a grupo): hoy sin
                 // contrato funcional explícito de quién debe administrarlo; se restringe a los
