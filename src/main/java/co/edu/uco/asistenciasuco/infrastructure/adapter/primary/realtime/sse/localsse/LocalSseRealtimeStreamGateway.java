@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.lo
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.secondaryports.realtime.RealtimeEvent;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.RealtimeAudienciaPolicy;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.contract.RealtimeStreamGateway;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.realtime.sse.response.RealtimeEventResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.realtime.localsse.ReactorRealtimeAdapter;
@@ -28,13 +29,24 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
 
     private final ReactorRealtimeAdapter realtimeAdapter;
     private final InstitutionalScopePort institutionalScopePort;
+    private final RealtimeAudienciaPolicy audienciaPolicy;
 
     public LocalSseRealtimeStreamGateway(
             final ReactorRealtimeAdapter realtimeAdapter,
             final InstitutionalScopePort institutionalScopePort
     ) {
+        this(realtimeAdapter, institutionalScopePort, RealtimeAudienciaPolicy.porDefecto());
+    }
+
+    /** CULM-001 B.1 (3.8): la politica de audiencia decide por tipo exacto que eventos llegan a cada audiencia. */
+    public LocalSseRealtimeStreamGateway(
+            final ReactorRealtimeAdapter realtimeAdapter,
+            final InstitutionalScopePort institutionalScopePort,
+            final RealtimeAudienciaPolicy audienciaPolicy
+    ) {
         this.realtimeAdapter = Objects.requireNonNull(realtimeAdapter, "ReactorRealtimeAdapter es requerido.");
         this.institutionalScopePort = Objects.requireNonNull(institutionalScopePort, "InstitutionalScopePort es requerido.");
+        this.audienciaPolicy = Objects.requireNonNull(audienciaPolicy, "RealtimeAudienciaPolicy es requerida.");
     }
 
     @Override
@@ -48,6 +60,8 @@ public final class LocalSseRealtimeStreamGateway implements RealtimeStreamGatewa
         final String grupoIdTexto = grupoId.toString();
         return realtimeAdapter.events()
                 .filter(event -> grupoIdTexto.equals(event.payload().get("grupo")))
+                // En B el suscriptor es siempre el docente titular (validado arriba); C agrega otras audiencias.
+                .filter(event -> audienciaPolicy.entregaA(event.type(), RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR))
                 .map(RealtimeEventResponse::from);
     }
 
