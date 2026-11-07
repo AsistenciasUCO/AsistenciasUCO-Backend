@@ -7,6 +7,8 @@ import co.edu.uco.asistenciasuco.application.features.decano.exception.Coordinad
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
@@ -38,7 +40,9 @@ public final class DbExceptionTranslator {
     private static final Logger LOGGER = LoggerFactory.getLogger(DbExceptionTranslator.class);
     private static final Set<ErrorDefinition> FORBIDDEN_CODES = Set.of(
             AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION,
-            SecurityErrorCode.FORBIDDEN
+            SecurityErrorCode.FORBIDDEN,
+            AsistenciaQrErrorCode.AQR_002,
+            AsistenciaQrErrorCode.AQR_004
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
@@ -53,6 +57,9 @@ public final class DbExceptionTranslator {
             CatalogoErrorCode.TPR_001,
             CatalogoErrorCode.ARE_001,
             FestivoErrorCode.FES_007,
+            TomaAsistenciaErrorCode.TOM_001,
+            AsistenciaQrErrorCode.AQR_001,
+            AsistenciaQrErrorCode.AQR_010,
             CommonErrorCode.RESOURCE_NOT_FOUND
     );
     private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
@@ -87,6 +94,11 @@ public final class DbExceptionTranslator {
             SesionErrorCode.SES_011,
             SesionErrorCode.SES_012,
             SesionErrorCode.SES_016,
+            TomaAsistenciaErrorCode.TOM_003,
+            TomaAsistenciaErrorCode.TOM_004,
+            AsistenciaQrErrorCode.AQR_003,
+            AsistenciaQrErrorCode.AQR_005,
+            AsistenciaQrErrorCode.AQR_006,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -106,6 +118,8 @@ public final class DbExceptionTranslator {
             FestivoErrorCode.FES_002,
             FestivoErrorCode.FES_004,
             FestivoErrorCode.FES_006,
+            TomaAsistenciaErrorCode.TOM_002,
+            AsistenciaQrErrorCode.AQR_007,
             CommonErrorCode.VALIDATION_ERROR
     );
 
