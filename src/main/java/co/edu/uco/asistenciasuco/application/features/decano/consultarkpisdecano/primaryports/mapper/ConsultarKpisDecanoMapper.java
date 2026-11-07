@@ -15,6 +15,6 @@ public final class ConsultarKpisDecanoMapper {
     }
 
     public static KpisDecanoDTO toDto(final KpisDecanoDomain d) {
-        return new KpisDecanoDTO(d.idFacultad(), d.nombreFacultad(), d.idPeriodoAcademico(), d.nombrePeriodoAcademico(), d.totalProgramas(), d.totalEstudiantes(), d.estudiantesRegulares(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaRetencion(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo(), d.porcentajeAsistencia(), d.gruposActivos(), d.cupoTotal(), d.matriculadosActivos(), d.tasaAforo(), d.umbralAdvertencia(), d.umbralPerdida());
+        return new KpisDecanoDTO(d.idFacultad(), d.nombreFacultad(), d.idPeriodoAcademico(), d.nombrePeriodoAcademico(), d.totalProgramas(), d.totalEstudiantes(), d.estudiantesRegulares(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaRetencion(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo(), d.porcentajeAsistencia(), d.gruposActivos(), d.cupoTotal(), d.matriculadosActivos(), d.tasaAforo(), d.umbralAdvertencia(), d.umbralPerdida(), d.tomasDictadas(), d.horasDictadas(), d.horasFalta());
     }
 }

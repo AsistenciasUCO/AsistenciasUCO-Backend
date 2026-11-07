@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
@@ -58,15 +57,6 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
             EXEC dbo.usp_registrar_asistencias_sesion
                  @idSesion = :idSesion,
                  @asistenciaJSON = :asistenciaJSON,
-                 @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
-            """;
-
-    static final String SQL_REGISTRAR_ASISTENCIA_AUTONOMA = """
-            EXEC dbo.usp_registrar_asistencia_estudiante_autonomo
-                 @idEstudiante = :idEstudiante,
-                 @idSesion = :idSesion,
-                 @codigoVerificacion = :codigoVerificacion,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
@@ -143,24 +133,6 @@ public final class AsistenciaJdbcBaselineOracle implements AsistenciaRepositoryP
                 new MapSqlParameterSource()
                         .addValue(PARAM_ID_SESION, dto.sesion())
                         .addValue(PARAM_ASISTENCIA_JSON, serializarRegistros(dto))
-                        .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
-                        .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
-        );
-    }
-
-    @Override
-    public void registrarAsistenciaAutonoma(final RegistrarAsistenciaAutonomaRepositoryDTO dto) {
-        if (ObjectHelper.isNull(dto)) {
-            throw new CrosscuttingException("El dominio para registrar asistencia autonoma es obligatorio.");
-        }
-
-        procedureExecutor.execute(
-                "registrarAsistenciaAutonoma",
-                SQL_REGISTRAR_ASISTENCIA_AUTONOMA,
-                new MapSqlParameterSource()
-                        .addValue(PARAM_ID_ESTUDIANTE, dto.estudiante())
-                        .addValue(PARAM_ID_SESION, dto.sesion())
-                        .addValue(PARAM_CODIGO_VERIFICACION, dto.codigoVerificacion())
                         .addValue(PARAM_ID_CORRELACION, CorrelationIdContext.require())
                         .addValue(PARAM_ID_USUARIO_EJECUTOR, dto.usuarioEjecutor())
         );

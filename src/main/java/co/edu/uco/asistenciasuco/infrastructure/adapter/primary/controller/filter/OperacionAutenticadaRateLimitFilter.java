@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter;
 
+import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import co.edu.uco.asistenciasuco.crosscutting.exception.catalog.SecurityErrorCode;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
 import jakarta.servlet.FilterChain;
@@ -19,24 +20,21 @@ import java.util.Optional;
 import java.util.function.IntSupplier;
 
 /**
- * CULM-001 A.2-4 (F-TRX-003): limite de intentos por minuto, en memoria, de dos operaciones autenticadas.
+ * CULM-001 A.2-4 (F-TRX-003): limite de intentos por minuto, en memoria, de {@code POST /api/v1/archivos/subir}: por
+ * usuario ({@code usr:<sub>}) y por IP ({@code ip:<ip>}), ambos con {@code ARCHIVOS/LIMITE_SUBIDAS_POR_MINUTO}.
  *
- * <ul>
- *   <li>{@code POST /api/v1/archivos/subir}: por usuario ({@code usr:<sub>}) y por IP ({@code ip:<ip>}), ambos con
- *       {@code ARCHIVOS/LIMITE_SUBIDAS_POR_MINUTO}.</li>
- *   <li>{@code POST /api/v1/estudiante/asistencia-qr}: por IP con {@code ASISTENCIA_QR/LIMITE_IP_POR_MINUTO} y por
- *       estudiante con {@code ASISTENCIA_QR/LIMITE_ESTUDIANTE_POR_MINUTO}.</li>
- * </ul>
+ * <p>CULM-001 B.2 ([SUPUESTO-B-12]): {@code POST /api/v1/estudiante/asistencia-qr} ya no se limita aqui. Su limite por
+ * IP cuenta solo los intentos rechazados ({@code AsistenciaQrRateLimitFilter}) y los limites por estudiante y por token
+ * los aplica el caso de uso, para que un campus detras del mismo NAT no reciba 429 al registrar.</p>
  *
  * <p>Se registra despues de la cadena de Spring Security, asi que conoce al principal autenticado (las peticiones sin token
  * o sin rol ya fueron rechazadas). Al superar un limite responde 429 {@code TOO_MANY_REQUESTS} con el escritor de errores
  * de seguridad. Los limites se leen en cada peticion (el administrador los cambia sin reiniciar); si el catalogo falla
- * rigen los valores por defecto. El limite por token de asistencia queda para el paquete B.</p>
+ * rigen los valores por defecto.</p>
  */
 public final class OperacionAutenticadaRateLimitFilter extends OncePerRequestFilter {
 
     public static final String RUTA_SUBIR_ARCHIVO = "/api/v1/archivos/subir";
-    public static final String RUTA_ASISTENCIA_QR = "/api/v1/estudiante/asistencia-qr";
 
     /** Una clave de limite: prefijo, origen de la clave y limite por minuto. */
     public record Regla(String prefijo, Origen origen, IntSupplier limitePorMinuto) {
@@ -55,15 +53,12 @@ public final class OperacionAutenticadaRateLimitFilter extends OncePerRequestFil
     private final NetworkClientIpResolver ipResolver;
     private final SecurityErrorResponseWriter responseWriter;
     private final List<Regla> reglasSubida;
-    private final List<Regla> reglasAsistenciaQr;
 
     public OperacionAutenticadaRateLimitFilter(
             final SlidingWindowRateLimiter limiter,
             final NetworkClientIpResolver ipResolver,
             final SecurityErrorResponseWriter responseWriter,
-            final IntSupplier limiteSubidasPorMinuto,
-            final IntSupplier limiteAsistenciaQrPorIp,
-            final IntSupplier limiteAsistenciaQrPorEstudiante
+            final IntSupplier limiteSubidasPorMinuto
     ) {
         this.limiter = Objects.requireNonNull(limiter, "SlidingWindowRateLimiter es obligatorio.");
         this.ipResolver = Objects.requireNonNull(ipResolver, "NetworkClientIpResolver es obligatorio.");
@@ -71,9 +66,6 @@ public final class OperacionAutenticadaRateLimitFilter extends OncePerRequestFil
         this.reglasSubida = List.of(
                 new Regla("archivos:", Origen.USUARIO, limiteSubidasPorMinuto),
                 new Regla("archivos:", Origen.IP, limiteSubidasPorMinuto));
-        this.reglasAsistenciaQr = List.of(
-                new Regla("asistencia-qr:", Origen.IP, limiteAsistenciaQrPorIp),
-                new Regla("asistencia-qr:", Origen.USUARIO, limiteAsistenciaQrPorEstudiante));
     }
 
     @Override
@@ -102,13 +94,7 @@ public final class OperacionAutenticadaRateLimitFilter extends OncePerRequestFil
             return List.of();
         }
         final String uri = request.getRequestURI();
-        if (RUTA_SUBIR_ARCHIVO.equals(uri)) {
-            return reglasSubida;
-        }
-        if (RUTA_ASISTENCIA_QR.equals(uri)) {
-            return reglasAsistenciaQr;
-        }
-        return List.of();
+        return RUTA_SUBIR_ARCHIVO.equals(uri) ? reglasSubida : List.of();
     }
 
     private String clave(final Origen origen, final HttpServletRequest request) {

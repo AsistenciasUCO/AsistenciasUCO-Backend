@@ -72,7 +72,8 @@ public class DecanoIndicadoresJpaRepository implements DecanoIndicadoresQueryPor
                             cero(e.totalProgramas()), cero(e.totalEstudiantes()), cero(e.estudiantesRegulares()), cero(e.estudiantesRiesgo()),
                             cero(e.estudiantesPerdida()), e.tasaRetencion(), cero(e.sesionesEjecutadas()), cero(e.faltasSinJustaCausa()),
                             e.porcentajeAusentismo(), e.porcentajeAsistencia(), cero(e.gruposActivos()), cero(e.cupoTotal()),
-                            cero(e.matriculadosActivos()), e.tasaAforo(), e.umbralAdvertencia(), e.umbralPerdida());
+                            cero(e.matriculadosActivos()), e.tasaAforo(), e.umbralAdvertencia(), e.umbralPerdida(),
+                            cero(e.tomasDictadas()), e.horasDictadas(), e.horasFalta());
                 });
     }
 

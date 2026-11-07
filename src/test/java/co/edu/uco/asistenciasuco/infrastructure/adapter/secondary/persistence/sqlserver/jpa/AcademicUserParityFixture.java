@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import java.util.ArrayList;
@@ -155,21 +156,25 @@ final class AcademicUserParityFixture {
             final UUID asistenciaEstudiante1 = UUID.randomUUID();
             jdbc.update("INSERT INTO dbo.Asistencia (id, estudianteGrupo, sesion) VALUES (?, ?, ?)",
                     asistenciaEstudiante1.toString(), eg1.toString(), sesionNumero.toString());
+            // CULM-001 B.2 (2.16.3): DetalleAsistencia.toma es obligatoria (toma 1 implicita de la sesion).
+            jdbc.update(TomaAsistenciaTestSql.SQL_ASEGURAR_TOMA_1_DE_ASISTENCIA, asistenciaEstudiante1.toString());
             jdbc.update("""
-                    INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin)
-                    VALUES (?, ?, ?, 0, ?, SYSDATETIME(), DATEADD(HOUR, 1, SYSDATETIME()))
-                    """, UUID.randomUUID().toString(), codigoEnteroUnico(), asistenciaEstudiante1.toString(),
-                    s.razonCausa().toString());
+                    INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin, toma)
+                    VALUES (?, ?, ?, 0, ?, SYSDATETIME(), DATEADD(HOUR, 1, SYSDATETIME()), """ + TomaAsistenciaTestSql.SQL_TOMA_1_DE_ASISTENCIA + ")",
+                    UUID.randomUUID().toString(), codigoEnteroUnico(), asistenciaEstudiante1.toString(),
+                    s.razonCausa().toString(), asistenciaEstudiante1.toString());
 
             if (numero == 1) {
                 final UUID asistenciaEstudiante2 = UUID.randomUUID();
                 jdbc.update("INSERT INTO dbo.Asistencia (id, estudianteGrupo, sesion) VALUES (?, ?, ?)",
                         asistenciaEstudiante2.toString(), eg2.toString(), sesionNumero.toString());
+                // CULM-001 B.2 (2.16.3): DetalleAsistencia.toma es obligatoria (toma 1 implicita de la sesion).
+                jdbc.update(TomaAsistenciaTestSql.SQL_ASEGURAR_TOMA_1_DE_ASISTENCIA, asistenciaEstudiante2.toString());
                 jdbc.update("""
-                        INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin)
-                        VALUES (?, ?, ?, 1, ?, SYSDATETIME(), DATEADD(HOUR, 1, SYSDATETIME()))
-                        """, UUID.randomUUID().toString(), codigoEnteroUnico(), asistenciaEstudiante2.toString(),
-                        s.razonCausa().toString());
+                        INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin, toma)
+                        VALUES (?, ?, ?, 1, ?, SYSDATETIME(), DATEADD(HOUR, 1, SYSDATETIME()), """ + TomaAsistenciaTestSql.SQL_TOMA_1_DE_ASISTENCIA + ")",
+                        UUID.randomUUID().toString(), codigoEnteroUnico(), asistenciaEstudiante2.toString(),
+                        s.razonCausa().toString(), asistenciaEstudiante2.toString());
             }
         }
 
@@ -323,14 +328,9 @@ final class AcademicUserParityFixture {
         for (final String periodo : periodos) {
             jdbc.update("DELETE FROM dbo.AuditoriaEvento WHERE resourceType = 'PeriodoAcademico' AND resourceId = ?",
                     periodo.toUpperCase());
-            jdbc.update("""
-                    DELETE FROM dbo.DetalleAsistencia WHERE asistencia IN (
-                        SELECT a.id FROM dbo.Asistencia a INNER JOIN dbo.Sesion s ON s.id = a.sesion
-                        INNER JOIN dbo.Grupo g ON g.id = s.grupo WHERE g.periodoAcademico = ?)""", periodo);
-            jdbc.update("""
-                    DELETE FROM dbo.Asistencia WHERE sesion IN (
-                        SELECT s.id FROM dbo.Sesion s INNER JOIN dbo.Grupo g ON g.id = s.grupo
-                        WHERE g.periodoAcademico = ?)""", periodo);
+            // CULM-001 B.2 (2.16.3 d): detalle -> token -> toma -> cancelacion -> asistencia, antes de la sesion.
+            TomaAsistenciaTestSql.limpiarDependientesDeSesiones(jdbc,
+                    "s.grupo IN (SELECT g.id FROM dbo.Grupo g WHERE g.periodoAcademico = ?)", periodo);
             jdbc.update("""
                     DELETE FROM dbo.Sesion WHERE grupo IN (SELECT id FROM dbo.Grupo WHERE periodoAcademico = ?)""", periodo);
             jdbc.update("""

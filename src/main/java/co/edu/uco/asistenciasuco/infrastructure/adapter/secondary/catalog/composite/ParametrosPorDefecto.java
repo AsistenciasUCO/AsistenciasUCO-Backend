@@ -36,6 +36,12 @@ public final class ParametrosPorDefecto {
         valores.put(clave("ARCHIVOS", "LIMITE_SUBIDAS_POR_MINUTO"), "10");
         valores.put(clave("ASISTENCIA_QR", "LIMITE_IP_POR_MINUTO"), "20");
         valores.put(clave("ASISTENCIA_QR", "LIMITE_ESTUDIANTE_POR_MINUTO"), "5");
+        // CULM-001 B.2 (semilla 35, DEC-018): QR de asistencia. LIMITE_ESTUDIANTE_POR_MINUTO se conserva en 5 (DEC-045).
+        valores.put(clave("ASISTENCIA_QR", "HABILITADA"), "true");
+        valores.put(clave("ASISTENCIA_QR", "ROTACION_SEGUNDOS"), "60");
+        valores.put(clave("ASISTENCIA_QR", "LIMITE_FALLIDOS_IP_POR_MINUTO"), "600");
+        valores.put(clave("ASISTENCIA_QR", "LIMITE_TOKEN_POR_MINUTO"), "120");
+        valores.put(clave("ASISTENCIA_QR", "URL_BASE_FRONTEND"), "http://localhost:4200");
         // CULM-001 A.2-7 y A.1 (E-08): codigos de estado que la BD resuelve por parametro.
         valores.put(clave("RECLAMO", "ESTADO_PENDIENTE"), "P");
         valores.put(clave("RECLAMO", "ESTADO_RETIRADO"), "X");

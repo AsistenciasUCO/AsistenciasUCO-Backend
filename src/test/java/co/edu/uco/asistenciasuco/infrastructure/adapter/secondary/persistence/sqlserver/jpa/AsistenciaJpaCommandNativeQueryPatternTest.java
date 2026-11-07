@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.*;
 
 
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistroAsistenciaSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
@@ -94,21 +93,6 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     }
 
     @Test
-    void CMD_PAT_002_registrar_asistencia_autonoma_usa_create_native_query_con_sus_parametros_reales() {
-        command.registrarAsistenciaAutonoma(new RegistrarAsistenciaAutonomaRepositoryDTO(
-                ESTUDIANTE, SESION, "1234", EJECUTOR));
-
-        verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_registrar_asistencia_estudiante_autonomo"));
-        verify(query).setParameter("idEstudiante", ESTUDIANTE);
-        verify(query).setParameter("idSesion", SESION);
-        verify(query).setParameter("codigoVerificacion", "1234");
-        verify(query).setParameter("idCorrelacion", CORRELATION);
-        verify(query).setParameter("idUsuarioEjecutor", EJECUTOR);
-        verify(query).getResultList();
-        verify(entityManager, never()).createStoredProcedureQuery(anyString());
-    }
-
-    @Test
     void CMD_PAT_003_solicitar_revision_usa_create_native_query_con_sus_parametros_reales() {
         command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
                 ESTUDIANTE, SESION, "NOTA", "Justificacion", SOPORTE, EJECUTOR));
@@ -143,8 +127,8 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
 
     @Test
     void CMD_PAT_005_ningun_command_abre_transaccion_jpa_ni_consulta_el_entity_manager_mas_alla_del_patron() {
-        command.registrarAsistenciaAutonoma(new RegistrarAsistenciaAutonomaRepositoryDTO(
-                ESTUDIANTE, SESION, "1234", EJECUTOR));
+        command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                ESTUDIANTE, SESION, "NOTA", "J", null, EJECUTOR));
 
         verify(entityManager).createNativeQuery(anyString());
         verifyNoMoreInteractions(entityManager);
@@ -166,8 +150,8 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
         when(query.getResultList()).thenReturn(Collections.singletonList(new Object[]{UUID.randomUUID(), "m", "", true}));
 
         final DatabaseOperationException exception = assertThrows(DatabaseOperationException.class,
-                () -> command.registrarAsistenciaAutonoma(new RegistrarAsistenciaAutonomaRepositoryDTO(
-                        ESTUDIANTE, SESION, "1234", EJECUTOR)));
+                () -> command.solicitarRevisionAsistencia(new SolicitarRevisionAsistenciaRepositoryDTO(
+                        ESTUDIANTE, SESION, "NOTA", "J", null, EJECUTOR)));
 
         assertEquals(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT.code(), exception.getCode());
     }
@@ -187,7 +171,7 @@ class AsistenciaJpaCommandNativeQueryPatternTest {
     @Test
     void CMD_PAT_009_dto_nulo_mantiene_la_excepcion_del_baseline_antes_de_tocar_el_entity_manager() {
         assertThrows(CrosscuttingException.class,
-                () -> command.registrarAsistenciaAutonoma(null));
+                () -> command.solicitarRevisionAsistencia(null));
 
         verify(entityManager, never()).createNativeQuery(anyString());
     }

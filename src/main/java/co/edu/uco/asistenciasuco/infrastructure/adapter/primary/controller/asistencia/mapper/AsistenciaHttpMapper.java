@@ -1,13 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.mapper;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.dto.ConsultarAsistenciasPorGrupoDTO;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.primaryports.dto.RegistrarAsistenciaAutonomaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.dto.RegistrarAsistenciaDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistrarAsistenciasSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.dto.RegistroAsistenciaSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.primaryports.dto.SolicitarRevisionAsistenciaDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.ConsultarAsistenciasPorGrupoRequest;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaQrRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciaRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.RegistrarAsistenciasSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.asistencia.request.SolicitarRevisionAsistenciaRequest;
@@ -68,13 +66,5 @@ public final class AsistenciaHttpMapper {
                         ))
                         .toList();
         return new RegistrarAsistenciasSesionDTO(request.getSesionId(), registros, usuarioEjecutor);
-    }
-
-    public static RegistrarAsistenciaAutonomaDTO toApplicationDTO(
-            final RegistrarAsistenciaQrRequest request,
-            final UUID usuarioId
-    ) {
-        Objects.requireNonNull(request, "El request HTTP para registrar asistencia autonoma es obligatorio.");
-        return new RegistrarAsistenciaAutonomaDTO(request.getSesionId(), request.getCodigo(), usuarioId);
     }
 }

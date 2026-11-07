@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.GrupoRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
@@ -82,6 +83,7 @@ class SesionGrupoCommandsSpParityIT {
     void limpiar() {
         try {
             limpiarEstudiantesDeLaIt();
+            TomaAsistenciaTestSql.limpiarDependientesDeSesiones(jdbcTemplate, "s.nombre LIKE ?", PREFIJO + "%");
             jdbcTemplate.update("DELETE FROM dbo.Sesion WHERE nombre LIKE ?", PREFIJO + "%");
             jdbcTemplate.update("DELETE FROM dbo.Grupo WHERE nombre LIKE ?", PREFIJO + "GRP-%");
             fixture.cleanup();

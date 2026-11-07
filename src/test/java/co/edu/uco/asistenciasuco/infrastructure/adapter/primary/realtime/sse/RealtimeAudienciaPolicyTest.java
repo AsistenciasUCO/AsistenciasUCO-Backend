@@ -71,4 +71,15 @@ class RealtimeAudienciaPolicyTest {
         assertFalse(soloCancelada.audienciasDe("SECRETO").isEmpty());
         assertThrows(NullPointerException.class, () -> new LocalSseRealtimeStreamGateway(adapter, scope, null));
     }
+
+    @Test
+    void B2_los_cinco_tipos_de_tomas_y_qr_van_solo_al_titular_por_igualdad_exacta() {
+        for (final String tipo : java.util.List.of("TOMA_ABIERTA", "TOMA_CERRADA", "ASISTENCIA_QR_ROTADO",
+                "ASISTENCIA_QR_REGISTRADA", "ASISTENCIAS_TOMA_ACTUALIZADAS")) {
+            assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe(tipo));
+        }
+        // Un tipo de /realtime/emit parecido no coincide con el del QR (que lleva el token).
+        assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("asistencia_qr.rotado"));
+        assertEquals(Set.of(RealtimeAudienciaPolicy.Audiencia.DOCENTE_TITULAR), policy.audienciasDe("ASISTENCIA_QR_ROTADO_X"));
+    }
 }

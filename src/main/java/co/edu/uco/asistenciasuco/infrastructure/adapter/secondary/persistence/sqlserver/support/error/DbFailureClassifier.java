@@ -4,6 +4,8 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.exception.Asist
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
+import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
@@ -186,6 +188,19 @@ final class DbFailureClassifier {
             case "SES_013" -> SesionErrorCode.SES_013;
             case "SES_016" -> SesionErrorCode.SES_016;
             // CULM-001 B.1: festivos (carga, aplicacion y consultas del administrador).
+            // CULM-001 B.2: tomas de asistencia y QR de asistencia (el codigo de la DB se expone tal cual).
+            case "TOM_001" -> TomaAsistenciaErrorCode.TOM_001;
+            case "TOM_002" -> TomaAsistenciaErrorCode.TOM_002;
+            case "TOM_003" -> TomaAsistenciaErrorCode.TOM_003;
+            case "TOM_004" -> TomaAsistenciaErrorCode.TOM_004;
+            case "AQR_001" -> AsistenciaQrErrorCode.AQR_001;
+            case "AQR_002" -> AsistenciaQrErrorCode.AQR_002;
+            case "AQR_003" -> AsistenciaQrErrorCode.AQR_003;
+            case "AQR_004" -> AsistenciaQrErrorCode.AQR_004;
+            case "AQR_005" -> AsistenciaQrErrorCode.AQR_005;
+            case "AQR_006" -> AsistenciaQrErrorCode.AQR_006;
+            case "AQR_007" -> AsistenciaQrErrorCode.AQR_007;
+            case "AQR_010" -> AsistenciaQrErrorCode.AQR_010;
             case "FES_001" -> FestivoErrorCode.FES_001;
             case "FES_002" -> FestivoErrorCode.FES_002;
             case "FES_003" -> FestivoErrorCode.FES_003;

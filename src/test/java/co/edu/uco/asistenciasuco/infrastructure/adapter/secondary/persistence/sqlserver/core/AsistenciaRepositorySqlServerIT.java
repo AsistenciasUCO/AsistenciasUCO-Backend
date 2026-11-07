@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
@@ -97,10 +98,8 @@ class AsistenciaRepositorySqlServerIT {
     void limpiarFixture() {
         try {
             for (final UUID sesion : sesionesCreadas) {
-                jdbcTemplate.update(
-                        "DELETE FROM dbo.DetalleAsistencia WHERE asistencia IN (SELECT id FROM dbo.Asistencia WHERE sesion = ?)",
-                        sesion.toString());
-                jdbcTemplate.update("DELETE FROM dbo.Asistencia WHERE sesion = ?", sesion.toString());
+                // CULM-001 B.2 (2.16.3 d): detalle -> token -> toma -> cancelacion -> asistencia, antes de la sesion.
+                TomaAsistenciaTestSql.limpiarDependientesDeSesion(jdbcTemplate, sesion.toString());
             }
             for (final String[] fila : creados) {
                 if ("EstudianteGrupo".equals(fila[0])) {

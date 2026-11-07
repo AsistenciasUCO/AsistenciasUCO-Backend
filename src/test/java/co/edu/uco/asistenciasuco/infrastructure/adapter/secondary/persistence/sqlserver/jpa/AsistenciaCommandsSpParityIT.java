@@ -5,7 +5,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 
 import co.edu.uco.asistenciasuco.application.exception.ApplicationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionRepositoryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.SolicitarRevisionAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.crosscutting.exception.TechnicalException;
@@ -128,56 +127,6 @@ class AsistenciaCommandsSpParityIT {
         }
     }
 
-    // ------------------------------------------------------------------ registrar asistencia autonoma
-
-    @Test
-    void AUT_01_codigo_correcto_registra_la_asistencia_igual_en_jdbc_y_jpa() {
-        final UUID estudiante = fixture.estudiantes().get(0);
-        final UUID sesionA = sesionA();
-        final UUID sesionB = sesionB();
-
-        final Outcome jdbc = autonoma(false, sesionA, estudiante, codigoDe(sesionA), usuarioDe(estudiante));
-        final Outcome jpa = autonoma(true, sesionB, estudiante, codigoDe(sesionB), usuarioDe(estudiante));
-
-        assertEquals(jdbc, jpa, "PARITY_MISMATCH en AUT_01");
-        assertNull(jpa.exceptionClass(), "Con codigo correcto el SP debe completar sin excepcion.");
-        assertEquals(1, jpa.asistencias(), "Oraculo absoluto: una cabecera de asistencia en la sesion.");
-        assertNotNull(jpa.estadoPorEstudiante().get(estudiante), "Oraculo absoluto: el estudiante queda con detalle.");
-    }
-
-    @Test
-    void AUT_02_codigo_incorrecto_es_rechazo_funcional_sin_escrituras_en_ambos() {
-        final UUID estudiante = fixture.estudiantes().get(0);
-
-        final Outcome jdbc = autonoma(false, sesionA(), estudiante, "CODIGO-ERRADO", usuarioDe(estudiante));
-        final Outcome jpa = autonoma(true, sesionB(), estudiante, "CODIGO-ERRADO", usuarioDe(estudiante));
-
-        assertEquals(jdbc, jpa, "PARITY_MISMATCH en AUT_02");
-        assertNotNull(jpa.exceptionClass(), "Un codigo erroneo debe ser rechazado por la DB.");
-        assertEquals(0, jpa.asistencias(), "Oraculo absoluto: ningun efecto tras el rechazo.");
-    }
-
-    @Test
-    void AUT_03_estudiante_ajeno_al_grupo_es_rechazado_sin_escrituras() {
-        final UUID ajeno = UUID.randomUUID();
-
-        final Outcome jdbc = autonoma(false, sesionA(), ajeno, "X", ajeno);
-        final Outcome jpa = autonoma(true, sesionB(), ajeno, "X", ajeno);
-
-        assertEquals(jdbc, jpa, "PARITY_MISMATCH en AUT_03");
-        assertEquals(0, jpa.asistencias());
-    }
-
-    @Test
-    void AUT_04_usuario_ejecutor_nulo_se_clasifica_igual_que_el_baseline() {
-        final UUID estudiante = fixture.estudiantes().get(0);
-
-        final Outcome jdbc = autonoma(false, sesionA(), estudiante, codigoDe(sesionA()), null);
-        final Outcome jpa = autonoma(true, sesionB(), estudiante, codigoDe(sesionB()), null);
-
-        assertEquals(jdbc, jpa, "PARITY_MISMATCH en AUT_04");
-    }
-
     // ------------------------------------------------------------------ radicar solicitud de revision
 
     @Test
@@ -260,24 +209,6 @@ class AsistenciaCommandsSpParityIT {
     }
 
     // ------------------------------------------------------------------ ejecucion y captura de outcome
-
-    private Outcome autonoma(
-            final boolean candidato,
-            final UUID sesion,
-            final UUID estudiante,
-            final String codigo,
-            final UUID ejecutor
-    ) {
-        final RegistrarAsistenciaAutonomaRepositoryDTO dto =
-                new RegistrarAsistenciaAutonomaRepositoryDTO(estudiante, sesion, codigo, ejecutor);
-        return ejecutar(sesion, () -> {
-            if (candidato) {
-                jpaCandidate.registrarAsistenciaAutonoma(dto);
-            } else {
-                jdbcOracle.registrarAsistenciaAutonoma(dto);
-            }
-        });
-    }
 
     private Outcome radicar(
             final boolean candidato,
@@ -392,10 +323,6 @@ class AsistenciaCommandsSpParityIT {
 
     private UUID sesionB() {
         return sesionesDelTest.get(1);
-    }
-
-    private String codigoDe(final UUID sesion) {
-        return jdbcTemplate.queryForObject("SELECT TRIM(codigo) FROM dbo.Sesion WHERE id = ?", String.class, sesion.toString());
     }
 
     /** Usuario asociado al estudiante (perfil ESTUDIANTE: fila en dbo.Estudiante). */

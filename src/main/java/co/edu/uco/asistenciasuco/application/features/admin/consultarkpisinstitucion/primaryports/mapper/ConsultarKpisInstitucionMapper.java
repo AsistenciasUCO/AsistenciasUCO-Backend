@@ -15,6 +15,6 @@ public final class ConsultarKpisInstitucionMapper {
     }
 
     public static KpisInstitucionDTO toDto(final KpisInstitucionDomain d) {
-        return new KpisInstitucionDTO(d.idInstitucion(), d.nombreInstitucion(), d.idPeriodoAcademico(), d.nombrePeriodoAcademico(), d.totalFacultades(), d.totalProgramas(), d.totalEstudiantes(), d.estudiantesRegulares(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaRetencion(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo(), d.porcentajeAsistencia(), d.sesionesVencidas(), d.sesionesConRegistro(), d.porcentajeCumplimiento(), d.estudiantesConMatriculaActiva(), d.estudiantesRegistrados(), d.docentesConGrupoActivo(), d.docentesRegistrados(), d.umbralAdvertencia(), d.umbralPerdida());
+        return new KpisInstitucionDTO(d.idInstitucion(), d.nombreInstitucion(), d.idPeriodoAcademico(), d.nombrePeriodoAcademico(), d.totalFacultades(), d.totalProgramas(), d.totalEstudiantes(), d.estudiantesRegulares(), d.estudiantesRiesgo(), d.estudiantesPerdida(), d.tasaRetencion(), d.sesionesEjecutadas(), d.faltasSinJustaCausa(), d.porcentajeAusentismo(), d.porcentajeAsistencia(), d.sesionesVencidas(), d.sesionesConRegistro(), d.porcentajeCumplimiento(), d.estudiantesConMatriculaActiva(), d.estudiantesRegistrados(), d.docentesConGrupoActivo(), d.docentesRegistrados(), d.umbralAdvertencia(), d.umbralPerdida(), d.tomasDictadas(), d.horasDictadas(), d.horasFalta());
     }
 }

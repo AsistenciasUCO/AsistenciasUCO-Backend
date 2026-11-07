@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DetalleSolicitudRevisionDocenteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
@@ -210,10 +211,12 @@ class SolicitudRevisionDocenteDetalleSqlIT {
     private void insertarDetalle(final UUID asistencia, final String codigoRazon, final boolean asistio) {
         final String razon = jdbc.queryForObject("SELECT id FROM dbo.RazonCausa WHERE codigo = ?", String.class, codigoRazon);
         final LocalDateTime ahora = LocalDateTime.now();
+        // CULM-001 B.2 (2.16.3): DetalleAsistencia.toma es obligatoria (toma 1 implicita de la sesion).
+        jdbc.update(TomaAsistenciaTestSql.SQL_ASEGURAR_TOMA_1_DE_ASISTENCIA, asistencia.toString());
         jdbc.update("""
-                INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin)
-                VALUES (?, ?, ?, ?, ?, ?, ?)""",
+                INSERT INTO dbo.DetalleAsistencia (id, codigo, asistencia, asistio, razonCausa, fechaHoraInicio, fechaHoraFin, toma)
+                VALUES (?, ?, ?, ?, ?, ?, ?, """ + TomaAsistenciaTestSql.SQL_TOMA_1_DE_ASISTENCIA + ")",
                 UUID.randomUUID().toString(), 900_000 + RANDOM.nextInt(90_000), asistencia.toString(),
-                asistio, razon, ahora.minusHours(1), ahora);
+                asistio, razon, ahora.minusHours(1), ahora, asistencia.toString());
     }
 }
