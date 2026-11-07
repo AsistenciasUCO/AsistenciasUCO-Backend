@@ -17,7 +17,8 @@ import java.time.Clock;
 import java.time.Duration;
 
 /**
- * CULM-001 A.2-4 (F-TRX-003): limite de intentos de la subida de archivos y de la asistencia por QR. El filtro va despues
+ * CULM-001 A.2-4 (F-TRX-003): limite de intentos de la subida de archivos (CULM-001 B.2: la asistencia por QR tiene su
+ * propio filtro de IP que cuenta solo rechazos, {@code AsistenciaQrWiringConfiguration}). El filtro va despues
  * de la cadena de Spring Security ({@code DEFAULT_FILTER_ORDER + 10}) para conocer al principal; los filtros publicos de
  * matricula y verificacion siguen antes de la seguridad.
  */
@@ -25,7 +26,6 @@ import java.time.Duration;
 public class RateLimitWiringConfiguration {
 
     static final String GRUPO_ARCHIVOS = "ARCHIVOS";
-    static final String GRUPO_ASISTENCIA_QR = "ASISTENCIA_QR";
 
     @Bean
     public FilterRegistrationBean<OperacionAutenticadaRateLimitFilter> operacionAutenticadaRateLimitFilter(
@@ -39,11 +39,9 @@ public class RateLimitWiringConfiguration {
                 limiter,
                 networkClientIpResolver,
                 securityErrorResponseWriter,
-                () -> limite(parameterCatalogPort.getObject(), GRUPO_ARCHIVOS, "LIMITE_SUBIDAS_POR_MINUTO"),
-                () -> limite(parameterCatalogPort.getObject(), GRUPO_ASISTENCIA_QR, "LIMITE_IP_POR_MINUTO"),
-                () -> limite(parameterCatalogPort.getObject(), GRUPO_ASISTENCIA_QR, "LIMITE_ESTUDIANTE_POR_MINUTO"));
+                () -> limite(parameterCatalogPort.getObject(), GRUPO_ARCHIVOS, "LIMITE_SUBIDAS_POR_MINUTO"));
         final FilterRegistrationBean<OperacionAutenticadaRateLimitFilter> registro = new FilterRegistrationBean<>(filtro);
-        registro.addUrlPatterns(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO, OperacionAutenticadaRateLimitFilter.RUTA_ASISTENCIA_QR);
+        registro.addUrlPatterns(OperacionAutenticadaRateLimitFilter.RUTA_SUBIR_ARCHIVO);
         registro.setOrder(SecurityFilterProperties.DEFAULT_FILTER_ORDER + 10);
         return registro;
     }
