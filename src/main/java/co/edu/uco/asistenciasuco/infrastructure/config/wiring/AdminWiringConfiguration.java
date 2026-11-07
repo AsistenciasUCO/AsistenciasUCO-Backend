@@ -90,9 +90,35 @@ public class AdminWiringConfiguration {
     @Bean CambiarEstadoFacultadInputPort cambiarEstadoFacultadInputPort(final CambiarEstadoFacultadUseCase useCase) { return new CambiarEstadoFacultadInteractor(useCase); }
     @Bean ConsultarAreasUseCase consultarAreasUseCase(final AreaQueryPort port) { return new ConsultarAreasUseCaseImpl(port); }
     @Bean ConsultarAreasInputPort consultarAreasInputPort(final ConsultarAreasUseCase useCase) { return new ConsultarAreasInteractor(useCase); }
-    @Bean EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(final PeriodoAcademicoQueryPort periodoPort, final CierrePeriodoCommandPort cierrePort) { return new EjecutarCierreMasivoUseCaseImpl(periodoPort, cierrePort); }
+    @Bean
+    EjecutarCierreMasivoUseCase ejecutarCierreMasivoUseCase(
+            final PeriodoAcademicoQueryPort periodoPort,
+            final CierrePeriodoCommandPort cierrePort,
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider
+    ) {
+        return new EjecutarCierreMasivoUseCaseImpl(
+                periodoPort,
+                cierrePort,
+                notificacionPortProvider.getIfAvailable(() -> notificacion -> {})
+        );
+    }
+
     @Bean EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort(final EjecutarCierreMasivoUseCase useCase) { return new EjecutarCierreMasivoInteractor(useCase); }
     // HU096-HU098: el periodo es unico por institucion; solo lo gestiona el ADMINISTRADOR.
     @Bean GestionarPeriodoAcademicoUseCase gestionarPeriodoAcademicoUseCase(final PeriodoAcademicoCommandPort commandPort) { return new GestionarPeriodoAcademicoUseCaseImpl(commandPort); }
     @Bean GestionarPeriodoAcademicoInputPort gestionarPeriodoAcademicoInputPort(final GestionarPeriodoAcademicoUseCase useCase) { return new GestionarPeriodoAcademicoInteractor(useCase); }
+
+    @Bean
+    co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.AdministrarNotificacionesUseCase administrarNotificacionesUseCase(
+            final co.edu.uco.asistenciasuco.application.secondaryports.notification.admin.AdministracionNotificacionPort port
+    ) {
+        return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.impl.AdministrarNotificacionesUseCaseImpl(port);
+    }
+
+    @Bean
+    co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports.AdministrarNotificacionesInputPort administrarNotificacionesInputPort(
+            final co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.AdministrarNotificacionesUseCase useCase
+    ) {
+        return new co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports.interactor.AdministrarNotificacionesInteractor(useCase);
+    }
 }

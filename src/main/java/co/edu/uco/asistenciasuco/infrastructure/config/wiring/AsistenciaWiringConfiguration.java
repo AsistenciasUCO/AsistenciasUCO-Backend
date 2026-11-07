@@ -108,9 +108,16 @@ public class AsistenciaWiringConfiguration {
     @Bean
     public SolicitarRevisionAsistenciaUseCase solicitarRevisionAsistenciaUseCase(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final InstitutionalScopePort institutionalScopePort
+            final InstitutionalScopePort institutionalScopePort,
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider,
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> destinatariosPortProvider
     ) {
-        return new SolicitarRevisionAsistenciaUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
+        return new SolicitarRevisionAsistenciaUseCaseImpl(
+                asistenciaRepositoryPort,
+                institutionalScopePort,
+                notificacionPortProvider.getIfAvailable(() -> notificacion -> {}),
+                destinatariosPortProvider.getIfAvailable(() -> null)
+        );
     }
 
     @Bean
@@ -123,9 +130,16 @@ public class AsistenciaWiringConfiguration {
     @Bean
     public ResolverSolicitudRevisionAsistenciaUseCase resolverSolicitudRevisionAsistenciaUseCase(
             final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final InstitutionalScopePort institutionalScopePort
+            final InstitutionalScopePort institutionalScopePort,
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort> notificacionPortProvider,
+            final org.springframework.beans.factory.ObjectProvider<co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort> destinatariosPortProvider
     ) {
-        return new ResolverSolicitudRevisionAsistenciaUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
+        return new ResolverSolicitudRevisionAsistenciaUseCaseImpl(
+                asistenciaRepositoryPort,
+                institutionalScopePort,
+                notificacionPortProvider.getIfAvailable(() -> notificacion -> {}),
+                destinatariosPortProvider.getIfAvailable(() -> null)
+        );
     }
 
     @Bean

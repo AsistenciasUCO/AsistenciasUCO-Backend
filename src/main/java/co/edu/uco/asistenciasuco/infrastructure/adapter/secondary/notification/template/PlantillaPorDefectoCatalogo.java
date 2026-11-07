@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.notification.template;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.notification.Notificacion;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -17,7 +19,37 @@ import java.util.concurrent.ConcurrentHashMap;
 public class PlantillaPorDefectoCatalogo {
 
     private static final String RESOURCE_PATTERN = "notification/templates/%s.%s.properties";
+    public static final List<String> TIPOS_CONOCIDOS = List.of(
+            Notificacion.TIPO_RETIRO_ESTUDIANTE_GRUPO,
+            Notificacion.TIPO_SOLICITUD_INGRESO_REGISTRADA,
+            Notificacion.TIPO_SOLICITUD_INGRESO_RESUELTA,
+            Notificacion.TIPO_SOLICITUD_INGRESO_RETIRADA,
+            Notificacion.TIPO_VERIFICACION_CORREO,
+            Notificacion.TIPO_RECLAMO_ASISTENCIA_RADICADO,
+            Notificacion.TIPO_RECLAMO_ASISTENCIA_RESUELTO,
+            Notificacion.TIPO_ALERTA_RIESGO_INASISTENCIA,
+            Notificacion.TIPO_ALERTA_PERDIDA_INASISTENCIA,
+            Notificacion.TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO
+    );
+
+    private static final String IDIOMA_SOPORTADO = "es";
+
+    private final List<String> tiposPermitidos;
+
+    public PlantillaPorDefectoCatalogo() {
+        this(TIPOS_CONOCIDOS);
+    }
+
+    /** Solo para pruebas: restringe la lista blanca de tipos cuyos recursos pueden cargarse. */
+    PlantillaPorDefectoCatalogo(final List<String> tiposPermitidos) {
+        this.tiposPermitidos = List.copyOf(tiposPermitidos);
+    }
+
     private final Map<String, Optional<PlantillaNotificacion>> cache = new ConcurrentHashMap<>();
+
+    public List<String> listarTiposConocidos() {
+        return TIPOS_CONOCIDOS;
+    }
 
     public Optional<PlantillaNotificacion> obtener(final String tipo, final String idioma) {
         if (tipo == null || tipo.isBlank()) {
@@ -30,7 +62,12 @@ public class PlantillaPorDefectoCatalogo {
     }
 
     private Optional<PlantillaNotificacion> cargarRecurso(final String tipo, final String idioma) {
-        final String path = String.format(RESOURCE_PATTERN, tipo, idioma);
+        // Lista blanca: la ruta del recurso se arma solo con constantes conocidas, nunca con la entrada.
+        final String tipoConocido = tiposPermitidos.stream().filter(conocido -> conocido.equals(tipo)).findFirst().orElse(null);
+        if (tipoConocido == null || !IDIOMA_SOPORTADO.equals(idioma)) {
+            return Optional.empty();
+        }
+        final String path = String.format(RESOURCE_PATTERN, tipoConocido, IDIOMA_SOPORTADO);
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try (InputStream stream = classLoader.getResourceAsStream(path)) {
             if (stream == null) {

@@ -49,6 +49,10 @@ public class PlantillaNotificacionJpaRepository implements PlantillaNotificacion
         }
     }
 
+    public void invalidarCache() {
+        cache.clear();
+    }
+
     @Override
     public Optional<PlantillaNotificacion> consultarActiva(final String tipo, final String idioma) {
         final String tipoNorm = tipo == null ? "" : tipo.trim();

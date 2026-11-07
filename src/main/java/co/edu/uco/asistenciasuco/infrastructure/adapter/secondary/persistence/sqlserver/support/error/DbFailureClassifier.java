@@ -88,6 +88,11 @@ final class DbFailureClassifier {
             case "RET_004" -> CommonErrorCode.VALIDATION_ERROR;
             // HU159: correccion de identidad. Motivo invalido es validacion; la correccion de documento apagada por
             // parametro (IDENTIDAD.PERMITIR_CORREGIR_DOCUMENTO) es una regla de negocio en conflicto.
+            // NTF-002B: administracion de plantillas y cola outbox (marcadores invalidos, version inexistente,
+            // notificacion fuera de un estado reintentable).
+            case "NTF_004" -> CommonErrorCode.VALIDATION_ERROR;
+            case "NTF_005" -> CommonErrorCode.RESOURCE_NOT_FOUND;
+            case "NTF_008" -> CommonErrorCode.CONFLICT;
             case "IDE_001" -> CommonErrorCode.VALIDATION_ERROR;
             case "IDE_003" -> CommonErrorCode.CONFLICT;
             // IDENT-001: correo institucional y verificacion. VCE_001/VCE_002 son entradas invalidas (400, VCE_002 identico para
