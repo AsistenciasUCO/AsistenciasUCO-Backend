@@ -4,10 +4,6 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasiste
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.ConsultarAsistenciasPorGrupoUseCase;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.primaryports.RegistrarAsistenciaAutonomaInputPort;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.primaryports.interactor.RegistrarAsistenciaAutonomaInteractor;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.usecase.RegistrarAsistenciaAutonomaUseCase;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.usecase.impl.RegistrarAsistenciaAutonomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.RegistrarAsistenciaInputPort;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.RegistrarAsistenciaUseCase;
@@ -88,21 +84,6 @@ public class AsistenciaWiringConfiguration {
             final RegistrarAsistenciasSesionUseCase registrarAsistenciasSesionUseCase
     ) {
         return new RegistrarAsistenciasSesionInteractor(registrarAsistenciasSesionUseCase);
-    }
-
-    @Bean
-    public RegistrarAsistenciaAutonomaUseCase registrarAsistenciaAutonomaUseCase(
-            final AsistenciaRepositoryPort asistenciaRepositoryPort,
-            final InstitutionalScopePort institutionalScopePort
-    ) {
-        return new RegistrarAsistenciaAutonomaUseCaseImpl(asistenciaRepositoryPort, institutionalScopePort);
-    }
-
-    @Bean
-    public RegistrarAsistenciaAutonomaInputPort registrarAsistenciaAutonomaInputPort(
-            final RegistrarAsistenciaAutonomaUseCase registrarAsistenciaAutonomaUseCase
-    ) {
-        return new RegistrarAsistenciaAutonomaInteractor(registrarAsistenciaAutonomaUseCase);
     }
 
     @Bean
