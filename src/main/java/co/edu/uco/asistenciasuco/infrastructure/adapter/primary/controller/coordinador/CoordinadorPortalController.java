@@ -162,10 +162,6 @@ public final class CoordinadorPortalController {
         final var data = consultarEstudiantesProgramaInputPort.execute(authenticatedUserResolver.requireAuthenticatedUserId());
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
-    @GetMapping("/solicitudes-matricula")
-    public ResponseEntity<ApiListResponse<Void>> consultarSolicitudesMatricula() { throw unavailable(); }
-    @PatchMapping("/solicitudes-matricula/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> resolverSolicitudMatricula(@PathVariable final UUID id) { throw unavailable(); }
     @PostMapping("/grupos/{grupoId}/estudiantes")
     public ResponseEntity<ApiDataResponse<Void>> matricularEstudianteEnGrupo(@PathVariable final UUID grupoId) { throw unavailable(); }
     @DeleteMapping("/grupos/{grupoId}/estudiantes/{estudianteId}")
