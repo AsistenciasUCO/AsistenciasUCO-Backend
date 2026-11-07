@@ -42,7 +42,6 @@ import io.swagger.v3.oas.models.PathItem;
 import io.swagger.v3.oas.models.media.Schema;
 import io.swagger.v3.oas.models.security.SecurityScheme;
 import io.swagger.v3.parser.OpenAPIV3Parser;
-import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.springframework.http.HttpMethod;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -189,9 +188,9 @@ class OpenApiGoldenPathConformanceTest {
                         "horaInicio", "horaFin", "totalEstudiantes"));
         assertObjectSchema("Sesion",
                 Set.of("sesion", "grupo", "nombre", "numero", "codigo", "numeroSemana", "codigoGrupo",
-                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin"),
+                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion"),
                 Set.of("sesion", "grupo", "nombre", "numero", "codigo", "numeroSemana", "codigoGrupo",
-                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin"));
+                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion"));
         assertObjectSchema("EstudianteGrupo",
                 Set.of("id", "idEstudiante", "documento", "nombreCompleto", "correo", "codigoEstado", "nombreEstado"),
                 Set.of("id", "idEstudiante", "documento", "nombreCompleto", "correo", "codigoEstado", "nombreEstado"));
@@ -226,10 +225,7 @@ class OpenApiGoldenPathConformanceTest {
                 Set.of("timestamp", "status", "error", "code", "message", "path", "correlationId"));
     }
 
-    // CULM-001 B.1 (CONTRACT 3.10.1, DEC-032): SesionConsultadaDTO agrega estado y cancelacion; el esquema Sesion los recibe
-    // en el golden path 1.3.0, que el orquestador publica al cerrar B sobre la 1.2.0 de A. Mientras tanto la comparacion
-    // DTO-esquema no puede pasar sin tocar el contrato WORM congelado. Se reactiva junto con la 1.3.0.
-    @Disabled("B: golden path 1.3.0 pendiente")
+    // CULM-001 B (CONTRACT 3.10.1, DEC-032): golden path 1.3.0, Sesion recibe estado y cancelacion (SesionConsultadaDTO).
     @Test
     void criticalOpenApiSchemasMatchProviderDtoPropertyShapes() {
         final Map<String, Class<?>> providerDtos = new LinkedHashMap<>();
