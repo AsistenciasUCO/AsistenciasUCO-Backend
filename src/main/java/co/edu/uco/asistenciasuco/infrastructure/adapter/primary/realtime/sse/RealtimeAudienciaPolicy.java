@@ -34,7 +34,13 @@ public final class RealtimeAudienciaPolicy {
                 "ASISTENCIA_REGISTRADA", SOLO_TITULAR,
                 "SESION_CANCELADA", SOLO_TITULAR,
                 "MATRICULA_QR_ROTADO", SOLO_TITULAR,
-                "ESTUDIANTE_MATRICULADO", SOLO_TITULAR
+                "ESTUDIANTE_MATRICULADO", SOLO_TITULAR,
+                // CULM-001 B.2 (contrato 3.8): tomas y QR de asistencia. ASISTENCIA_QR_ROTADO lleva el token: solo titular.
+                "TOMA_ABIERTA", SOLO_TITULAR,
+                "TOMA_CERRADA", SOLO_TITULAR,
+                "ASISTENCIA_QR_ROTADO", SOLO_TITULAR,
+                "ASISTENCIA_QR_REGISTRADA", SOLO_TITULAR,
+                "ASISTENCIAS_TOMA_ACTUALIZADAS", SOLO_TITULAR
         ));
     }
 
