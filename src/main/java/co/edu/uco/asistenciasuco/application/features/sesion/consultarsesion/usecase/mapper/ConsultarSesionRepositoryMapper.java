@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.domain.ConsultarSesionDomain;
 import co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity.SesionConsultadaEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarSesionRepositoryDTO;
@@ -38,7 +39,8 @@ public final class ConsultarSesionRepositoryMapper {
                 entity.getCodigoGrupo(),
                 entity.getNombreGrupo(),
                 entity.getFechaHoraInicio(),
-                entity.getFechaHoraFin()
+                entity.getFechaHoraFin(),
+                CancelacionSesionDTO.desde(entity.getCancelacion())
         );
     }
 }

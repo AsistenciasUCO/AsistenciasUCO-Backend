@@ -38,7 +38,8 @@ public final class ConsultarSesionMapper {
                 entity.getCodigoGrupo(),
                 entity.getNombreGrupo(),
                 entity.getFechaHoraInicio(),
-                entity.getFechaHoraFin()
+                entity.getFechaHoraFin(),
+                entity.getCancelacion()
         );
     }
 }

@@ -62,11 +62,14 @@ public final class ConsultarSesionesMateriaEstudianteUseCaseImpl implements Cons
         return sesiones.stream()
                 .map(sesion -> {
                     final var hechos = hechosPorSesion.getOrDefault(sesion.id(), List.of());
-                    final EstadoAsistenciaSesion estado = resolverEstado(hechos);
+                    final SesionProcedenciaEntity procedencia = procedencias.get(sesion.id());
+                    // CULM-001 B.1 (3.2.4): una sesion cancelada no tiene asistencia que mostrar ni es reclamable.
+                    final boolean cancelada = procedencia != null && procedencia.cancelacion() != null;
+                    final EstadoAsistenciaSesion estado = cancelada ? EstadoAsistenciaSesion.NO_DISPONIBLE : resolverEstado(hechos);
                     final String estadoSolicitud = resolverEstadoSolicitud(hechos);
                     final boolean reclamable = estado == EstadoAsistenciaSesion.AUSENTE && estadoSolicitud == null;
                     return ConsultarSesionesMateriaEstudianteRepositoryMapper.toDomain(
-                            sesion, procedencias.get(sesion.id()), estado, estadoSolicitud, reclamable);
+                            sesion, procedencia, estado, estadoSolicitud, reclamable);
                 })
                 .toList();
     }

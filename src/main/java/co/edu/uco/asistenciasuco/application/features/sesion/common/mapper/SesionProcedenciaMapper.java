@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.common.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.SesionV2ConsultadaDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.SesionProcedenciaEntity;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
@@ -21,7 +22,7 @@ public final class SesionProcedenciaMapper {
         return SesionProcedenciaEntity.desdeAlmacenamiento(
                 row.sesion(), row.grupo(), row.nombre(), row.numero(), row.codigo(), row.numeroSemana(),
                 row.codigoGrupo(), row.nombreGrupo(), row.fechaHoraInicio(), row.fechaHoraFin(),
-                row.procedenciaTemporal()
+                row.procedenciaTemporal(), CancelacionSesionDTO.desde(row.cancelacion())
         );
     }
 
@@ -31,7 +32,7 @@ public final class SesionProcedenciaMapper {
                 entity.sesion(), entity.grupo(), entity.nombre(), entity.numero(), entity.codigo(),
                 entity.numeroSemana(), entity.codigoGrupo(), entity.nombreGrupo(),
                 entity.fechaHoraInicioUtc(), entity.fechaHoraFinUtc(),
-                entity.estadoTemporal().name(), entity.procedenciaTemporal()
+                entity.estadoTemporal().name(), entity.procedenciaTemporal(), entity.cancelacion()
         );
     }
 

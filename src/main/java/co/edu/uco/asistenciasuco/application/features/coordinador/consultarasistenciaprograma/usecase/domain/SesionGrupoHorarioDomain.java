@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.usecase.domain;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.common.EstadoHorarioSesion;
 
 import java.time.LocalDateTime;
@@ -24,8 +25,19 @@ public record SesionGrupoHorarioDomain(
         LocalDateTime fechaHoraFin,
         LocalDateTime fechaHoraInicioUtc,
         LocalDateTime fechaHoraFinUtc,
-        EstadoHorarioSesion estadoTemporal
+        EstadoHorarioSesion estadoTemporal,
+        CancelacionSesionDTO cancelacion
 ) {
+
+    /** Sesion programada (sin cancelacion). */
+    public SesionGrupoHorarioDomain(final UUID id, final UUID idGrupo, final Integer codigoGrupo, final String nombreGrupo,
+                                    final String nombre, final Integer numero, final String codigo,
+                                    final Integer numeroSemana, final LocalDateTime fechaHoraInicio,
+                                    final LocalDateTime fechaHoraFin, final LocalDateTime fechaHoraInicioUtc,
+                                    final LocalDateTime fechaHoraFinUtc, final EstadoHorarioSesion estadoTemporal) {
+        this(id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio, fechaHoraFin,
+                fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, null);
+    }
 
     public SesionGrupoHorarioDomain {
         Objects.requireNonNull(id, "La sesion es obligatoria.");
