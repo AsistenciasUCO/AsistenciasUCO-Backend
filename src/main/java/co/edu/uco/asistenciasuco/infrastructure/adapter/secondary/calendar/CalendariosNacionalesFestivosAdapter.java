@@ -15,7 +15,7 @@ import java.util.Map;
  */
 public final class CalendariosNacionalesFestivosAdapter implements CalendarioFestivosPort {
 
-    public static final String FUENTE = "CALENDARIOS_NACIONALES";
+    static final String CODIGO_FUENTE = "CALENDARIOS_NACIONALES";
     static final String CLAVE_URL = "URL_CALENDARIOS_NACIONALES";
     static final String URL_POR_DEFECTO = "https://calendariosnacionales.com/co/v1/{anio}/nacionales.json";
 
@@ -27,12 +27,12 @@ public final class CalendariosNacionalesFestivosAdapter implements CalendarioFes
 
     @Override
     public String fuente() {
-        return FUENTE;
+        return CODIGO_FUENTE;
     }
 
     @Override
     public List<FestivoColombia> obtenerFestivos(final int anio) {
-        return FestivosHttpSupport.leerFestivos(FUENTE,
-                http.get(FUENTE, http.parametro(CLAVE_URL, URL_POR_DEFECTO), anio, Map.of()).get("holidays"), anio);
+        return FestivosHttpSupport.leerFestivos(CODIGO_FUENTE,
+                http.get(CODIGO_FUENTE, http.parametro(CLAVE_URL, URL_POR_DEFECTO), anio, Map.of()).get("holidays"), anio);
     }
 }

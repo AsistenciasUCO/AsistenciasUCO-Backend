@@ -155,6 +155,10 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     private static final DateTimeFormatter HORA = DateTimeFormatter.ofPattern("HH:mm");
     private static final List<String> ORDEN_DIAS = List.of("LU", "MA", "MI", "JU", "VI", "SA", "DO");
     private static final int MAX_PARAMETROS_IN = 1000;
+    private static final String P_GRUPO = "idGrupo";
+    private static final String P_CORRELACION = "idCorrelacion";
+    private static final String P_USUARIO = "idUsuarioEjecutor";
+    private static final String P_NUMERO_IDENTIFICACION = "numeroIdentificacion";
 
     private final EntityManager entityManager;
     private final TransactionOperations transactionOperations;
@@ -218,8 +222,8 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         long total = Long.MAX_VALUE;
         for (int pagina = 1; grupos.size() < total; pagina++) {
             final List<Object[]> filas = ((List<?>) entityManager.createNativeQuery(SQL_GRUPOS_PAGINADO)
-                    .setParameter("idUsuarioEjecutor", usuarioEjecutor)
-                    .setParameter("idCorrelacion", correlationId)
+                    .setParameter(P_USUARIO, usuarioEjecutor)
+                    .setParameter(P_CORRELACION, correlationId)
                     .setParameter("numeroPagina", pagina)
                     .setParameter("tamanoPagina", TAMANO_PAGINA_GRUPOS)
                     .getResultList()).stream().map(Object[].class::cast).toList();
@@ -266,9 +270,9 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                 "consultarEstudiantesGrupo",
                 "No fue posible consultar los estudiantes del grupo.",
                 () -> ((List<?>) entityManager.createNativeQuery(SQL_ESTUDIANTES_GRUPO)
-                        .setParameter("idGrupo", grupoId)
-                        .setParameter("idUsuarioEjecutor", usuarioEjecutor)
-                        .setParameter("idCorrelacion", correlationId)
+                        .setParameter(P_GRUPO, grupoId)
+                        .setParameter(P_USUARIO, usuarioEjecutor)
+                        .setParameter(P_CORRELACION, correlationId)
                         .getResultList()).stream()
                         .map(Object[].class::cast)
                         .map(GrupoJpaRepository::toEstudianteGrupo)
@@ -293,11 +297,11 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                 "buscarEstudiantePorDocumentoGrupo",
                 "No fue posible buscar el estudiante por documento.",
                 () -> ((List<?>) entityManager.createNativeQuery(SQL_BUSCAR_ESTUDIANTE_POR_DOCUMENTO)
-                        .setParameter("idGrupo", grupoId)
+                        .setParameter(P_GRUPO, grupoId)
                         .setParameter("idTipoIdentificacion", tipoIdentificacionId)
-                        .setParameter("numeroIdentificacion", numeroIdentificacion)
-                        .setParameter("idCorrelacion", correlationId)
-                        .setParameter("idUsuarioEjecutor", usuarioEjecutor)
+                        .setParameter(P_NUMERO_IDENTIFICACION, numeroIdentificacion)
+                        .setParameter(P_CORRELACION, correlationId)
+                        .setParameter(P_USUARIO, usuarioEjecutor)
                         .getResultList()).stream()
                         .map(Object[].class::cast)
                         .map(GrupoJpaRepository::toEstudianteBusqueda)
@@ -330,14 +334,14 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", dto.idGrupo());
+        parametros.put(P_GRUPO, dto.idGrupo());
         parametros.put("idAsignatura", dto.idAsignatura());
         parametros.put("idPeriodoAcademico", dto.idPeriodoAcademico());
         parametros.put("codigo", dto.codigo());
         parametros.put("nombre", dto.nombre());
         parametros.put("idDocente", dto.idDocente());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(P_CORRELACION, correlationId);
+        parametros.put(P_USUARIO, dto.usuarioEjecutor());
 
         return procedureExecutor.execute(OP_CREAR_GRUPO, SQL_CREAR_GRUPO, parametros, correlationId);
     }
@@ -346,13 +350,13 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", dto.idGrupo());
+        parametros.put(P_GRUPO, dto.idGrupo());
         parametros.put("codigo", dto.codigo());
         parametros.put("nombre", dto.nombre());
         parametros.put("idDocente", dto.idDocente());
         parametros.put("cupoMaximo", dto.cupoMaximo());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
+        parametros.put(P_CORRELACION, correlationId);
+        parametros.put(P_USUARIO, dto.usuarioEjecutor());
 
         return procedureExecutor.execute(OP_ACTUALIZAR_GRUPO, SQL_ACTUALIZAR_GRUPO, parametros, correlationId);
     }
@@ -361,16 +365,16 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         final UUID correlationId = CorrelationIdContext.require();
 
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", dto.getGrupoId());
-        parametros.put("numeroIdentificacion", dto.getNumeroIdentificacion());
+        parametros.put(P_GRUPO, dto.getGrupoId());
+        parametros.put(P_NUMERO_IDENTIFICACION, dto.getNumeroIdentificacion());
         parametros.put("primerNombre", dto.getPrimerNombre());
         parametros.put("segundoNombre", dto.getSegundoNombre());
         parametros.put("primerApellido", dto.getPrimerApellido());
         parametros.put("segundoApellido", dto.getSegundoApellido());
         parametros.put("correo", dto.getCorreo());
         parametros.put("password", dto.getPassword());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.getUsuarioEjecutor());
+        parametros.put(P_CORRELACION, correlationId);
+        parametros.put(P_USUARIO, dto.getUsuarioEjecutor());
         parametros.put("idTipoIdIdentificacion", dto.getTipoIdentificacionId());
 
         return procedureExecutor.execute(OP_REGISTRAR_ESTUDIANTE, SQL_REGISTRAR_ESTUDIANTE, parametros, correlationId);
@@ -387,10 +391,10 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
         }
         final UUID correlationId = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", idGrupo);
+        parametros.put(P_GRUPO, idGrupo);
         parametros.put("horariosJSON", serializarFranjas(franjas));
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(P_CORRELACION, correlationId);
+        parametros.put(P_USUARIO, usuarioEjecutor);
         procedureExecutor.execute(OP_GUARDAR_HORARIOS, SQL_GUARDAR_HORARIOS, parametros, correlationId);
         precargarSesiones(idGrupo, usuarioEjecutor, correlationId);
     }
@@ -398,9 +402,9 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
     // F2: las sesiones futuras se alinean con el horario guardado (crea las que faltan y retira las generadas que ya no encajan).
     private void precargarSesiones(final UUID idGrupo, final UUID usuarioEjecutor, final UUID correlationId) {
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idGrupo", idGrupo);
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        parametros.put(P_GRUPO, idGrupo);
+        parametros.put(P_CORRELACION, correlationId);
+        parametros.put(P_USUARIO, usuarioEjecutor);
         procedureExecutor.execute(OP_PRECARGAR_SESIONES, SQL_PRECARGAR_SESIONES, parametros, correlationId);
     }
 

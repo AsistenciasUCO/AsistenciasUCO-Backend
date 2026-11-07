@@ -15,7 +15,7 @@ import java.util.Optional;
 public final class FestivosParametros {
 
     public static final String GRUPO = "FESTIVOS";
-    public static final String HABILITADO = "HABILITADO";
+    public static final String CLAVE_HABILITADO = "HABILITADO";
     public static final String PROVEEDOR_PRINCIPAL = "PROVEEDOR_PRINCIPAL";
     public static final String ORDEN_RESPALDO = "ORDEN_RESPALDO";
     public static final String ANIOS_ADELANTE = "ANIOS_ADELANTE";
@@ -43,7 +43,7 @@ public final class FestivosParametros {
     }
 
     public boolean habilitado() {
-        return valor(HABILITADO).map(texto -> Boolean.parseBoolean(texto.strip())).orElse(true);
+        return valor(CLAVE_HABILITADO).map(texto -> Boolean.parseBoolean(texto.strip())).orElse(true);
     }
 
     public String texto(final String clave, final String defecto) {
@@ -75,8 +75,7 @@ public final class FestivosParametros {
 
     private Optional<String> valor(final String clave) {
         try {
-            final Optional<String> valor = parametros.getParameter(GRUPO, clave);
-            return valor == null ? Optional.empty() : valor;
+            return Objects.requireNonNullElse(parametros.getParameter(GRUPO, clave), Optional.empty());
         } catch (final RuntimeException exception) {
             return Optional.empty();
         }

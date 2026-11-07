@@ -30,11 +30,11 @@ import java.util.TreeMap;
  */
 public final class CalculoLocalFestivosColombiaAdapter implements CalendarioFestivosPort {
 
-    public static final String FUENTE = "CALCULO_LOCAL";
+    static final String CODIGO_FUENTE = "CALCULO_LOCAL";
 
     @Override
     public String fuente() {
-        return FUENTE;
+        return CODIGO_FUENTE;
     }
 
     @Override

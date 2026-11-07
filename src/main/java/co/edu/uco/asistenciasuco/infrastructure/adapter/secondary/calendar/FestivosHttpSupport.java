@@ -45,8 +45,10 @@ final class FestivosHttpSupport {
 
     String parametro(final String clave, final String defecto) {
         try {
-            final Optional<String> valor = parametros.getParameter(GRUPO, clave);
-            return valor == null ? defecto : valor.map(String::strip).filter(v -> !v.isEmpty()).orElse(defecto);
+            return Objects.requireNonNullElse(parametros.getParameter(GRUPO, clave), Optional.<String>empty())
+                    .map(String::strip)
+                    .filter(v -> !v.isEmpty())
+                    .orElse(defecto);
         } catch (final RuntimeException exception) {
             return defecto;
         }
