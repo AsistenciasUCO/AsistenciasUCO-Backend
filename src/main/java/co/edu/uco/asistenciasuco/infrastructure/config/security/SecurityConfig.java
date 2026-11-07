@@ -180,6 +180,10 @@ public class SecurityConfig {
                 // Abrir este listado a DOCENTE permitiria enumerar grupos de otros docentes.
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos")
                     .hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // CULM-001 A.2-15 (DEC-027): busqueda por documento exacto del estudiante a matricular, solo del DOCENTE
+                // titular (la titularidad la valida usp_buscar_estudiante_por_documento_grupo, SEC_002). Va ANTES de
+                // GET /api/v1/grupos/** para no abrirla a COORDINADOR ni ADMINISTRADOR.
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos/*/estudiantes/busqueda").hasRole(ROLE_DOCENTE)
                 // Sub-recursos de un grupo especifico (estudiantes, asistencias): el DOCENTE si
                 // los necesita, pero scopeados a su propio grupo en Application via
                 // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /

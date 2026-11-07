@@ -137,9 +137,13 @@ public final class RegistrarEstudianteRequestValidator implements Validator<Regi
         );
     }
 
+    /**
+     * CULM-001 A.2-15: el correo es opcional para un estudiante ya registrado (el modal solo recibe el correo enmascarado de
+     * la busqueda). Sin correo, el caso de uso resuelve al estudiante por su documento y responde 400 {@code FIELD_REQUIRED}
+     * (correo) si no lo encuentra; un alta nueva sigue exigiendo correo institucional (IDENT-001).
+     */
     private static void validateCorreo(final String value, final ValidationResultBuilder builder) {
         if (!ValidationHelper.hasText(value)) {
-            builder.add("correo", ValidationErrorType.REQUIRED, "El correo es obligatorio.");
             return;
         }
         final String normalized = value.trim();

@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import java.util.Optional;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ActualizarGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.CrearGrupoRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.FranjaHorarioRepositoryDTO;
@@ -109,6 +111,17 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                  @tamanoPagina = NULL
             """;
     static final int COLUMNAS_ESTUDIANTES_GRUPO = 8;
+
+    // CULM-001 A.2-15 (DEC-027): busqueda exacta por documento, titularidad dentro del SP (SEC_002 -> 403).
+    static final String SQL_BUSCAR_ESTUDIANTE_POR_DOCUMENTO = """
+            EXEC dbo.usp_buscar_estudiante_por_documento_grupo
+                 @idGrupo = :idGrupo,
+                 @idTipoIdentificacion = :idTipoIdentificacion,
+                 @numeroIdentificacion = :numeroIdentificacion,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
+    static final int COLUMNAS_BUSQUEDA = 9;
 
     static final String OP_CREAR_GRUPO = "crearGrupo";
     static final String OP_ACTUALIZAR_GRUPO = "actualizarGrupo";
@@ -262,6 +275,44 @@ public class GrupoJpaRepository implements GrupoRepositoryPort, GrupoFacultadQue
                         .toList(),
                 DbCodeTranslator::traducir
         );
+    }
+
+    @Override
+    public Optional<EstudianteBusquedaRepositoryProjection> buscarEstudiantePorDocumento(
+            final UUID grupoId,
+            final UUID tipoIdentificacionId,
+            final Integer numeroIdentificacion,
+            final UUID usuarioEjecutor
+    ) {
+        require(grupoId, "El grupo de la busqueda es obligatorio.");
+        require(tipoIdentificacionId, "El tipo de identificacion de la busqueda es obligatorio.");
+        require(numeroIdentificacion, "El numero de identificacion de la busqueda es obligatorio.");
+        require(usuarioEjecutor, "El usuario ejecutor de la busqueda es obligatorio.");
+        final UUID correlationId = CorrelationIdContext.require();
+        return JpaQueryExecutor.execute(
+                "buscarEstudiantePorDocumentoGrupo",
+                "No fue posible buscar el estudiante por documento.",
+                () -> ((List<?>) entityManager.createNativeQuery(SQL_BUSCAR_ESTUDIANTE_POR_DOCUMENTO)
+                        .setParameter("idGrupo", grupoId)
+                        .setParameter("idTipoIdentificacion", tipoIdentificacionId)
+                        .setParameter("numeroIdentificacion", numeroIdentificacion)
+                        .setParameter("idCorrelacion", correlationId)
+                        .setParameter("idUsuarioEjecutor", usuarioEjecutor)
+                        .getResultList()).stream()
+                        .map(Object[].class::cast)
+                        .map(GrupoJpaRepository::toEstudianteBusqueda)
+                        .findFirst(),
+                DbCodeTranslator::traducir
+        );
+    }
+
+    private static EstudianteBusquedaRepositoryProjection toEstudianteBusqueda(final Object[] f) {
+        if (f.length != COLUMNAS_BUSQUEDA) {
+            throw new IllegalStateException("La busqueda de estudiante devolvio " + f.length + " columnas; se esperaban "
+                    + COLUMNAS_BUSQUEDA + ".");
+        }
+        return new EstudianteBusquedaRepositoryProjection(NativeRowValues.uuid(f[0]), texto(f[1]), texto(f[2]), texto(f[3]),
+                texto(f[4]), texto(f[5]), enteroONulo(f[6]), texto(f[7]), texto(f[8]));
     }
 
     private static EstudianteGrupoRepositoryProjection toEstudianteGrupo(final Object[] f) {
