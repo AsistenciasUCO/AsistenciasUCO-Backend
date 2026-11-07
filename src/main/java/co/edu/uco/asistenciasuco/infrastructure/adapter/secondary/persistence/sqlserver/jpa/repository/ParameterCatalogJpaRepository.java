@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import org.springframework.beans.factory.annotation.Qualifier;
 import jakarta.persistence.EntityManager;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Repository;
@@ -20,6 +21,8 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 @Repository
 @ConditionalOnProperty(prefix = "app.adapters.parameter-catalog", name = "provider", havingValue = "sqlserver")
+// CULM-001 A.2-6: proveedor real; los consumidores reciben el decorador con valores por defecto (DEC-018).
+@Qualifier("parameterCatalogDelegado")
 public class ParameterCatalogJpaRepository implements ParameterCatalogPort {
 
     static final String HQL_PARAMETRO = "select p.valor from UvParametroEntity p where p.grupo = :grupo and p.clave = :clave";

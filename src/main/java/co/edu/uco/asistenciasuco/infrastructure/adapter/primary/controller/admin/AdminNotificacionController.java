@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationErrorType;
+import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationHelper;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.primaryports.AdministrarNotificacionesInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.EstadoCanalNotificacionProjection;
 import co.edu.uco.asistenciasuco.application.features.admin.administrarnotificaciones.usecase.domain.NotificacionSalienteAdminProjection;
@@ -100,6 +105,8 @@ public class AdminNotificacionController {
             @PathVariable final String tipo,
             @RequestBody final CrearVersionPlantillaRequest request
     ) {
+        // CULM-001 A.2-6: asunto y cuerpo obligatorios; {} responde 400 VALIDATION_ERROR antes de llegar al adaptador (antes NPE 500).
+        RequestValidationGuard.validate(validarVersion(request));
         final UUID adminId = authenticatedUserResolver.requireAuthenticatedUserId();
         final VersionPlantillaProjection version = administracionPort.crearVersionPlantilla(
                 tipo,
@@ -109,6 +116,15 @@ public class AdminNotificacionController {
                 adminId
         );
         return ResponseEntity.ok(new ApiDataResponse<>(true, toVersionResponse(version)));
+    }
+
+    static ValidationResult validarVersion(final CrearVersionPlantillaRequest request) {
+        final ValidationResultBuilder builder = new ValidationResultBuilder();
+        builder.addIf(request == null || !ValidationHelper.hasText(request.asunto()),
+                "asunto", ValidationErrorType.REQUIRED, "El asunto de la plantilla es obligatorio.");
+        builder.addIf(request == null || !ValidationHelper.hasText(request.cuerpo()),
+                "cuerpo", ValidationErrorType.REQUIRED, "El cuerpo de la plantilla es obligatorio.");
+        return builder.build();
     }
 
     @PatchMapping("/plantillas/{tipo}/versiones/{version}/activar")
