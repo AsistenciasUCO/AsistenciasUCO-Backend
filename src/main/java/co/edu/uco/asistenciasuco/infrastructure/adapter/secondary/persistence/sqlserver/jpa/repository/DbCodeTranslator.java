@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.exception.business.ConflictExceptio
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
+import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.exception.MatriculaQrErrorCode;
 import jakarta.persistence.PersistenceException;
 
@@ -42,6 +43,8 @@ final class DbCodeTranslator {
             // HU176B: validacion publica del token. MQR_001 es el mismo error para cualquier token invalido.
             case "MQR_001" -> new ResourceNotFoundException(MatriculaQrErrorCode.MQR_001);
             case "MQR_007" -> new ValidationException(MatriculaQrErrorCode.MQR_007.code(), MatriculaQrErrorCode.MQR_007.defaultMessage());
+            // CULM-001 B.1: consultas de festivos del administrador (anio fuera de FESTIVOS/ANIO_MINIMO..ANIO_MAXIMO).
+            case "FES_001" -> new ValidationException(FestivoErrorCode.FES_001);
             case "PAG_001" -> new ValidationException("Los parametros de paginacion no son validos.");
             case "GEN_002", "VAL_001" -> new ValidationException("Los datos de la consulta no son validos.");
             // HU112/HU128/HU143/HU157: el SP de lectura exige el perfil del ejecutor.

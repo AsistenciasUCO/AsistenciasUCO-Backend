@@ -20,7 +20,9 @@ import java.util.Objects;
  * runtime, que la base del ambiente expone el contrato UTC-D06-POST-FREEZE que v2 necesita: la vista
  * {@code dbo.uv_sesion_v2} con {@code procedenciaTemporal} y los dos SP v2. Si falta algo, el arranque
  * falla: nunca se sirve v2 contra una base que no puede registrar ni leer la procedencia (respuestas
- * con {@code Z} no verificadas serian informacion falsamente confirmada).</p>
+ * con {@code Z} no verificadas serian informacion falsamente confirmada). CULM-001 B.1 (3.6) agrega
+ * {@code dbo.uv_sesion_estado} (estado de cancelacion que leen todas las sesiones) y
+ * {@code dbo.usp_generar_sesiones_grupo_v2}.</p>
  */
 @Component
 @Conditional(SesionesV2Activation.Enabled.class)
@@ -33,6 +35,8 @@ public class SesionV2SchemaCompatibilityVerifier implements ApplicationRunner {
                      WHEN COL_LENGTH('dbo.uv_sesion_v2', 'procedenciaTemporal') IS NOT NULL
                       AND OBJECT_ID('dbo.usp_crear_sesion_v2', 'P') IS NOT NULL
                       AND OBJECT_ID('dbo.usp_actualizar_sesion_v2', 'P') IS NOT NULL
+                      AND COL_LENGTH('dbo.uv_sesion_estado', 'estaCancelada') IS NOT NULL
+                      AND OBJECT_ID('dbo.usp_generar_sesiones_grupo_v2', 'P') IS NOT NULL
                      THEN 1 ELSE 0
                    END
             """;
@@ -54,7 +58,8 @@ public class SesionV2SchemaCompatibilityVerifier implements ApplicationRunner {
             throw new IllegalStateException(
                     "UTC V2 esta activo (app.sesiones.v2.enabled ausente o true) pero la base de datos no expone el "
                             + "contrato UTC-D06-POST-FREEZE (dbo.uv_sesion_v2.procedenciaTemporal, dbo.usp_crear_sesion_v2, "
-                            + "dbo.usp_actualizar_sesion_v2). Despliegue primero la DB o desactive v2 explicitamente con "
+                            + "dbo.usp_actualizar_sesion_v2) ni el de CULM-001 B.1 (dbo.uv_sesion_estado, "
+                            + "dbo.usp_generar_sesiones_grupo_v2). Despliegue primero la DB o desactive v2 explicitamente con "
                             + "app.sesiones.v2.enabled=false.");
         }
         LOGGER.info("Contrato DB UTC-D06-POST-FREEZE verificado; /api/v2/sesiones habilitado.");

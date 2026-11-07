@@ -5,6 +5,7 @@ import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoEr
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tipoidentificacion.exception.TipoIdentificacionErrorCode;
@@ -49,6 +50,7 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_RECLAMO_NO_EXISTE,
             CatalogoErrorCode.TPR_001,
             CatalogoErrorCode.ARE_001,
+            FestivoErrorCode.FES_007,
             CommonErrorCode.RESOURCE_NOT_FOUND
     );
     private static final Set<ErrorDefinition> CONFLICT_CODES = Set.of(
@@ -77,6 +79,11 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_SESION_NO_INICIADA,
             AsistenciaErrorCode.ERR_SESION_CERRADA,
             AsistenciaErrorCode.ERR_SESION_HORARIO_INDETERMINADO,
+            // CULM-001 B.1: sesion cancelada (lote) y rechazos de la cancelacion HU047.
+            AsistenciaErrorCode.ERR_SESION_CANCELADA,
+            SesionErrorCode.SES_011,
+            SesionErrorCode.SES_012,
+            SesionErrorCode.SES_016,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -89,6 +96,12 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
+            // CULM-001 B.1: motivo de cancelacion y datos de festivos.
+            SesionErrorCode.SES_013,
+            FestivoErrorCode.FES_001,
+            FestivoErrorCode.FES_002,
+            FestivoErrorCode.FES_004,
+            FestivoErrorCode.FES_006,
             CommonErrorCode.VALIDATION_ERROR
     );
 

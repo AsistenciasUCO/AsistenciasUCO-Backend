@@ -29,7 +29,8 @@ public class PlantillaPorDefectoCatalogo {
             Notificacion.TIPO_RECLAMO_ASISTENCIA_RESUELTO,
             Notificacion.TIPO_ALERTA_RIESGO_INASISTENCIA,
             Notificacion.TIPO_ALERTA_PERDIDA_INASISTENCIA,
-            Notificacion.TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO
+            Notificacion.TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO,
+            Notificacion.TIPO_SESION_CANCELADA
     );
 
     private static final String IDIOMA_SOPORTADO = "es";

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.*;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.*;
@@ -13,9 +14,14 @@ public final class CoreViewJpaProjectionMapper {
     private CoreViewJpaProjectionMapper() { }
 
     public static SesionRepositoryProjection toSesion(final UvSesionEntity row) {
+        return toSesion(row, null);
+    }
+
+    /** CULM-001 B.1: sesion v1 con la cancelacion de {@code uv_sesion_estado} ({@code null} si esta programada). */
+    public static SesionRepositoryProjection toSesion(final UvSesionEntity row, final CancelacionSesionProjection cancelacion) {
         return new SesionRepositoryProjection(row.id(), row.idGrupo(), row.nombre(), row.numero(), row.codigo(),
                 row.numeroSemana(), textOrNull(row.codigoGrupo()), row.nombreGrupo(),
-                row.fechaHoraInicio(), row.fechaHoraFin());
+                row.fechaHoraInicio(), row.fechaHoraFin(), cancelacion);
     }
 
     public static GrupoRepositoryProjection toGrupo(final UvGrupoEntity row) {

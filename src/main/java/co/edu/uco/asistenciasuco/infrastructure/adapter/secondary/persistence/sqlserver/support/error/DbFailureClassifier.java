@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
+import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
@@ -171,6 +172,21 @@ final class DbFailureClassifier {
             case "SES_007" -> AsistenciaErrorCode.ERR_SESION_NO_INICIADA;
             case "SES_008" -> AsistenciaErrorCode.ERR_SESION_CERRADA;
             case "SES_009" -> AsistenciaErrorCode.ERR_SESION_HORARIO_INDETERMINADO;
+            // CULM-001 B.1: sesion cancelada (NB-1: SES_010 se publica como ERR_SESION_CANCELADA, igual que SES_007..009) y
+            // cancelacion por el docente HU047 (codigos de la DB expuestos tal cual).
+            case "SES_010" -> AsistenciaErrorCode.ERR_SESION_CANCELADA;
+            case "SES_011" -> SesionErrorCode.SES_011;
+            case "SES_012" -> SesionErrorCode.SES_012;
+            case "SES_013" -> SesionErrorCode.SES_013;
+            case "SES_016" -> SesionErrorCode.SES_016;
+            // CULM-001 B.1: festivos (carga, aplicacion y consultas del administrador).
+            case "FES_001" -> FestivoErrorCode.FES_001;
+            case "FES_002" -> FestivoErrorCode.FES_002;
+            case "FES_003" -> FestivoErrorCode.FES_003;
+            case "FES_004" -> FestivoErrorCode.FES_004;
+            case "FES_006" -> FestivoErrorCode.FES_006;
+            case "FES_007" -> FestivoErrorCode.FES_007;
+            case "FES_009" -> FestivoErrorCode.FES_009;
             // LB-004D (soporte de revision): ARC_001 es identico para soporte inexistente, ajeno, ya vinculado u
             // huerfano (404 sin distinguir casos); ARC_002 registro en conflicto; ARC_003 metadata invalida;
             // ARC_005 el estudiante no corresponde al ejecutor autenticado.
