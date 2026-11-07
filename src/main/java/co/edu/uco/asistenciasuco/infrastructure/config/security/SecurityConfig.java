@@ -152,8 +152,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
-                // Generación del QR/PIN de una sesión: acción del docente que dicta la sesión.
-                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole(ROLE_DOCENTE)
+                // CULM-001 B.2: tomas de asistencia de la sesion (POST cubierto por /api/v1/sesiones/**) y operaciones sobre
+                // una toma (cierre, lote, consultas, QR). Titularidad en Application y en la DB.
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas").hasRole(ROLE_DOCENTE)
+                .requestMatchers("/api/v1/tomas/**").hasRole(ROLE_DOCENTE)
                 // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
                 // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
                 // Application via InstitutionalScopePort (ver ConsultarSesionesPorGrupoUseCaseImpl).
