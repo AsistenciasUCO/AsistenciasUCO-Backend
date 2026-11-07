@@ -12,7 +12,8 @@ import java.util.UUID;
  * CULM-001 B.2 (CONTRACT 3.11, B2-CON): fixture SQL autocontenido (patron de {@code test_culm001_b2_concurrencia.ps1})
  * para las pruebas de tomas y QR contra SQL Server real: un docente titular, {@code grupos} grupos de un periodo propio,
  * {@code estudiantesPorGrupo} matriculas activas por grupo y una sesion por grupo dentro de su ventana (UTC confirmado). Todo
- * se marca con una etiqueta unica y {@link #limpiar()} lo borra en el orden del contrato (2.16.3 d).
+ * se marca con una etiqueta unica y {@link #limpiar()} lo borra en el orden del contrato (2.16.3 d). Cada lote restaura
+ * {@code NOCOUNT}/{@code XACT_ABORT}: la conexion vuelve al pool y Hibernate necesita el conteo de filas de sus INSERT.
  */
 public final class TomaQrCargaFixture {
 
@@ -81,6 +82,8 @@ public final class TomaQrCargaFixture {
                 SELECT s, CONCAT(@tag, N' S', n), 1, CONCAT(N'B2', RIGHT(@tag, 4), n), 1, id,
                        DATEADD(MINUTE, -30, SYSUTCDATETIME()), DATEADD(MINUTE, 90, SYSUTCDATETIME()), N'UTC_V2' FROM @g;
                 COMMIT TRANSACTION;
+                SET XACT_ABORT OFF;
+                SET NOCOUNT OFF;
                 """.formatted(etiqueta, cantidadGrupos, estudiantesPorGrupo));
         docenteUsuario = UUID.fromString(jdbc.queryForObject(
                 "SELECT CONVERT(VARCHAR(36), id) FROM dbo.Usuario WHERE correo = ?", String.class, etiqueta + ".d@it.invalid"));
@@ -141,6 +144,8 @@ public final class TomaQrCargaFixture {
                 DELETE d FROM dbo.Docente d INNER JOIN dbo.Usuario u ON u.id = d.usuario WHERE u.correo LIKE CONCAT(@tag, N'.%%');
                 DELETE FROM dbo.Usuario WHERE correo LIKE CONCAT(@tag, N'.%%');
                 COMMIT TRANSACTION;
+                SET XACT_ABORT OFF;
+                SET NOCOUNT OFF;
                 """.formatted(etiqueta));
     }
 }
