@@ -203,7 +203,7 @@ class AdminNotificacionControllerTest {
                 1,
                 new ResumenColaNotificacionProjection(1, 0, 5, 0, 0)
         );
-        when(administracionPort.consultarCola(any(), any(), anyInt(), anyInt(), eq(ADMIN_ID))).thenReturn(pagina);
+        when(administracionPort.consultarCola(any(), any(), anyInt(), anyInt(), any())).thenReturn(pagina);
 
         mockMvc.perform(get("/api/v1/admin/notificaciones/cola?pagina=0&tamano=20"))
                 .andExpect(status().isOk())

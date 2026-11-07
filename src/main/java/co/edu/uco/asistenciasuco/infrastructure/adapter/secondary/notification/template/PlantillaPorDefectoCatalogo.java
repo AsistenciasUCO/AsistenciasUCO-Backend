@@ -32,6 +32,9 @@ public class PlantillaPorDefectoCatalogo {
             Notificacion.TIPO_CIERRE_MASIVO_PERIODO_EJECUTADO
     );
 
+    private static final java.util.regex.Pattern TIPO_VALIDO = java.util.regex.Pattern.compile("[A-Z0-9_]{3,60}");
+    private static final java.util.regex.Pattern IDIOMA_VALIDO = java.util.regex.Pattern.compile("[a-z]{2}");
+
     private final Map<String, Optional<PlantillaNotificacion>> cache = new ConcurrentHashMap<>();
 
     public List<String> listarTiposConocidos() {
@@ -49,6 +52,9 @@ public class PlantillaPorDefectoCatalogo {
     }
 
     private Optional<PlantillaNotificacion> cargarRecurso(final String tipo, final String idioma) {
+        if (!TIPO_VALIDO.matcher(tipo).matches() || !IDIOMA_VALIDO.matcher(idioma).matches()) {
+            return Optional.empty();
+        }
         final String path = String.format(RESOURCE_PATTERN, tipo, idioma);
         final ClassLoader classLoader = Thread.currentThread().getContextClassLoader();
         try (InputStream stream = classLoader.getResourceAsStream(path)) {

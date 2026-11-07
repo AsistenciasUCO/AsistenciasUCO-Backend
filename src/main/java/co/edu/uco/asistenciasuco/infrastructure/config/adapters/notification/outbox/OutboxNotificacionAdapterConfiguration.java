@@ -11,6 +11,7 @@ import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.Outb
 import com.fasterxml.jackson.databind.ObjectMapper;
 import io.micrometer.core.instrument.MeterRegistry;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Conditional;
@@ -41,11 +42,11 @@ public class OutboxNotificacionAdapterConfiguration {
     @Conditional(OutboxAdapterCondition.class)
     public NotificacionOutboxDispatcher notificacionOutboxDispatcher(
             final NotificacionOutboxRepository repository,
-            final NotificacionChannelSender sender,
+            final ObjectProvider<NotificacionChannelSender> senderProvider,
             final OutboxNotificationProperties properties,
             final MeterRegistry meterRegistry
     ) {
-        return new NotificacionOutboxDispatcher(repository, sender, properties, meterRegistry, Clock.systemUTC());
+        return new NotificacionOutboxDispatcher(repository, senderProvider.getObject(), properties, meterRegistry, Clock.systemUTC());
     }
 
     @Bean

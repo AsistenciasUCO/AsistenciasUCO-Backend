@@ -53,6 +53,10 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
     private static final String SP_CONSULTAR_COLA = "dbo.usp_consultar_notificaciones_salientes_admin";
     private static final String SP_REINTENTAR_COLA = "dbo.usp_reintentar_notificacion_saliente";
 
+    private static final String PARAM_IDIOMA = "idioma";
+    private static final String PARAM_ID_CORRELACION = "idCorrelacion";
+    private static final String PARAM_ID_USUARIO_EJECUTOR = "idUsuarioEjecutor";
+
     private final EntityManager entityManager;
     private final PlantillaNotificacionJpaRepository plantillaRepository;
     private final PlantillaPorDefectoCatalogo catalogoDefecto;
@@ -161,13 +165,13 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
 
         try {
             final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_CONSULTAR_PLANTILLAS);
-            sp.registerStoredProcedureParameter("idioma", String.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idUsuarioEjecutor", UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_IDIOMA, String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_USUARIO_EJECUTOR, UUID.class, ParameterMode.IN);
 
-            sp.setParameter("idioma", idiomaNorm);
-            sp.setParameter("idCorrelacion", corrId);
-            sp.setParameter("idUsuarioEjecutor", idUsuarioEjecutor);
+            sp.setParameter(PARAM_IDIOMA, idiomaNorm);
+            sp.setParameter(PARAM_ID_CORRELACION, corrId);
+            sp.setParameter(PARAM_ID_USUARIO_EJECUTOR, idUsuarioEjecutor);
 
             sp.execute();
 
@@ -181,6 +185,8 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
             sp.hasMoreResults();
 
             return mapearPlantillasAdmin(tiposRows, marcadoresRows, versionesRows);
+        } catch (final co.edu.uco.asistenciasuco.application.exception.ApplicationException ex) {
+            throw ex;
         } catch (final RuntimeException ex) {
             LOGGER.warn("No fue posible consultar plantillas por SP. Construyendo respaldo desde catalogo en memoria: {}", ex.getMessage());
             return construirRespaldoPlantillas(idiomaNorm);
@@ -194,60 +200,58 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
             final List<?> marcadoresRows,
             final List<?> versionesRows
     ) {
-        final Map<String, List<MarcadorPlantillaProjection>> marcadoresPorTipo = new LinkedHashMap<>();
-        for (final Object mObj : marcadoresRows) {
-            final Object[] row = (Object[]) mObj;
-            final String tipo = String.valueOf(row[0]);
-            final String marcador = String.valueOf(row[1]);
-            final String descripcion = row.length > 2 && row[2] != null ? String.valueOf(row[2]) : "";
-            final String ejemplo = row.length > 3 && row[3] != null ? String.valueOf(row[3]) : "";
-            final boolean obligatorio = row.length > 4 && toBoolean(row[4]);
-
-            marcadoresPorTipo.computeIfAbsent(tipo, _ -> new ArrayList<>())
-                    .add(new MarcadorPlantillaProjection(marcador, descripcion, ejemplo, obligatorio));
-        }
-
-        final Map<String, List<VersionPlantillaProjection>> versionesPorTipo = new LinkedHashMap<>();
-        for (final Object vObj : versionesRows) {
-            final Object[] row = (Object[]) vObj;
-            final UUID id = toUuid(row[0]);
-            final String tipo = String.valueOf(row[1]);
-            final String idioma = String.valueOf(row[2]);
-            final int version = toInt(row[3]);
-            final String asunto = String.valueOf(row[4]);
-            final String cuerpo = String.valueOf(row[5]);
-            final boolean activa = toBoolean(row[6]);
-            final Instant creadoEn = row.length > 7 ? toInstant(row[7]) : Instant.now();
-
-            versionesPorTipo.computeIfAbsent(tipo, _ -> new ArrayList<>())
-                    .add(new VersionPlantillaProjection(id, tipo, idioma, version, asunto, cuerpo, activa, creadoEn));
-        }
+        final Map<String, List<MarcadorPlantillaProjection>> marcadoresPorTipo = agruparMarcadores(marcadoresRows);
+        final Map<String, List<VersionPlantillaProjection>> versionesPorTipo = agruparVersiones(versionesRows);
 
         final List<TipoPlantillaAdminProjection> resultado = new ArrayList<>();
         for (final Object tObj : tiposRows) {
             final Object[] row = (Object[]) tObj;
             final String tipo = String.valueOf(row[0]);
-            final String idioma = String.valueOf(row[1]);
-            final int versionActiva = toInt(row[2]);
-            final String asuntoActivo = row[3] != null ? String.valueOf(row[3]) : "";
-            final String cuerpoActivo = row[4] != null ? String.valueOf(row[4]) : "";
-            final Instant actualizadoEn = row.length > 5 && row[5] != null ? toInstant(row[5]) : Instant.now();
-
-            final List<MarcadorPlantillaProjection> marcadores = marcadoresPorTipo.getOrDefault(tipo, List.of());
-            final List<VersionPlantillaProjection> versiones = versionesPorTipo.getOrDefault(tipo, List.of());
-
             resultado.add(new TipoPlantillaAdminProjection(
                     tipo,
-                    idioma,
-                    versionActiva,
-                    asuntoActivo,
-                    cuerpoActivo,
-                    actualizadoEn,
-                    marcadores,
-                    versiones
+                    String.valueOf(row[1]),
+                    toInt(row[2]),
+                    textoOpcional(row, 3, ""),
+                    textoOpcional(row, 4, ""),
+                    row.length > 5 && row[5] != null ? toInstant(row[5]) : Instant.now(),
+                    marcadoresPorTipo.getOrDefault(tipo, List.of()),
+                    versionesPorTipo.getOrDefault(tipo, List.of())
             ));
         }
         return resultado;
+    }
+
+    private static Map<String, List<MarcadorPlantillaProjection>> agruparMarcadores(final List<?> marcadoresRows) {
+        final Map<String, List<MarcadorPlantillaProjection>> marcadoresPorTipo = new LinkedHashMap<>();
+        for (final Object mObj : marcadoresRows) {
+            final Object[] row = (Object[]) mObj;
+            marcadoresPorTipo.computeIfAbsent(String.valueOf(row[0]), _ -> new ArrayList<>())
+                    .add(new MarcadorPlantillaProjection(
+                            String.valueOf(row[1]),
+                            textoOpcional(row, 2, ""),
+                            textoOpcional(row, 3, ""),
+                            row.length > 4 && toBoolean(row[4])));
+        }
+        return marcadoresPorTipo;
+    }
+
+    private static Map<String, List<VersionPlantillaProjection>> agruparVersiones(final List<?> versionesRows) {
+        final Map<String, List<VersionPlantillaProjection>> versionesPorTipo = new LinkedHashMap<>();
+        for (final Object vObj : versionesRows) {
+            final Object[] row = (Object[]) vObj;
+            final String tipo = String.valueOf(row[1]);
+            versionesPorTipo.computeIfAbsent(tipo, _ -> new ArrayList<>())
+                    .add(new VersionPlantillaProjection(
+                            toUuid(row[0]),
+                            tipo,
+                            String.valueOf(row[2]),
+                            toInt(row[3]),
+                            String.valueOf(row[4]),
+                            String.valueOf(row[5]),
+                            toBoolean(row[6]),
+                            row.length > 7 ? toInstant(row[7]) : Instant.now()));
+        }
+        return versionesPorTipo;
     }
 
     private List<TipoPlantillaAdminProjection> construirRespaldoPlantillas(final String idioma) {
@@ -305,20 +309,20 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         try {
             final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_GUARDAR_PLANTILLA);
             sp.registerStoredProcedureParameter("tipo", String.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idioma", String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_IDIOMA, String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("asunto", String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("cuerpo", String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("creadoPor", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idUsuarioEjecutor", UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_USUARIO_EJECUTOR, UUID.class, ParameterMode.IN);
 
             sp.setParameter("tipo", tipoNorm);
-            sp.setParameter("idioma", idiomaNorm);
+            sp.setParameter(PARAM_IDIOMA, idiomaNorm);
             sp.setParameter("asunto", asuntoNorm);
             sp.setParameter("cuerpo", cuerpoNorm);
             sp.setParameter("creadoPor", creadoPor);
-            sp.setParameter("idCorrelacion", corrId);
-            sp.setParameter("idUsuarioEjecutor", creadoPor);
+            sp.setParameter(PARAM_ID_CORRELACION, corrId);
+            sp.setParameter(PARAM_ID_USUARIO_EJECUTOR, creadoPor);
 
             sp.execute();
 
@@ -370,16 +374,16 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         try {
             final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_ACTIVAR_VERSION);
             sp.registerStoredProcedureParameter("tipo", String.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idioma", String.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_IDIOMA, String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("version", Integer.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idUsuarioEjecutor", UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_USUARIO_EJECUTOR, UUID.class, ParameterMode.IN);
 
             sp.setParameter("tipo", tipoNorm);
-            sp.setParameter("idioma", idiomaNorm);
+            sp.setParameter(PARAM_IDIOMA, idiomaNorm);
             sp.setParameter("version", version);
-            sp.setParameter("idCorrelacion", corrId);
-            sp.setParameter("idUsuarioEjecutor", activadoPor);
+            sp.setParameter(PARAM_ID_CORRELACION, corrId);
+            sp.setParameter(PARAM_ID_USUARIO_EJECUTOR, activadoPor);
 
             sp.execute();
 
@@ -415,17 +419,10 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         final Optional<PlantillaNotificacion> defectoOpt = catalogoDefecto.obtener(tipoNorm, idiomaNorm);
         if (defectoOpt.isPresent()) {
             for (final PlantillaNotificacion.Marcador m : defectoOpt.get().marcadores()) {
-                datosMuestra.put(m.nombre(), valorMuestraPara(m.nombre()));
+                datosMuestra.put(m.nombre(), MuestrasNotificacion.valorPara(m.nombre()));
             }
         } else {
-            datosMuestra.put("grupo", "G01 de Ingeniería de Software");
-            datosMuestra.put("estudiante", "Ana María Gómez");
-            datosMuestra.put("fecha", "2026-11-06");
-            datosMuestra.put("porcentaje", "22");
-            datosMuestra.put("motivo", "Incapacidad médica");
-            datosMuestra.put("estado", "Aprobada");
-            datosMuestra.put("observacion", "Revisión verificada en clase");
-            datosMuestra.put("periodo", "2026-2");
+            datosMuestra.putAll(MuestrasNotificacion.basicoVistaPrevia());
         }
 
         final ContenidoRenderizado renderizado = plantillaRenderer.renderizarExplicito(asunto, cuerpo, datosMuestra);
@@ -435,22 +432,6 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
                 renderizado.html(),
                 renderizado.origen()
         );
-    }
-
-    private static String valorMuestraPara(final String marcador) {
-        return switch (marcador) {
-            case "grupo" -> "G01 de Ingeniería de Software";
-            case "estudiante" -> "Ana María Gómez";
-            case "fecha" -> "2026-11-06";
-            case "porcentaje" -> "22";
-            case "motivo" -> "Incapacidad médica EPS";
-            case "estado" -> "Aprobada";
-            case "observacion" -> "Solicitud verificada en sesión";
-            case "periodo" -> "2026-2";
-            case "nombre" -> "Carlos Andrés Ramírez";
-            case "enlace" -> "https://asistencias.uco.edu.co/verificar-correo#token=sample-preview-token";
-            default -> "[" + marcador + "]";
-        };
     }
 
     @Override
@@ -475,16 +456,16 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
             sp.registerStoredProcedureParameter("tipo", String.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("numeroPagina", Integer.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("tamanoPagina", Integer.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idUsuarioEjecutor", UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_USUARIO_EJECUTOR, UUID.class, ParameterMode.IN);
 
             sp.setParameter("estado", (estado == null || estado.isBlank()) ? null : estado.trim());
             sp.setParameter("codigoEstado", null);
             sp.setParameter("tipo", (tipo == null || tipo.isBlank()) ? null : tipo.trim());
             sp.setParameter("numeroPagina", numPagina);
             sp.setParameter("tamanoPagina", tamPagina);
-            sp.setParameter("idCorrelacion", corrId);
-            sp.setParameter("idUsuarioEjecutor", idUsuarioEjecutor);
+            sp.setParameter(PARAM_ID_CORRELACION, corrId);
+            sp.setParameter(PARAM_ID_USUARIO_EJECUTOR, idUsuarioEjecutor);
 
             sp.execute();
 
@@ -499,23 +480,7 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
 
             final List<NotificacionSalienteAdminProjection> elementos = new ArrayList<>();
             for (final Object itemObj : itemsRows) {
-                final Object[] r = (Object[]) itemObj;
-                elementos.add(new NotificacionSalienteAdminProjection(
-                        toUuid(r[0]),
-                        String.valueOf(r[1]),
-                        String.valueOf(r[2]),
-                        String.valueOf(r[3]),
-                        r.length > 4 && r[4] != null ? String.valueOf(r[4]) : String.valueOf(r[3]),
-                        r.length > 5 && toBoolean(r[5]),
-                        r.length > 6 ? toInt(r[6]) : 0,
-                        r.length > 7 ? toInt(r[7]) : 0,
-                        r.length > 8 ? toInstant(r[8]) : null,
-                        r.length > 9 ? toInstant(r[9]) : null,
-                        r.length > 10 ? toInstant(r[10]) : null,
-                        r.length > 11 && r[11] != null ? String.valueOf(r[11]) : null,
-                        r.length > 12 && r[12] != null ? String.valueOf(r[12]) : null,
-                        r.length > 13 && r[13] != null ? toUuid(r[13]) : null
-                ));
+                elementos.add(mapearItemCola((Object[]) itemObj));
             }
 
             long totalElementos = elementos.size();
@@ -526,17 +491,9 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
                 totalPaginas = meta.length > 1 ? toInt(meta[1]) : (int) Math.ceil((double) totalElementos / tamPagina);
             }
 
-            ResumenColaNotificacionProjection resumen = new ResumenColaNotificacionProjection(0, 0, 0, 0, 0);
-            if (!summaryRows.isEmpty()) {
-                final Object[] sum = (Object[]) summaryRows.getFirst();
-                resumen = new ResumenColaNotificacionProjection(
-                        toLong(sum[0]),
-                        sum.length > 1 ? toLong(sum[1]) : 0,
-                        sum.length > 2 ? toLong(sum[2]) : 0,
-                        sum.length > 3 ? toLong(sum[3]) : 0,
-                        sum.length > 4 ? toLong(sum[4]) : 0
-                );
-            }
+            final ResumenColaNotificacionProjection resumen = summaryRows.isEmpty()
+                    ? new ResumenColaNotificacionProjection(0, 0, 0, 0, 0)
+                    : mapearResumenCola((Object[]) summaryRows.getFirst());
 
             return new PaginaColaNotificacionProjection(
                     elementos,
@@ -560,6 +517,43 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
         }
     }
 
+    private static NotificacionSalienteAdminProjection mapearItemCola(final Object[] r) {
+        return new NotificacionSalienteAdminProjection(
+                toUuid(r[0]),
+                String.valueOf(r[1]),
+                String.valueOf(r[2]),
+                String.valueOf(r[3]),
+                textoOpcional(r, 4, String.valueOf(r[3])),
+                r.length > 5 && toBoolean(r[5]),
+                r.length > 6 ? toInt(r[6]) : 0,
+                r.length > 7 ? toInt(r[7]) : 0,
+                r.length > 8 ? toInstant(r[8]) : null,
+                r.length > 9 ? toInstant(r[9]) : null,
+                r.length > 10 ? toInstant(r[10]) : null,
+                textoOpcional(r, 11, null),
+                textoOpcional(r, 12, null),
+                r.length > 13 && r[13] != null ? toUuid(r[13]) : null
+        );
+    }
+
+    private static ResumenColaNotificacionProjection mapearResumenCola(final Object[] sum) {
+        return new ResumenColaNotificacionProjection(
+                toLong(sum[0]),
+                valorLong(sum, 1),
+                valorLong(sum, 2),
+                valorLong(sum, 3),
+                valorLong(sum, 4)
+        );
+    }
+
+    private static String textoOpcional(final Object[] fila, final int indice, final String porDefecto) {
+        return fila.length > indice && fila[indice] != null ? String.valueOf(fila[indice]) : porDefecto;
+    }
+
+    private static long valorLong(final Object[] fila, final int indice) {
+        return fila.length > indice ? toLong(fila[indice]) : 0;
+    }
+
     @Override
     public void reintentarNotificacion(final UUID idNotificacion, final UUID usuarioEjecutor) {
         Objects.requireNonNull(idNotificacion, "El identificador de la notificacion es obligatorio.");
@@ -571,13 +565,13 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
             final StoredProcedureQuery sp = em.createStoredProcedureQuery(SP_REINTENTAR_COLA);
             sp.registerStoredProcedureParameter("id", UUID.class, ParameterMode.IN);
             sp.registerStoredProcedureParameter("idNotificacion", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idCorrelacion", UUID.class, ParameterMode.IN);
-            sp.registerStoredProcedureParameter("idUsuarioEjecutor", UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_CORRELACION, UUID.class, ParameterMode.IN);
+            sp.registerStoredProcedureParameter(PARAM_ID_USUARIO_EJECUTOR, UUID.class, ParameterMode.IN);
 
             sp.setParameter("id", idNotificacion);
             sp.setParameter("idNotificacion", null);
-            sp.setParameter("idCorrelacion", corrId);
-            sp.setParameter("idUsuarioEjecutor", usuarioEjecutor);
+            sp.setParameter(PARAM_ID_CORRELACION, corrId);
+            sp.setParameter(PARAM_ID_USUARIO_EJECUTOR, usuarioEjecutor);
 
             sp.execute();
 
@@ -620,25 +614,7 @@ public class AdministracionNotificacionJpaAdapter implements AdministracionNotif
                 "Administrador Institucional",
                 correoDestino != null && !correoDestino.isBlank() ? correoDestino.trim() : null
         );
-        final Map<String, String> datosMuestra = new LinkedHashMap<>();
-        datosMuestra.put("fecha", "2026-11-06");
-        datosMuestra.put("fechaSesion", "2026-11-06");
-        datosMuestra.put("grupo", "G01 de Ingeniería de Software");
-        datosMuestra.put("estudiante", "Ana María Gómez");
-        datosMuestra.put("motivo", "Incapacidad médica EPS");
-        datosMuestra.put("causal", "Incapacidad médica EPS");
-        datosMuestra.put("resultado", "aceptada");
-        datosMuestra.put("estado", "APROBAR");
-        datosMuestra.put("observacion", "Soporte médico verificado.");
-        datosMuestra.put("porcentaje", "15.5");
-        datosMuestra.put("umbral", "15");
-        datosMuestra.put("limite", "20");
-        datosMuestra.put("periodo", "2026-2");
-        datosMuestra.put("totalEstudiantes", "120");
-        datosMuestra.put("totalAprobados", "108");
-        datosMuestra.put("totalReprobados", "12");
-        datosMuestra.put("nombre", "Administrador Institucional");
-        datosMuestra.put("enlace", "http://localhost:4200/verificar-correo#token=prueba-admin");
+        final Map<String, String> datosMuestra = MuestrasNotificacion.completo();
 
         // VERIFICACION_CORREO emite un token real por usuario y solo aplica a estudiantes sin verificar: un
         // envio de prueba del administrador no debe tocar ese flujo, asi que viaja como un tipo de prueba aparte.

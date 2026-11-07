@@ -50,22 +50,23 @@ public class AdminNotificacionAdapterConfiguration {
     @Bean
     @ConditionalOnMissingBean(PlantillaRenderer.class)
     public PlantillaRenderer adminPlantillaRenderer(
-            final PlantillaNotificacionRepository plantillaRepository,
-            final PlantillaPorDefectoCatalogo catalogoPorDefecto,
+            final ObjectProvider<PlantillaNotificacionRepository> plantillaRepositoryProvider,
+            final ObjectProvider<PlantillaPorDefectoCatalogo> catalogoPorDefectoProvider,
             final MeterRegistry meterRegistry,
             final ObjectProvider<SmtpNotificationProperties> smtpPropsProvider
     ) {
         final SmtpNotificationProperties props = smtpPropsProvider.getIfAvailable();
         final String platformUrl = props != null ? props.platformUrl() : "";
-        return new PlantillaRenderer(plantillaRepository, catalogoPorDefecto, meterRegistry, platformUrl);
+        return new PlantillaRenderer(
+                plantillaRepositoryProvider.getObject(), catalogoPorDefectoProvider.getObject(), meterRegistry, platformUrl);
     }
 
     @Bean
     @ConditionalOnMissingBean(AdministracionNotificacionPort.class)
     public AdministracionNotificacionPort administracionNotificacionPort(
             final EntityManager entityManager,
-            final PlantillaNotificacionJpaRepository plantillaRepository,
-            final PlantillaPorDefectoCatalogo catalogoDefecto,
+            final ObjectProvider<PlantillaNotificacionJpaRepository> plantillaRepositoryProvider,
+            final ObjectProvider<PlantillaPorDefectoCatalogo> catalogoDefectoProvider,
             final PlantillaRenderer plantillaRenderer,
             final NotificationAdapterProperties adapterProperties,
             final OutboxNotificationProperties outboxProperties,
@@ -76,8 +77,8 @@ public class AdminNotificacionAdapterConfiguration {
     ) {
         return new AdministracionNotificacionJpaAdapter(
                 entityManager,
-                plantillaRepository,
-                catalogoDefecto,
+                plantillaRepositoryProvider.getObject(),
+                catalogoDefectoProvider.getObject(),
                 plantillaRenderer,
                 adapterProperties,
                 outboxProperties,
