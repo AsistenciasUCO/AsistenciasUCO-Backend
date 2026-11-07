@@ -67,7 +67,8 @@ public class AdminIndicadoresJpaRepository implements AdminIndicadoresQueryPort 
                             cero(e.faltasSinJustaCausa()), e.porcentajeAusentismo(), e.porcentajeAsistencia(), cero(e.sesionesVencidas()),
                             cero(e.sesionesConRegistro()), e.porcentajeCumplimiento(), cero(e.estudiantesConMatriculaActiva()),
                             cero(e.estudiantesRegistrados()), cero(e.docentesConGrupoActivo()), cero(e.docentesRegistrados()),
-                            e.umbralAdvertencia(), e.umbralPerdida());
+                            e.umbralAdvertencia(), e.umbralPerdida(),
+                            cero(e.tomasDictadas()), e.horasDictadas(), e.horasFalta());
                 });
     }
 

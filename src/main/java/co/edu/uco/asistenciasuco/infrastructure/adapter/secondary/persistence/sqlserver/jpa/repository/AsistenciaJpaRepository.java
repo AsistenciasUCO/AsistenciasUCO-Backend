@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ConsultarAsistenciasPorGrupoRepositoryDTO;
-import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaAutonomaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciaRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.RegistrarAsistenciasSesionRepositoryDTO;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.dto.ResolverSolicitudRevisionAsistenciaRepositoryDTO;
@@ -39,15 +38,6 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
-    private static final String SQL_REGISTRAR_ASISTENCIA_AUTONOMA = """
-            EXEC dbo.usp_registrar_asistencia_estudiante_autonomo
-                 @idEstudiante = :idEstudiante,
-                 @idSesion = :idSesion,
-                 @codigoVerificacion = :codigoVerificacion,
-                 @idCorrelacion = :idCorrelacion,
-                 @idUsuarioEjecutor = :idUsuarioEjecutor
-            """;
-
     private static final String SQL_RADICAR_SOLICITUD_REVISION = """
             EXEC dbo.usp_radicar_solicitud_revision_asistencia_v2
                  @idEstudiante = :idEstudiante,
@@ -70,7 +60,6 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
             """;
 
     static final String OP_REGISTRAR_ASISTENCIAS_SESION = "registrarAsistenciasSesion";
-    static final String OP_REGISTRAR_ASISTENCIA_AUTONOMA = "registrarAsistenciaAutonoma";
     static final String OP_SOLICITAR_REVISION_ASISTENCIA = "solicitarRevisionAsistencia";
     static final String OP_RESOLVER_SOLICITUD_REVISION = "resolverSolicitudRevisionAsistencia";
     static final String OP_RETIRAR_SOLICITUD_REVISION = "retirarSolicitudRevisionAsistencia";
@@ -130,24 +119,6 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 
         procedureExecutor.execute(OP_REGISTRAR_ASISTENCIAS_SESION, SQL_REGISTRAR_ASISTENCIAS_SESION, parametros, correlationId);
-    }
-
-    @Override
-    public void registrarAsistenciaAutonoma(final RegistrarAsistenciaAutonomaRepositoryDTO dto) {
-        if (ObjectHelper.isNull(dto)) {
-            throw new CrosscuttingException("El dominio para registrar asistencia autonoma es obligatorio.");
-        }
-
-        final UUID correlationId = CorrelationIdContext.require();
-
-        final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idEstudiante", dto.estudiante());
-        parametros.put("idSesion", dto.sesion());
-        parametros.put("codigoVerificacion", dto.codigoVerificacion());
-        parametros.put("idCorrelacion", correlationId);
-        parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
-
-        procedureExecutor.execute(OP_REGISTRAR_ASISTENCIA_AUTONOMA, SQL_REGISTRAR_ASISTENCIA_AUTONOMA, parametros, correlationId);
     }
 
     @Override
@@ -237,12 +208,45 @@ public class AsistenciaJpaRepository implements AsistenciaRepositoryPort {
                         .stream()
                         .map(Object[].class::cast)
                         .map(AsistenciaJpaRepository::toAsistencia)
-                        .toList(),
+                        .collect(java.util.stream.Collectors.collectingAndThen(
+                                java.util.stream.Collectors.toList(), AsistenciaJpaRepository::consolidarPorSesion)),
                 DbCodeTranslator::traducir
         );
     }
 
     // PRIVATE HELPERS
+
+    /**
+     * CULM-001 B.2 ([SUPUESTO-B-15], contrato 3.2.9): con varias tomas el SP del ambito devuelve un detalle por toma; el
+     * golden path de {@code GET /grupos/{id}/asistencias} conserva su esquema con UNA fila por estudiante y sesion y el
+     * estado consolidado: {@code SJC} si alguna toma es SJC; si no {@code EX} si alguna es EX; si no {@code AN}. La fila
+     * conserva el id del primer detalle (orden del SP) y {@code presente} = estado consolidado AN. Con una toma por sesion
+     * el resultado es identico al actual. La lista es completa ({@code @tamanoPagina = NULL}), asi que agrupar aqui no
+     * altera la paginacion.
+     */
+    static List<AsistenciaRepositoryProjection> consolidarPorSesion(final List<AsistenciaRepositoryProjection> filas) {
+        final Map<List<UUID>, AsistenciaRepositoryProjection> porSesion = new LinkedHashMap<>();
+        for (final AsistenciaRepositoryProjection fila : filas) {
+            porSesion.merge(java.util.Arrays.asList(fila.getEstudiante(), fila.getSesion()), fila, AsistenciaJpaRepository::consolidar);
+        }
+        return List.copyOf(porSesion.values());
+    }
+
+    private static AsistenciaRepositoryProjection consolidar(final AsistenciaRepositoryProjection primera,
+                                                             final AsistenciaRepositoryProjection otra) {
+        final String estado = prioridad(otra.getEstado()) > prioridad(primera.getEstado()) ? otra.getEstado() : primera.getEstado();
+        return new AsistenciaRepositoryProjection(primera.getAsistencia(), primera.getEstudiante(), primera.getGrupo(),
+                primera.getSesion(), "AN".equals(estado), estado, primera.getObservacion());
+    }
+
+    private static int prioridad(final String estado) {
+        return switch (estado == null ? "" : estado) {
+            case "SJC" -> 3;
+            case "EX" -> 2;
+            case "AN" -> 1;
+            default -> 0;
+        };
+    }
 
     private static AsistenciaRepositoryProjection toAsistencia(final Object[] f) {
         if (f.length != COLUMNAS_ASISTENCIAS) {

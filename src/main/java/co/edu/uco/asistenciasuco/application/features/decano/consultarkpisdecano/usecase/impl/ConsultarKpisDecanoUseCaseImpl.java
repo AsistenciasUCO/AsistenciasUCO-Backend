@@ -27,6 +27,6 @@ public final class ConsultarKpisDecanoUseCaseImpl implements ConsultarKpisDecano
         }
         DecanoIndicadoresRules.facultadDelDecano(scopePort, domain.actorUsuarioId());
         final KpisDecanoProjection p = queryPort.consultarKpis(domain.actorUsuarioId(), domain.idPeriodoAcademico());
-        return new KpisDecanoDomain(p.idFacultad(), p.nombreFacultad(), p.idPeriodoAcademico(), p.nombrePeriodoAcademico(), p.totalProgramas(), p.totalEstudiantes(), p.estudiantesRegulares(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.porcentajeAsistencia(), p.gruposActivos(), p.cupoTotal(), p.matriculadosActivos(), p.tasaAforo(), p.umbralAdvertencia(), p.umbralPerdida());
+        return new KpisDecanoDomain(p.idFacultad(), p.nombreFacultad(), p.idPeriodoAcademico(), p.nombrePeriodoAcademico(), p.totalProgramas(), p.totalEstudiantes(), p.estudiantesRegulares(), p.estudiantesRiesgo(), p.estudiantesPerdida(), p.tasaRetencion(), p.sesionesEjecutadas(), p.faltasSinJustaCausa(), p.porcentajeAusentismo(), p.porcentajeAsistencia(), p.gruposActivos(), p.cupoTotal(), p.matriculadosActivos(), p.tasaAforo(), p.umbralAdvertencia(), p.umbralPerdida(), p.tomasDictadas(), p.horasDictadas(), p.horasFalta());
     }
 }
