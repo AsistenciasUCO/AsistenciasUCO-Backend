@@ -33,11 +33,16 @@ class CoreViewJpaQueryErrorSemanticsTest {
     void errores_de_provider_conservan_database_operation_exception_en_las_seis_capabilities() {
         final EntityManager entityManager = mock(EntityManager.class);
         when(entityManager.createQuery(anyString(), eq(UvSesionEntity.class))).thenThrow(new PersistenceException("db"));
+        // CULM-001 B.1: la lectura de sesiones se une a uv_sesion_estado y consulta Object[].
+        when(entityManager.createQuery(anyString(), eq(Object[].class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvGrupoEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvUsuarioEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvDocenteIdentidadEntity.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(Long.class))).thenThrow(new PersistenceException("db"));
         when(entityManager.createQuery(anyString(), eq(UvTipoIdentificacionEntity.class))).thenThrow(new PersistenceException("db"));
+        // CULM-001 A.2-1/A.2-2: grupos y directorio de estudiantes se consultan por SP (consulta nativa con ejecutor).
+        when(entityManager.createNativeQuery(anyString())).thenThrow(new PersistenceException("db"));
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
 
         assertThrows(DatabaseOperationException.class,
                 () -> new SesionJpaRepository(entityManager, new JpaProcedureExecutor(entityManager))
@@ -45,7 +50,7 @@ class CoreViewJpaQueryErrorSemanticsTest {
         assertThrows(DatabaseOperationException.class,
                 () -> new GrupoJpaRepository(entityManager,
                         mock(org.springframework.transaction.support.TransactionOperations.class),
-                        new JpaProcedureExecutor(entityManager)).consultarGrupos());
+                        new JpaProcedureExecutor(entityManager)).consultarGrupos(UUID.randomUUID()));
         assertThrows(DatabaseOperationException.class,
                 () -> new UsuarioJpaRepository(entityManager, new JpaProcedureExecutor(entityManager))
                         .consultarUsuarioPorId(UUID.randomUUID()));
@@ -55,6 +60,7 @@ class CoreViewJpaQueryErrorSemanticsTest {
                 () -> new EstudianteJpaRepository(entityManager).consultarEstudiantes(emptyPage()));
         assertThrows(DatabaseOperationException.class,
                 () -> new TipoIdentificacionJpaRepository(entityManager).consultarTiposIdentificacion());
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
     }
 
     @Test
@@ -74,7 +80,7 @@ class CoreViewJpaQueryErrorSemanticsTest {
 
     private static ConsultarEstudiantesRepositoryDTO emptyPage() {
         return new ConsultarEstudiantesRepositoryDTO(
-                null, null, null, null, null, null, null, null, null, 0, 10);
+                null, null, null, null, null, null, null, null, null, 0, 10, UUID.randomUUID());
     }
 }
 

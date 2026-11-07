@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import java.util.Optional;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.composite.ParametrosPorDefecto;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.MatriculaQrAccesoPolicy;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.primaryports.AbrirVentanaMatriculaInputPort;
 import co.edu.uco.asistenciasuco.application.features.matriculaqr.primaryports.CerrarVentanaMatriculaInputPort;
@@ -30,7 +32,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEnc
 import co.edu.uco.asistenciasuco.application.secondaryports.security.TokenGeneratorPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.MatriculaQrRateLimitFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.NetworkClientIpResolver;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.SlidingWindowRateLimiter;
+import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matriculaqr.MatriculaQrPublicaController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler.RotacionTokenMatriculaScheduler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
@@ -54,8 +56,6 @@ import java.time.Duration;
 @Configuration(proxyBeanMethods = false)
 public class MatriculaQrWiringConfiguration {
 
-    private static final int LIMITE_IP_POR_DEFECTO = 20;
-
     @Bean
     public TokenGeneratorPort tokenGeneratorPort() {
         return new SecureRandomTokenGeneratorAdapter();
@@ -77,7 +77,19 @@ public class MatriculaQrWiringConfiguration {
      */
     @Bean
     public NetworkClientIpResolver networkClientIpResolver(final ObjectProvider<ParameterCatalogPort> parameterCatalogPort) {
-        return new NetworkClientIpResolver(() -> parameterCatalogPort.getObject().getParameter("RED", "PROXIES_CONFIABLES"));
+        return new NetworkClientIpResolver(() -> proxiesConfiables(parameterCatalogPort.getObject()));
+    }
+
+    /**
+     * CULM-001 A.2-5: si el catalogo falla, el valor seguro es "sin proxies confiables" (no se confia en
+     * {@code X-Forwarded-For}); nunca un 500 en la resolucion de la IP.
+     */
+    public static Optional<String> proxiesConfiables(final ParameterCatalogPort parameterCatalogPort) {
+        try {
+            return parameterCatalogPort.getParameter("RED", "PROXIES_CONFIABLES");
+        } catch (final ParameterCatalogPort.ParameterCatalogException _) {
+            return ParametrosPorDefecto.valor("RED", "PROXIES_CONFIABLES");
+        }
     }
 
     @Bean
@@ -202,15 +214,24 @@ public class MatriculaQrWiringConfiguration {
         return registro;
     }
 
-    private static int limiteIp(final ParameterCatalogPort parameterCatalogPort) {
-        return parameterCatalogPort.getParameter("MATRICULA_QR", "LIMITE_IP_POR_MINUTO")
-                .map(valor -> {
-                    try {
-                        return Integer.parseInt(valor.strip());
-                    } catch (final NumberFormatException _) {
-                        return LIMITE_IP_POR_DEFECTO;
-                    }
-                })
-                .orElse(LIMITE_IP_POR_DEFECTO);
+    /**
+     * CULM-001 A.2-5: causa raiz del 401 publico. Si el catalogo lanza {@code ParameterCatalogException} dentro de este
+     * filtro (antes de la cadena de seguridad), rige el valor por defecto de {@link ParametrosPorDefecto}.
+     */
+    public static int limiteIp(final ParameterCatalogPort parameterCatalogPort) {
+        final int porDefecto = ParametrosPorDefecto.entero("MATRICULA_QR", "LIMITE_IP_POR_MINUTO");
+        try {
+            return parameterCatalogPort.getParameter("MATRICULA_QR", "LIMITE_IP_POR_MINUTO")
+                    .map(valor -> {
+                        try {
+                            return Integer.parseInt(valor.strip());
+                        } catch (final NumberFormatException _) {
+                            return porDefecto;
+                        }
+                    })
+                    .orElse(porDefecto);
+        } catch (final ParameterCatalogPort.ParameterCatalogException _) {
+            return porDefecto;
+        }
     }
 }

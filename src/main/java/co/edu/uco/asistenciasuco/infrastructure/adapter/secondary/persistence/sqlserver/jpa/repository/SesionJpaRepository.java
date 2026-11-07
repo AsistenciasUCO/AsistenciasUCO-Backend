@@ -12,6 +12,7 @@ import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.CoreViewJpaProjectionMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionEntity;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionEstadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.JpaQueryExecutor;
 import co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext;
@@ -86,16 +87,20 @@ public class SesionJpaRepository implements SesionRepositoryPort {
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    // CULM-001 B.1 (§2.7.6, §3.2.3): v2 = SP congelado + cancelacion por festivo. Sin transaccion de Spring: con
+    // @@TRANCOUNT = 0 el v2 traduce cualquier fallo interno (incluido el 3915) a la tupla SYS_001.
     static final String SQL_GENERAR_SESIONES_GRUPO = """
-            EXEC dbo.usp_generar_sesiones_grupo
+            EXEC dbo.usp_generar_sesiones_grupo_v2
                  @idGrupo = :idGrupo,
                  @idCorrelacion = :idCorrelacion,
                  @idUsuarioEjecutor = :idUsuarioEjecutor
             """;
 
+    // CULM-001 B.1 (3.2.4): cada sesion se une a su fila de uv_sesion_estado (una por sesion) para exponer la cancelacion.
     private static final String SELECT_ROW = """
-            select s
+            select s, e
             from UvSesionEntity s
+            join UvSesionEstadoEntity e on e.idSesion = s.id
             """;
     static final String HQL_POR_ID = SELECT_ROW + " where s.id = :idSesion order by s.id";
     static final String HQL_POR_GRUPO = SELECT_ROW
@@ -179,7 +184,7 @@ public class SesionJpaRepository implements SesionRepositoryPort {
     }
 
     @Override
-    public void generarSesionesGrupo(final GenerarSesionesGrupoRepositoryDTO dto) {
+    public GeneracionSesiones generarSesionesGrupo(final GenerarSesionesGrupoRepositoryDTO dto) {
         require(dto, "El dominio para generar sesiones de grupo es obligatorio.");
         final UUID correlationId = CorrelationIdContext.require();
 
@@ -188,7 +193,9 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         parametros.put("idCorrelacion", correlationId);
         parametros.put("idUsuarioEjecutor", dto.usuarioEjecutor());
 
-        procedureExecutor.execute(OP_GENERAR_SESIONES_GRUPO, SQL_GENERAR_SESIONES_GRUPO, parametros, correlationId);
+        final List<Object> extras = procedureExecutor.executeWithExtras(
+                OP_GENERAR_SESIONES_GRUPO, SQL_GENERAR_SESIONES_GRUPO, parametros, correlationId, 2).extras();
+        return new GeneracionSesiones(entero(extras.get(0)), entero(extras.get(1)));
     }
 
     // QUERIES
@@ -205,9 +212,9 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         return JpaQueryExecutor.execute(
                 "consultarSesionesPorGrupo",
                 "No fue posible consultar las sesiones del grupo desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_GRUPO, UvSesionEntity.class)
+                () -> entityManager.createQuery(HQL_POR_GRUPO, Object[].class)
                         .setParameter("idGrupo", grupoId)
-                        .getResultList().stream().map(CoreViewJpaProjectionMapper::toSesion).toList()
+                        .getResultList().stream().map(SesionJpaRepository::toSesion).toList()
         );
     }
 
@@ -215,17 +222,26 @@ public class SesionJpaRepository implements SesionRepositoryPort {
         return JpaQueryExecutor.execute(
                 "consultarSesion",
                 "No fue posible consultar la sesion desde base de datos.",
-                () -> entityManager.createQuery(HQL_POR_ID, UvSesionEntity.class)
+                () -> entityManager.createQuery(HQL_POR_ID, Object[].class)
                         .setParameter("idSesion", sesionId)
                         .setMaxResults(1)
                         .getResultList().stream()
                         .findFirst()
-                        .map(CoreViewJpaProjectionMapper::toSesion)
+                        .map(SesionJpaRepository::toSesion)
                         .orElse(null)
         );
     }
 
     // PRIVATE HELPERS
+
+    static SesionRepositoryProjection toSesion(final Object[] fila) {
+        return CoreViewJpaProjectionMapper.toSesion((UvSesionEntity) fila[0],
+                SesionProcedenciaJpaRepository.cancelacion((UvSesionEstadoEntity) fila[1]));
+    }
+
+    private static int entero(final Object value) {
+        return value == null ? 0 : ((Number) value).intValue();
+    }
 
     private static void require(final Object value, final String message) {
         if (ObjectHelper.isNull(value)) throw new CrosscuttingException(message);

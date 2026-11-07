@@ -4,9 +4,8 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * Grupo de la oferta del estudiante (HU008). estadoPeriodo: VIGENTE o PROXIMO. codigoEstadoSolicitud: P o E cuando
- * el estudiante tiene una solicitud de ingreso abierta (HU053-HU055); null si no. codigoComponente: ESP (propia del
- * programa), BAS o INS (transversales).
+ * Grupo de la oferta del estudiante (HU008). estadoPeriodo: VIGENTE o PROXIMO. matriculado: solo la matricula inscrita
+ * cuenta. codigoComponente: ESP (propia del programa), BAS o INS (transversales).
  */
 public record GrupoOfertaEstudianteProjection(
         UUID idGrupo,
@@ -26,8 +25,6 @@ public record GrupoOfertaEstudianteProjection(
         int estudiantesActivos,
         int cuposDisponibles,
         boolean matriculado,
-        UUID idSolicitudAbierta,
-        String codigoEstadoSolicitud,
         String codigoComponente
 ) {
 }

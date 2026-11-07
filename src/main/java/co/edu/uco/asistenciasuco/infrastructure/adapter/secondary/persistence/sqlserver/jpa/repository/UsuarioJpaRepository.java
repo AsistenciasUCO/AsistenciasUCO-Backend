@@ -49,6 +49,13 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
     static final String HQL_POR_NUMERO_IDENTIFICACION = SELECT_ROW
             + " where u.numeroIdentificacion = :numeroIdentificacion order by u.id";
 
+    // CULM-001 A.2-15: correo real del estudiante ya resuelto por usp_buscar_estudiante_por_documento_grupo (uso interno).
+    static final String HQL_CORREO_POR_ESTUDIANTE = """
+            select u.correo
+            from UvEstudianteIdentidadEntity e join UvUsuarioEntity u on e.idUsuario = u.id
+            where e.id = :idEstudiante
+            """;
+
     static final String OP_SINCRONIZAR_USUARIO = "crearUsuario";
     private static final String PARAM_NUMERO_IDENTIFICACION = "numeroIdentificacion";
 
@@ -113,6 +120,23 @@ public class UsuarioJpaRepository implements UsuarioRepositoryPort {
         return first(HQL_POR_IDENTIFICACION, query -> query.setParameter("tipoIdentificacionId", tipoIdentificacionId)
                         .setParameter(PARAM_NUMERO_IDENTIFICACION, numeroIdentificacion),
                 "consultarUsuarioPorIdentificacion", "No fue posible consultar el usuario por identificacion.");
+    }
+
+    @Override
+    public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
+        if (idEstudiante == null) {
+            return Optional.empty();
+        }
+        return JpaQueryExecutor.execute(
+                "consultarCorreoPorEstudiante",
+                "No fue posible consultar el correo del estudiante.",
+                () -> entityManager.createQuery(HQL_CORREO_POR_ESTUDIANTE, String.class)
+                        .setParameter("idEstudiante", idEstudiante)
+                        .setMaxResults(1)
+                        .getResultList().stream()
+                        .filter(correo -> correo != null && !correo.isBlank())
+                        .findFirst()
+        );
     }
 
     // PRIVATE HELPERS

@@ -14,5 +14,6 @@ public interface EstudianteRepositoryPort {
 
     EstudiantePaginaRepositoryProjection consultarEstudiantes(ConsultarEstudiantesRepositoryDTO dto);
 
-    Optional<EstudianteDetalleRepositoryProjection> consultarEstudiantePorId(UUID estudianteId);
+    /** CULM-001 A.2-1: el ambito lo aplica el SP con el ejecutor; fuera de ambito no hay filas. */
+    Optional<EstudianteDetalleRepositoryProjection> consultarEstudiantePorId(UUID estudianteId, UUID actorUsuarioId);
 }

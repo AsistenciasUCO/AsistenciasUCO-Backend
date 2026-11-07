@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.invalidation;
 
+import co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.composite.ParametroConValorPorDefectoConfiguration;
+import org.springframework.beans.factory.annotation.Qualifier;
 import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.primaryports.ProcesarEventoAzureInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.usecase.ProcesarEventoAzureUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.procesareventoazure.usecase.impl.ProcesarEventoAzureUseCaseImpl;
@@ -20,7 +22,8 @@ public class CatalogInvalidationAdapterConfiguration {
 
     @Bean
     public CatalogInvalidationPort catalogInvalidationPort(
-            final ParameterCatalogPort parameterCatalogPort,
+            // CULM-001 A.2-6: la invalidacion de cache actua sobre el proveedor real, no sobre el decorador.
+            @Qualifier(ParametroConValorPorDefectoConfiguration.DELEGADO) final ParameterCatalogPort parameterCatalogPort,
             final MessageCatalogPort messageCatalogPort,
             final SecretVaultPort secretVaultPort
     ) {

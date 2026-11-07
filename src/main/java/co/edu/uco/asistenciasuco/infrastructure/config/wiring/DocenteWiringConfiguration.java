@@ -38,15 +38,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsignaturaD
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioDocenteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.DocenteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudIngresoGrupoPort;
-import co.edu.uco.asistenciasuco.application.features.docente.resolversolicitudingreso.primaryports.ResolverSolicitudIngresoInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.resolversolicitudingreso.primaryports.interactor.ResolverSolicitudIngresoInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.resolversolicitudingreso.usecase.ResolverSolicitudIngresoUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.resolversolicitudingreso.usecase.impl.ResolverSolicitudIngresoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarsolicitudesingreso.primaryports.ConsultarSolicitudesIngresoDocenteInputPort;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarsolicitudesingreso.primaryports.interactor.ConsultarSolicitudesIngresoDocenteInteractor;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarsolicitudesingreso.usecase.ConsultarSolicitudesIngresoDocenteUseCase;
-import co.edu.uco.asistenciasuco.application.features.docente.consultarsolicitudesingreso.usecase.impl.ConsultarSolicitudesIngresoDocenteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.RetiroEstudianteGrupoPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
 import co.edu.uco.asistenciasuco.application.features.docente.retirarestudiantegrupo.primaryports.RetirarEstudianteGrupoInputPort;
@@ -173,25 +164,5 @@ public class DocenteWiringConfiguration {
     @Bean
     RetirarEstudianteGrupoInputPort retirarEstudianteGrupoInputPort(final RetirarEstudianteGrupoUseCase useCase) {
         return new RetirarEstudianteGrupoInteractor(useCase);
-    }
-
-    @Bean
-    ResolverSolicitudIngresoUseCase resolverSolicitudIngresoUseCase(final InstitutionalScopePort scopePort, final SolicitudIngresoGrupoPort port, final NotificacionPort notificacionPort) {
-        return new ResolverSolicitudIngresoUseCaseImpl(scopePort, port, notificacionPort);
-    }
-
-    @Bean
-    ResolverSolicitudIngresoInputPort resolverSolicitudIngresoInputPort(final ResolverSolicitudIngresoUseCase useCase) {
-        return new ResolverSolicitudIngresoInteractor(useCase);
-    }
-
-    @Bean
-    ConsultarSolicitudesIngresoDocenteUseCase consultarSolicitudesIngresoDocenteUseCase(final InstitutionalScopePort scopePort, final SolicitudIngresoGrupoPort port) {
-        return new ConsultarSolicitudesIngresoDocenteUseCaseImpl(scopePort, port);
-    }
-
-    @Bean
-    ConsultarSolicitudesIngresoDocenteInputPort consultarSolicitudesIngresoDocenteInputPort(final ConsultarSolicitudesIngresoDocenteUseCase useCase) {
-        return new ConsultarSolicitudesIngresoDocenteInteractor(useCase);
     }
 }

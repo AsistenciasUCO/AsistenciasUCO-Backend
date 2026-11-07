@@ -11,7 +11,9 @@ public enum GrupoErrorCode implements ErrorDefinition {
     ERR_GRUPO_NO_EXISTE("ERR_GRUPO_NO_EXISTE", "El grupo consultado no existe.", ErrorKind.NOT_FOUND),
     ERR_GRUPO_NO_HABILITADO("ERR_GRUPO_NO_HABILITADO", "El grupo no se encuentra habilitado.", ErrorKind.CONFLICT),
     ERR_GRUPO_REQUERIDO("ERR_GRUPO_REQUERIDO", "El grupo es obligatorio.", ErrorKind.VALIDATION),
-    ERR_GRUPO_INVALIDO("ERR_GRUPO_INVALIDO", "El identificador del grupo no es valido.", ErrorKind.VALIDATION);
+    ERR_GRUPO_INVALIDO("ERR_GRUPO_INVALIDO", "El identificador del grupo no es valido.", ErrorKind.VALIDATION),
+    // CULM-001 A.2-15: matricula manual sin correo de un documento que no resuelve a un estudiante matriculable (400, correo).
+    ERR_CORREO_REQUERIDO_MATRICULA("FIELD_REQUIRED", "El correo es obligatorio: no hay un estudiante registrado que pueda matricular con ese documento.", ErrorKind.VALIDATION);
 
     private final String code;
     private final String defaultMessage;

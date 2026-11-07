@@ -22,6 +22,11 @@ public final class ConsultarEstudiantesUseCaseImpl implements ConsultarEstudiant
         if (ObjectHelper.isNull(domain)) {
             throw new CrosscuttingException("El dominio de consulta de estudiantes es obligatorio.");
         }
+        // CULM-001 A.2-1: el ambito (ADMINISTRADOR institucion, COORDINADOR programas, DOCENTE grupos propios) lo
+        // aplica usp_consultar_directorio_estudiantes_paginado con el ejecutor autenticado.
+        if (ObjectHelper.isNull(domain.actorUsuarioId())) {
+            throw new CrosscuttingException("El usuario ejecutor de la consulta de estudiantes es obligatorio.");
+        }
         return ConsultarEstudiantesRepositoryMapper.toUseCaseEntity(
                 estudianteRepositoryPort.consultarEstudiantes(
                         ConsultarEstudiantesRepositoryMapper.toRepositoryDTO(domain)

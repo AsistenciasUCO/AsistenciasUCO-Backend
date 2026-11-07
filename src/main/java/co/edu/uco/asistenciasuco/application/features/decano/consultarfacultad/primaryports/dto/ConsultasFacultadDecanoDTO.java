@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.dto;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -42,7 +44,19 @@ public final class ConsultasFacultadDecanoDTO {
                                     Integer codigoGrupo, String nombreGrupo, UUID idAsignatura,
                                     String nombreAsignatura, UUID idPrograma, String nombrePrograma,
                                     LocalDateTime fechaHoraInicioUtc, LocalDateTime fechaHoraFinUtc,
-                                    String estadoTemporal) {
+                                    String estadoTemporal, String estado, CancelacionSesionDTO cancelacion) {
+
+        /** Sesion programada (sin cancelacion). */
+        public SesionFacultadDTO(UUID id, String nombre, String codigo, Integer numeroSemana,
+                                 LocalDateTime fechaHoraInicio, LocalDateTime fechaHoraFin, UUID idGrupo,
+                                 Integer codigoGrupo, String nombreGrupo, UUID idAsignatura,
+                                 String nombreAsignatura, UUID idPrograma, String nombrePrograma,
+                                 LocalDateTime fechaHoraInicioUtc, LocalDateTime fechaHoraFinUtc,
+                                 String estadoTemporal) {
+            this(id, nombre, codigo, numeroSemana, fechaHoraInicio, fechaHoraFin, idGrupo, codigoGrupo, nombreGrupo,
+                    idAsignatura, nombreAsignatura, idPrograma, nombrePrograma, fechaHoraInicioUtc, fechaHoraFinUtc,
+                    estadoTemporal, EstadoSesion.PROGRAMADA.name(), null);
+        }
 
         /** Compatibilidad: sesion sin procedencia temporal confirmada (HU145). */
         public SesionFacultadDTO(UUID id, String nombre, String codigo, Integer numeroSemana,

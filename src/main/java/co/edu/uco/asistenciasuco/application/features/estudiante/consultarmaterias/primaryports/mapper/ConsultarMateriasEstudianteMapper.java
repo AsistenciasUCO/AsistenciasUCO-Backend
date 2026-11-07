@@ -10,6 +10,6 @@ public final class ConsultarMateriasEstudianteMapper {
 
     public static MateriaEstudianteDTO toDTO(final MateriaEstudianteDomain domain) {
         return new MateriaEstudianteDTO(domain.idAsignatura(), domain.nombreAsignatura(), domain.idGrupo(),
-                domain.nombreGrupo());
+                domain.nombreGrupo(), domain.indicadores());
     }
 }

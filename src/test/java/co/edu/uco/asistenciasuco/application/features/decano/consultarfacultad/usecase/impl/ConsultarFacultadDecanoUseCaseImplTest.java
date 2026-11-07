@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
@@ -235,6 +236,29 @@ class ConsultarFacultadDecanoUseCaseImplTest {
         assertEquals(1, arbol.size());
         assertTrue(arbol.getFirst().programas().isEmpty());
         assertFalse(arbol.getFirst().nombreDecano().isBlank());
+    }
+
+    // CULM-001 B.1 (3.2.4): el cronograma de la facultad muestra la sesion cancelada con su cancelacion.
+    @Test
+    void T_B1_01_sesion_cancelada_expone_estado_y_cancelacion_hasta_el_dto() {
+        final ConsultarFacultadDecanoInteractor interactor = new ConsultarFacultadDecanoInteractor(useCase);
+        final SesionFacultadProjection cancelada = sesion();
+        final SesionFacultadProjection programada = sesion();
+        when(queryPort.consultarSesiones(DECANO, null, null, null, 1, 10))
+                .thenReturn(new Pagina<>(List.of(cancelada, programada), 2));
+        when(procedenciaPort.consultarSesionesPorGrupo(cancelada.idGrupo())).thenReturn(List.of(
+                new SesionProcedenciaRepositoryProjection(cancelada.id(), cancelada.idGrupo(), cancelada.nombre(), 1,
+                        cancelada.codigo(), cancelada.numeroSemana(), "1", cancelada.nombreGrupo(), cancelada.fechaHoraInicio(),
+                        cancelada.fechaHoraFin(), "UTC_V2",
+                        new CancelacionSesionProjection("DOCENTE", "Calamidad domestica", null, LocalDateTime.of(2026, 2, 1, 9, 0)))));
+
+        final var sesiones = interactor.consultarSesiones(DECANO, null, null, null, null, null).elementos();
+
+        assertEquals("CANCELADA", sesiones.getFirst().estado());
+        assertEquals("DOCENTE", sesiones.getFirst().cancelacion().tipo());
+        assertEquals("Calamidad domestica", sesiones.getFirst().cancelacion().motivo());
+        assertEquals("PROGRAMADA", sesiones.get(1).estado());
+        assertNull(sesiones.get(1).cancelacion());
     }
 
     @Test

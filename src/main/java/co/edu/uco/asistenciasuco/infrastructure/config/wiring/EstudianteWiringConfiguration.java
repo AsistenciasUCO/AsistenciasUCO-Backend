@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.impl.RetirarReclamoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.usecase.RetirarReclamoUseCase;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.interactor.RetirarReclamoInteractor;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.RetirarReclamoInputPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.SesionProcedenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.ConsultarEstudiantePorIdInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarestudianteporid.primaryports.interactor.ConsultarEstudiantePorIdInteractor;
@@ -17,6 +22,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmateri
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.primaryports.interactor.ConsultarMateriasEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.usecase.ConsultarMateriasEstudianteUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarmaterias.usecase.impl.ConsultarMateriasEstudianteUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.ResumenAsistenciaQueryPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.ConsultarSesionesMateriaEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.interactor.ConsultarSesionesMateriaEstudianteInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.ConsultarSesionesMateriaEstudianteUseCase;
@@ -25,6 +31,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.AsistenciaS
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.HorarioEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.MateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
+import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudRevisionEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.ConsultarReclamosEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.interactor.ConsultarReclamosEstudianteInteractor;
@@ -32,25 +39,11 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclam
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.usecase.impl.ConsultarReclamosEstudianteUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.EstudianteRepositoryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.security.InstitutionalScopePort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.SolicitudIngresoGrupoPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.OfertaGruposEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.ConsultarOfertaGruposInputPort;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.primaryports.interactor.ConsultarOfertaGruposInteractor;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.ConsultarOfertaGruposUseCase;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarofertagrupos.usecase.impl.ConsultarOfertaGruposUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.secondaryports.notification.NotificacionPort;
-import co.edu.uco.asistenciasuco.application.features.estudiante.solicitaringresogrupo.primaryports.SolicitarIngresoGrupoInputPort;
-import co.edu.uco.asistenciasuco.application.features.estudiante.solicitaringresogrupo.primaryports.interactor.SolicitarIngresoGrupoInteractor;
-import co.edu.uco.asistenciasuco.application.features.estudiante.solicitaringresogrupo.usecase.SolicitarIngresoGrupoUseCase;
-import co.edu.uco.asistenciasuco.application.features.estudiante.solicitaringresogrupo.usecase.impl.SolicitarIngresoGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.estudiante.retirarsolicitudingreso.primaryports.RetirarSolicitudIngresoInputPort;
-import co.edu.uco.asistenciasuco.application.features.estudiante.retirarsolicitudingreso.primaryports.interactor.RetirarSolicitudIngresoInteractor;
-import co.edu.uco.asistenciasuco.application.features.estudiante.retirarsolicitudingreso.usecase.RetirarSolicitudIngresoUseCase;
-import co.edu.uco.asistenciasuco.application.features.estudiante.retirarsolicitudingreso.usecase.impl.RetirarSolicitudIngresoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.primaryports.ConsultarSolicitudesIngresoEstudianteInputPort;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.primaryports.interactor.ConsultarSolicitudesIngresoEstudianteInteractor;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.usecase.ConsultarSolicitudesIngresoEstudianteUseCase;
-import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsolicitudesingreso.usecase.impl.ConsultarSolicitudesIngresoEstudianteUseCaseImpl;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 
@@ -94,8 +87,9 @@ public class EstudianteWiringConfiguration {
     }
 
     @Bean
-    ConsultarMateriasEstudianteUseCase consultarMateriasEstudianteUseCase(final InstitutionalScopePort scopePort, final MateriaEstudianteQueryPort queryPort) {
-        return new ConsultarMateriasEstudianteUseCaseImpl(scopePort, queryPort);
+    ConsultarMateriasEstudianteUseCase consultarMateriasEstudianteUseCase(final InstitutionalScopePort scopePort, final MateriaEstudianteQueryPort queryPort,
+                                                                          final ResumenAsistenciaQueryPort resumenAsistenciaQueryPort) {
+        return new ConsultarMateriasEstudianteUseCaseImpl(scopePort, queryPort, resumenAsistenciaQueryPort);
     }
 
     @Bean
@@ -114,8 +108,8 @@ public class EstudianteWiringConfiguration {
     }
 
     @Bean
-    ConsultarSesionesMateriaEstudianteUseCase consultarSesionesMateriaEstudianteUseCase(final InstitutionalScopePort scopePort, final SesionMateriaEstudianteQueryPort queryPort, final AsistenciaSesionEstudianteQueryPort asistenciaPort, final SesionProcedenciaQueryPort procedenciaPort) {
-        return new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort, procedenciaPort);
+    ConsultarSesionesMateriaEstudianteUseCase consultarSesionesMateriaEstudianteUseCase(final InstitutionalScopePort scopePort, final SesionMateriaEstudianteQueryPort queryPort, final AsistenciaSesionEstudianteQueryPort asistenciaPort, final SesionProcedenciaQueryPort procedenciaPort, final ParameterCatalogPort parameterCatalogPort) {
+        return new ConsultarSesionesMateriaEstudianteUseCaseImpl(scopePort, queryPort, asistenciaPort, procedenciaPort, parameterCatalogPort);
     }
 
     @Bean
@@ -133,34 +127,15 @@ public class EstudianteWiringConfiguration {
         return new ConsultarReclamosEstudianteInteractor(useCase);
     }
 
+    /** CULM-001 A.2-7: retiro del reclamo propio pendiente. */
     @Bean
-    SolicitarIngresoGrupoUseCase solicitarIngresoGrupoUseCase(final InstitutionalScopePort scopePort, final SolicitudIngresoGrupoPort port, final NotificacionPort notificacionPort) {
-        return new SolicitarIngresoGrupoUseCaseImpl(scopePort, port, notificacionPort);
+    RetirarReclamoUseCase retirarReclamoUseCase(final InstitutionalScopePort scopePort, final AsistenciaRepositoryPort asistenciaRepositoryPort) {
+        return new RetirarReclamoUseCaseImpl(scopePort, asistenciaRepositoryPort);
     }
 
     @Bean
-    SolicitarIngresoGrupoInputPort solicitarIngresoGrupoInputPort(final SolicitarIngresoGrupoUseCase useCase) {
-        return new SolicitarIngresoGrupoInteractor(useCase);
-    }
-
-    @Bean
-    RetirarSolicitudIngresoUseCase retirarSolicitudIngresoUseCase(final InstitutionalScopePort scopePort, final SolicitudIngresoGrupoPort port, final NotificacionPort notificacionPort) {
-        return new RetirarSolicitudIngresoUseCaseImpl(scopePort, port, notificacionPort);
-    }
-
-    @Bean
-    RetirarSolicitudIngresoInputPort retirarSolicitudIngresoInputPort(final RetirarSolicitudIngresoUseCase useCase) {
-        return new RetirarSolicitudIngresoInteractor(useCase);
-    }
-
-    @Bean
-    ConsultarSolicitudesIngresoEstudianteUseCase consultarSolicitudesIngresoEstudianteUseCase(final InstitutionalScopePort scopePort, final SolicitudIngresoGrupoPort port) {
-        return new ConsultarSolicitudesIngresoEstudianteUseCaseImpl(scopePort, port);
-    }
-
-    @Bean
-    ConsultarSolicitudesIngresoEstudianteInputPort consultarSolicitudesIngresoEstudianteInputPort(final ConsultarSolicitudesIngresoEstudianteUseCase useCase) {
-        return new ConsultarSolicitudesIngresoEstudianteInteractor(useCase);
+    RetirarReclamoInputPort retirarReclamoInputPort(final RetirarReclamoUseCase useCase) {
+        return new RetirarReclamoInteractor(useCase);
     }
 
     /** HU008: oferta de grupos (con cupos) de los programas del estudiante. */

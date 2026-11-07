@@ -332,14 +332,14 @@ class PlantillaRendererTest {
     @Test
     @DisplayName("BE-R12: determinismo - misma entrada produce exactamente la misma salida")
     void BE_R12_determinismo() {
-        when(repository.consultarActiva("SOLICITUD_INGRESO_RESUELTA", "es"))
+        when(repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es"))
                 .thenReturn(Optional.empty());
 
         final PlantillaRenderer renderer = crearRenderer("https://asistencia.uco.edu.co");
-        final Map<String, String> datos = Map.of("grupo", "G02 de Física", "resultado", "aceptada");
+        final Map<String, String> datos = Map.of("grupo", "G02 de Física", "estudiante", "Ana Ruiz");
 
-        final ContenidoRenderizado r1 = renderer.renderizar("SOLICITUD_INGRESO_RESUELTA", datos, "A", "M");
-        final ContenidoRenderizado r2 = renderer.renderizar("SOLICITUD_INGRESO_RESUELTA", datos, "A", "M");
+        final ContenidoRenderizado r1 = renderer.renderizar("RETIRO_ESTUDIANTE_GRUPO", datos, "A", "M");
+        final ContenidoRenderizado r2 = renderer.renderizar("RETIRO_ESTUDIANTE_GRUPO", datos, "A", "M");
 
         assertEquals("default", r1.origen());
         assertEquals(r1, r2);
@@ -348,7 +348,7 @@ class PlantillaRendererTest {
         assertTrue(catalogoDefecto.obtener(null, "es").isEmpty());
         assertTrue(catalogoDefecto.obtener("   ", "es").isEmpty());
         assertTrue(catalogoDefecto.obtener("TIPO_INEXISTENTE", null).isEmpty());
-        assertTrue(catalogoDefecto.obtener("SOLICITUD_INGRESO_RETIRADA", "   ").isPresent());
+        assertTrue(catalogoDefecto.obtener("RETIRO_ESTUDIANTE_GRUPO", "   ").isPresent());
 
         final ContenidoRenderizado rStored = renderer.renderizar(null, null, null, null);
         assertEquals("stored", rStored.origen());
@@ -363,20 +363,20 @@ class PlantillaRendererTest {
     @Test
     @DisplayName("BE-T03: falla de BD al leer plantilla no propaga; baja al respaldo y cuenta origin correspondiente")
     void BE_T03_falla_de_bd_baja_al_respaldo_sin_propagar() {
-        when(repository.consultarActiva("SOLICITUD_INGRESO_REGISTRADA", "es"))
+        when(repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es"))
                 .thenThrow(new RuntimeException("Simulated DB failure"));
 
         final PlantillaRenderer renderer = crearRenderer("");
         final ContenidoRenderizado res = renderer.renderizar(
-                "SOLICITUD_INGRESO_REGISTRADA",
+                "RETIRO_ESTUDIANTE_GRUPO",
                 Map.of("grupo", "G01 de Redes", "estudiante", "Mateo López"),
                 "Asunto guardado",
                 "Mensaje guardado"
         );
 
         assertEquals("default", res.origen());
-        assertEquals("Nueva solicitud de ingreso al grupo G01 de Redes", res.asunto());
-        assertTrue(res.textoPlano().contains("Mateo López solicitó ingresar al grupo G01 de Redes."));
+        assertEquals("Retiro del grupo G01 de Redes", res.asunto());
+        assertTrue(res.textoPlano().contains("Se registró el retiro de Mateo López del grupo G01 de Redes."));
         assertEquals(1.0, meterRegistry.counter("notification.template.render.total", "origin", "default").count());
     }
 

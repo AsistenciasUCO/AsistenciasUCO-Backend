@@ -1,6 +1,9 @@
 package co.edu.uco.asistenciasuco.application.features.grupo.registrarestudianteengrupo.usecase.impl;
 
 
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection;
+import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
+import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.features.usuario.exception.UsuarioErrorCode;
 import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
@@ -71,10 +74,11 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
     }
 
     @Override
-    public RegistrarEstudianteResultadoEntity execute(final RegistrarEstudianteDomain domain) {
-        if (ObjectHelper.isNull(domain)) {
+    public RegistrarEstudianteResultadoEntity execute(final RegistrarEstudianteDomain solicitud) {
+        if (ObjectHelper.isNull(solicitud)) {
             throw new CrosscuttingException("El dominio para registrar estudiante en grupo es obligatorio.");
         }
+        final RegistrarEstudianteDomain domain = resolverEstudianteExistenteSinCorreo(solicitud);
         final boolean usuarioExistente = validarConflictoIdentidadUsuario(domain);
         // IDENT-001: un alta nueva exige correo institucional (un usuario existente no se revalida). Se rechaza antes
         // de tocar la base de datos o el proveedor de identidad; el SP repite la regla como autoridad final.
@@ -95,6 +99,30 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
         }
 
         return RegistrarEstudianteRepositoryMapper.toUseCaseEntity(resultado);
+    }
+
+    /**
+     * CULM-001 A.2-15 (DEC-027, REVIEW-3 B1): sin correo, el estudiante se resuelve con la MISMA busqueda del modal
+     * ({@code usp_buscar_estudiante_por_documento_grupo}: titularidad del ejecutor, fila Estudiante y misma institucion o
+     * sin vinculos, dentro del SP). Con 0 filas se responde 400 {@code FIELD_REQUIRED} (correo) sin llamar al SP de
+     * matricula. El correo real sale del {@code idEstudiante} devuelto, nunca de un documento libre, y no se usa
+     * {@code consultarUsuarioPorIdentificacion} para resolverlo. Despues sigue el flujo actual (IDN_001).
+     */
+    private RegistrarEstudianteDomain resolverEstudianteExistenteSinCorreo(final RegistrarEstudianteDomain solicitud) {
+        if (!solicitud.esPendienteDeResolverPorDocumento()) {
+            return solicitud;
+        }
+        if (solicitud.getTipoIdentificacionId() == null || solicitud.getNumeroIdentificacion() == null) {
+            throw new ValidationException(GrupoErrorCode.ERR_CORREO_REQUERIDO_MATRICULA);
+        }
+        final EstudianteBusquedaRepositoryProjection estudiante = grupoRepositoryPort.buscarEstudiantePorDocumento(
+                        solicitud.getGrupoId(), solicitud.getTipoIdentificacionId(), solicitud.getNumeroIdentificacion(),
+                        solicitud.getUsuarioEjecutor())
+                .orElseThrow(() -> new ValidationException(GrupoErrorCode.ERR_CORREO_REQUERIDO_MATRICULA));
+        final String correo = usuarioRepositoryPort.consultarCorreoPorEstudiante(estudiante.idEstudiante())
+                .orElseThrow(() -> new ValidationException(GrupoErrorCode.ERR_CORREO_REQUERIDO_MATRICULA));
+        return solicitud.resueltoCon(correo, estudiante.primerApellido(), estudiante.segundoApellido(),
+                estudiante.primerNombre(), estudiante.segundoNombre());
     }
 
     /**
@@ -151,6 +179,16 @@ public final class RegistrarEstudianteUseCaseImpl implements RegistrarEstudiante
                     RegistrarEstudianteIdentityMapper.toCrearCuentaIdentidadDTO(domain, usuarioCanonico, ROL_ESTUDIANTE);
             identityProviderPort.crearCuenta(requiereVerificacionCorreo ? cuenta.conVerificacionCorreo() : cuenta);
         } catch (final IdentityProviderPort.IdentityProviderException exception) {
+            if (!requiereVerificacionCorreo) {
+                // CULM-001 A (E2E): la persona ya existia en BD con su cuenta y sus credenciales; que el proveedor no
+                // reconcilie esa cuenta no invalida la matricula ya confirmada. Se registra el desfase y se responde como
+                // en el alta nueva (nunca 500). Solo una cuenta nueva sin aprovisionar es un fallo del registro.
+                LOGGER.atWarn()
+                        .addKeyValue("eventType", "IDENTITY_PROVISIONING_DRIFT")
+                        .addKeyValue("idUsuario", usuarioCanonico.id())
+                        .log("La cuenta de identidad del estudiante existente no pudo reconciliarse; la matricula se conserva.");
+                return;
+            }
             throw new InternalApplicationException(
                     "No fue posible completar el aprovisionamiento de identidad del estudiante registrado.",
                     exception

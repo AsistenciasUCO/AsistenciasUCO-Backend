@@ -19,6 +19,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.respo
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiMessageResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.mapper.SesionHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.CerrarSesionRequest;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.response.GeneracionSesionesGrupoResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.ConsultarSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.CrearSesionRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.sesion.request.ActualizarSesionRequest;
@@ -105,12 +106,15 @@ public final class SesionController {
 
     @PostMapping("/grupo/{grupoId}/generacion")
     @AuditableOperation(action = "GENERAR_SESIONES_GRUPO", resourceType = "GRUPO", resourceIdPathVariable = "grupoId")
-    public ResponseEntity<ApiMessageResponse> generarSesionesGrupo(@PathVariable final UUID grupoId) {
-        generarSesionesGrupoInputPort.execute(
+    public ResponseEntity<GeneracionSesionesGrupoResponse> generarSesionesGrupo(@PathVariable final UUID grupoId) {
+        final var generacion = generarSesionesGrupoInputPort.execute(
                 new GenerarSesionesGrupoDTO(grupoId, authenticatedUserResolver.requireAuthenticatedUserId())
         );
+        final int canceladas = generacion == null ? 0 : generacion.sesionesCanceladasPorFestivo();
+        final int conAsistencia = generacion == null ? 0 : generacion.sesionesFestivoConAsistencia();
         return ResponseEntity.status(HttpStatus.CREATED)
-                .body(new ApiMessageResponse(true, "Sesiones de grupo generadas correctamente."));
+                .body(new GeneracionSesionesGrupoResponse(true, "Sesiones de grupo generadas correctamente.",
+                        canceladas, conAsistencia));
     }
 
     @GetMapping("/{sesionId}")

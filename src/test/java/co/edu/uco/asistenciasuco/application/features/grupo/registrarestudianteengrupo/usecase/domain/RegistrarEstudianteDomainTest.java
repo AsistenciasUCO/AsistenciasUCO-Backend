@@ -7,7 +7,10 @@ import org.junit.jupiter.api.Test;
 import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 class RegistrarEstudianteDomainTest {
 
@@ -45,6 +48,44 @@ class RegistrarEstudianteDomainTest {
         assertEquals(usuario.getSegundoNombre(), domain.getSegundoNombre());
         assertEquals(usuario.getCorreo(), domain.getCorreo());
         assertEquals(usuario.getPassword(), domain.getPassword());
+        assertFalse(domain.esPendienteDeResolverPorDocumento());
+    }
+
+    @Test
+    void pendiente_de_resolver_por_documento_expone_nulos_en_nombres_y_correo_hasta_resolverse() {
+        final RegistrarEstudianteDomain pendiente = RegistrarEstudianteDomain.pendienteDeResolverPorDocumento(
+                TIPO_IDENTIFICACION,
+                123456789,
+                "Clave123!",
+                GRUPO,
+                USUARIO_EJECUTOR
+        );
+
+        assertTrue(pendiente.esPendienteDeResolverPorDocumento());
+        assertEquals(TIPO_IDENTIFICACION, pendiente.getTipoIdentificacionId());
+        assertEquals(123456789, pendiente.getNumeroIdentificacion());
+        assertEquals("Clave123!", pendiente.getPassword());
+        assertEquals(GRUPO, pendiente.getGrupoId());
+        assertEquals(USUARIO_EJECUTOR, pendiente.getUsuarioEjecutor());
+        assertNull(pendiente.getPrimerApellido());
+        assertNull(pendiente.getSegundoApellido());
+        assertNull(pendiente.getPrimerNombre());
+        assertNull(pendiente.getSegundoNombre());
+        assertNull(pendiente.getCorreo());
+
+        final RegistrarEstudianteDomain resuelto = pendiente.resueltoCon(
+                "ana.perez@uco.edu.co",
+                "Perez",
+                "Gomez",
+                "Ana",
+                "Maria"
+        );
+        assertFalse(resuelto.esPendienteDeResolverPorDocumento());
+        assertEquals("PEREZ", resuelto.getPrimerApellido());
+        assertEquals("GOMEZ", resuelto.getSegundoApellido());
+        assertEquals("ANA", resuelto.getPrimerNombre());
+        assertEquals("MARIA", resuelto.getSegundoNombre());
+        assertEquals("ana.perez@uco.edu.co", resuelto.getCorreo());
     }
 
     @Test

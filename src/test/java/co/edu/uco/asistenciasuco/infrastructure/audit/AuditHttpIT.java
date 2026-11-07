@@ -57,6 +57,7 @@ class AuditHttpIT {
     private static final String API_CLIENT_ID = "asistencias-api";
     private static final UUID ESTUDIANTE_ID = UUID.fromString("93641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID COORDINADOR_ID = UUID.fromString("83641bab-e3cd-485c-b275-47e7b731e18c");
+    private static final UUID DOCENTE_ID = UUID.fromString("73641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID SESION_ID = UUID.fromString("00000000-0000-0000-0000-000000000301");
     private static final UUID ESTUDIANTE_ACADEMICO_ID = UUID.fromString("00000000-0000-0000-0000-000000000201");
 
@@ -90,6 +91,9 @@ class AuditHttpIT {
                         API_CLIENT_ID, API_CLIENT_ID));
         when(jwtDecoder.decode("audit-coordinador"))
                 .thenReturn(institutionalJwt("audit-coordinador", COORDINADOR_ID, InstitutionalRole.COORDINADOR,
+                        API_CLIENT_ID, API_CLIENT_ID));
+        when(jwtDecoder.decode("audit-docente"))
+                .thenReturn(institutionalJwt("audit-docente", DOCENTE_ID, InstitutionalRole.DOCENTE,
                         API_CLIENT_ID, API_CLIENT_ID));
         when(usuarioRepositoryPort.consultarUsuarioPorCorreo(anyString())).thenReturn(Optional.empty());
         when(usuarioRepositoryPort.consultarUsuarioPorIdentificacion(any(), any())).thenReturn(Optional.empty());
@@ -142,7 +146,8 @@ class AuditHttpIT {
         final HttpHeaders headers = new HttpHeaders();
         headers.setContentType(MediaType.APPLICATION_JSON);
         headers.set("X-Correlation-Id", correlationId);
-        headers.setBearerAuth("audit-coordinador");
+        // CULM-001 A.1 (F-COO-004): la matricula manual es solo del DOCENTE titular; el COORDINADOR recibe 403 en el filtro.
+        headers.setBearerAuth("audit-docente");
 
         final String body = """
                 {
@@ -177,7 +182,7 @@ class AuditHttpIT {
         assertEquals("ERR_GRUPO_NO_HABILITADO", event.errorCode());
         assertEquals(409, event.httpStatus());
         assertEquals(AuditActorType.USER, event.actorType());
-        assertEquals(COORDINADOR_ID.toString(), event.actorId());
+        assertEquals(DOCENTE_ID.toString(), event.actorId());
         assertFalse(event.traceId() == null || event.traceId().isBlank());
         assertFalse(event.spanId() == null || event.spanId().isBlank());
         assertEquals("HTTP", event.metadata().get("handlerType"));

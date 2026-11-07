@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.core;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.TomaAsistenciaTestSql;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.exception.validation.ValidationException;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.AsistenciaRepositoryPort;
@@ -97,10 +98,8 @@ class AsistenciaRepositorySqlServerIT {
     void limpiarFixture() {
         try {
             for (final UUID sesion : sesionesCreadas) {
-                jdbcTemplate.update(
-                        "DELETE FROM dbo.DetalleAsistencia WHERE asistencia IN (SELECT id FROM dbo.Asistencia WHERE sesion = ?)",
-                        sesion.toString());
-                jdbcTemplate.update("DELETE FROM dbo.Asistencia WHERE sesion = ?", sesion.toString());
+                // CULM-001 B.2 (2.16.3 d): detalle -> token -> toma -> cancelacion -> asistencia, antes de la sesion.
+                TomaAsistenciaTestSql.limpiarDependientesDeSesion(jdbcTemplate, sesion.toString());
             }
             for (final String[] fila : creados) {
                 if ("EstudianteGrupo".equals(fila[0])) {
@@ -246,7 +245,7 @@ class AsistenciaRepositorySqlServerIT {
 
     private Map<UUID, AsistenciaRepositoryProjection> consultarPorEstudiante() {
         return asistenciaRepositoryPort.consultarAsistenciasPorGrupo(
-                        new ConsultarAsistenciasPorGrupoRepositoryDTO(grupoId, sesionId)
+                        new ConsultarAsistenciasPorGrupoRepositoryDTO(grupoId, sesionId, titular(grupoId))
                 ).stream()
                 .filter(projection -> estudiantes.contains(projection.getEstudiante()))
                 .collect(java.util.stream.Collectors.toMap(AsistenciaRepositoryProjection::getEstudiante, p -> p));
@@ -449,5 +448,13 @@ class AsistenciaRepositorySqlServerIT {
     private static UUID uuid(final Object valor) {
         assertNotNull(valor);
         return UUID.fromString(String.valueOf(valor));
+    }
+
+    /** CULM-001 A.2-2: la consulta por grupo exige el ejecutor; el docente titular ve todas las filas del grupo. */
+    private UUID titular(final UUID grupo) {
+        final java.util.List<UUID> ids = jdbcTemplate.query(
+                "SELECT d.usuario FROM dbo.Grupo g INNER JOIN dbo.Docente d ON d.id = g.docente WHERE g.id = ?",
+                (rs, row) -> UUID.fromString(rs.getString(1)), grupo);
+        return ids.isEmpty() ? UUID.fromString("00000000-0000-0000-0000-0000000000a1") : ids.getFirst();
     }
 }

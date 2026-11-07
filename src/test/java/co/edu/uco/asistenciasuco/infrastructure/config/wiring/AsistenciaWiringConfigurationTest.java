@@ -2,8 +2,6 @@ package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.primaryports.interactor.ConsultarAsistenciasPorGrupoInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.consultarasistenciasporgrupo.usecase.impl.ConsultarAsistenciasPorGrupoUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.primaryports.interactor.RegistrarAsistenciaAutonomaInteractor;
-import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciaautonoma.usecase.impl.RegistrarAsistenciaAutonomaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.primaryports.interactor.RegistrarAsistenciaInteractor;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistencia.usecase.impl.RegistrarAsistenciaUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.asistencia.registrarasistenciassesion.primaryports.interactor.RegistrarAsistenciasSesionInteractor;
@@ -45,11 +43,6 @@ class AsistenciaWiringConfigurationTest {
         assertInstanceOf(RegistrarAsistenciasSesionUseCaseImpl.class, registrarAsistenciasSesionUseCase);
         assertInstanceOf(RegistrarAsistenciasSesionInteractor.class,
                 config.registrarAsistenciasSesionInputPort(registrarAsistenciasSesionUseCase));
-
-        final var registrarAsistenciaAutonomaUseCase = config.registrarAsistenciaAutonomaUseCase(asistenciaRepositoryPort, scopePort);
-        assertInstanceOf(RegistrarAsistenciaAutonomaUseCaseImpl.class, registrarAsistenciaAutonomaUseCase);
-        assertInstanceOf(RegistrarAsistenciaAutonomaInteractor.class,
-                config.registrarAsistenciaAutonomaInputPort(registrarAsistenciaAutonomaUseCase));
 
         final var solicitarRevisionAsistenciaUseCase = config.solicitarRevisionAsistenciaUseCase(asistenciaRepositoryPort, scopePort, providerVacio(), providerVacio());
         assertInstanceOf(SolicitarRevisionAsistenciaUseCaseImpl.class, solicitarRevisionAsistenciaUseCase);

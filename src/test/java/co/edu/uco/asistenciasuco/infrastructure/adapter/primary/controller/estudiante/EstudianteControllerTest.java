@@ -19,6 +19,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 class EstudianteControllerTest {
 
+    private static final java.util.UUID ACTOR_DIRECTORIO = java.util.UUID.fromString("77777777-7777-7777-7777-777777777777");
+
     private static final UUID ESTUDIANTE = UUID.fromString("13641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID USUARIO = UUID.fromString("23641bab-e3cd-485c-b275-47e7b731e18c");
     private static final UUID TIPO_IDENTIFICACION = UUID.fromString("33641bab-e3cd-485c-b275-47e7b731e18c");
@@ -68,10 +70,10 @@ class EstudianteControllerTest {
         final ConsultarEstudiantesInputPort consultarEstudiantes =
                 dto -> new EstudiantePaginaDTO(List.of(resumen()), 1, 1, dto.page(), dto.size());
         final ConsultarEstudiantePorIdInputPort consultarPorId =
-                estudianteId -> new EstudianteDetalleDTO(resumen(), List.of(contexto()));
+                consulta -> new EstudianteDetalleDTO(resumen(), List.of(contexto()));
 
         return MockMvcBuilders
-                .standaloneSetup(new EstudianteController(consultarEstudiantes, consultarPorId))
+                .standaloneSetup(new EstudianteController(consultarEstudiantes, consultarPorId, () -> ACTOR_DIRECTORIO))
                 .build();
     }
 

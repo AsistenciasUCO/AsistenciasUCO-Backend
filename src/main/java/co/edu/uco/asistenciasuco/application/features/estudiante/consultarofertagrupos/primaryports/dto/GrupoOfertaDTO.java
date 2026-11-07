@@ -21,8 +21,6 @@ public record GrupoOfertaDTO(
         int estudiantesActivos,
         int cuposDisponibles,
         boolean matriculado,
-        UUID idSolicitudAbierta,
-        String estadoSolicitud,
         String tipoAsignatura,
         boolean transversal
 ) {

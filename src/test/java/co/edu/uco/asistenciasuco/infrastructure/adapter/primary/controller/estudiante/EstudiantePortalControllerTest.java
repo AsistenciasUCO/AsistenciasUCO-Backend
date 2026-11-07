@@ -1,5 +1,11 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante;
 
+import java.util.Arrays;
+import org.springframework.web.bind.annotation.PostMapping;
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.dto.RetirarReclamoDTO;
+import co.edu.uco.asistenciasuco.application.features.estudiante.retirarreclamo.primaryports.RetirarReclamoInputPort;
 import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ForbiddenException;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarreclamos.primaryports.ConsultarReclamosEstudianteInputPort;
@@ -22,6 +28,8 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -40,9 +48,10 @@ class EstudiantePortalControllerTest {
     private final ConsultarHorariosEstudianteInputPort horarios = mock(ConsultarHorariosEstudianteInputPort.class);
     private final ConsultarSesionesMateriaEstudianteInputPort sesiones = mock(ConsultarSesionesMateriaEstudianteInputPort.class);
     private final ConsultarReclamosEstudianteInputPort reclamos = mock(ConsultarReclamosEstudianteInputPort.class);
+    private final RetirarReclamoInputPort retirarReclamo = mock(RetirarReclamoInputPort.class);
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final EstudiantePortalController controller =
-            new EstudiantePortalController(materias, horarios, sesiones, reclamos, identity);
+            new EstudiantePortalController(materias, horarios, sesiones, reclamos, retirarReclamo, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
@@ -71,7 +80,7 @@ class EstudiantePortalControllerTest {
 
     @Test
     void consultarSesionesMateria_usa_actor_y_materia() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
+        when(sesiones.execute(ACTOR, MATERIA, null, null)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
                 UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1", "Grupo 1",
                 java.time.LocalDateTime.of(2026, 1, 20, 8, 0), java.time.LocalDateTime.of(2026, 1, 20, 10, 0),
                 null, null, "INDETERMINADA", "AUSENTE", null, true)));
@@ -82,13 +91,13 @@ class EstudiantePortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].estadoAsistencia").value("AUSENTE"))
                 .andExpect(jsonPath("$.datos[0].estadoSolicitudRevision").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].reclamable").value(true));
-        verify(sesiones).execute(ACTOR, MATERIA);
+        verify(sesiones).execute(ACTOR, MATERIA, null, null);
     }
 
     /** APP-04: aditivo; v1 sin zona se conserva y los instantes UTC llevan sufijo Z solo si la procedencia es CONFIRMADA. */
     @Test
     void APP04_consultarSesionesMateria_expone_instantes_utc_confirmados_sin_alterar_v1() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(
+        when(sesiones.execute(ACTOR, MATERIA, null, null)).thenReturn(List.of(
                 new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
                         "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
                         java.time.LocalDateTime.of(2026, 8, 17, 15, 0), java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
@@ -157,17 +166,58 @@ class EstudiantePortalControllerTest {
         mvc.perform(get("/api/v1/estudiante/reclamos")).andExpect(status().isForbidden());
     }
 
+    // CULM-001 A.2-7 (A2-B-12): DELETE /estudiante/reclamos/{id} deja de ser 501.
     @Test
-    void endpoints_no_implementados_lanzan_featureUnavailable() {
-        final List<Executable> operations = List.of(
-                controller::crearReclamo,
-                () -> controller.eliminarReclamo(MATERIA)
-        );
-        // HU176B (CONTRACT §3.5): POST /estudiante/matricular-grupo sale de 501; ver EstudianteMatriculaQrControllerTest.
+    void retirarReclamo_usa_el_actor_del_token_y_responde_200_con_el_mensaje() throws Exception {
+        when(retirarReclamo.execute(new RetirarReclamoDTO(MATERIA, ACTOR))).thenReturn("La solicitud de revision fue retirada.");
 
-        for (final var operation : operations) {
-            assertEquals("FEATURE_UNAVAILABLE",
-                    assertThrows(FeatureUnavailableException.class, operation).getCode());
-        }
+        mvc.perform(delete("/api/v1/estudiante/reclamos/{id}", MATERIA))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.exitoso").value(true))
+                .andExpect(jsonPath("$.mensaje").value("La solicitud de revision fue retirada."));
+    }
+
+    @Test
+    void retirarReclamo_ajeno_o_inexistente_responde_404_y_no_pendiente_409() throws Exception {
+        when(retirarReclamo.execute(new RetirarReclamoDTO(MATERIA, ACTOR)))
+                .thenThrow(new ResourceNotFoundException("La solicitud de revision no existe."));
+        mvc.perform(delete("/api/v1/estudiante/reclamos/{id}", MATERIA)).andExpect(status().isNotFound());
+
+        final UUID otro = UUID.randomUUID();
+        when(retirarReclamo.execute(new RetirarReclamoDTO(otro, ACTOR)))
+                .thenThrow(new ConflictException("Solo se puede retirar una solicitud de revision pendiente."));
+        mvc.perform(delete("/api/v1/estudiante/reclamos/{id}", otro)).andExpect(status().isConflict());
+    }
+
+    // CULM-001 A.2-14 (A2-B-16): POST /estudiante/reclamos (501) se retira; el reclamo se radica por
+    // POST /api/v1/asistencias/revisiones. La prueba de 501 se sustituye por la ausencia de ruta.
+    @Test
+    void post_reclamos_retirado_no_tiene_ruta() {
+        final boolean hayPost = Arrays.stream(EstudiantePortalController.class.getDeclaredMethods())
+                .anyMatch(metodo -> metodo.isAnnotationPresent(PostMapping.class));
+
+        assertFalse(hayPost);
+    }
+
+    /** CULM-001 D.1 (HU026B): fecha limite en UTC (sufijo Z), plazo vigente y paginacion opcional. */
+    @Test
+    void D1_consultarSesionesMateria_expone_la_fecha_limite_utc_y_el_plazo_vigente_y_acepta_pagina_y_tamano() throws Exception {
+        when(sesiones.execute(ACTOR, MATERIA, 2, 5)).thenReturn(List.of(
+                new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
+                        "Grupo 1", java.time.LocalDateTime.of(2026, 11, 4, 12, 0), java.time.LocalDateTime.of(2026, 11, 4, 13, 0),
+                        null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null,
+                        java.time.LocalDateTime.of(2026, 11, 10, 5, 0), true),
+                new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 2", 2, "SES-02", 2, UUID.randomUUID(), "G1",
+                        "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0), java.time.LocalDateTime.of(2026, 8, 17, 15, 0),
+                        null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null, null, false)));
+
+        mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA).param("pagina", "2").param("tamano", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos[0].fechaLimiteJustificacionUtc").value("2026-11-10T05:00:00Z"))
+                .andExpect(jsonPath("$.datos[0].plazoJustificacionVigente").value(true))
+                .andExpect(jsonPath("$.datos[1].fechaLimiteJustificacionUtc").doesNotExist())
+                .andExpect(jsonPath("$.datos[1].plazoJustificacionVigente").value(false))
+                .andExpect(jsonPath("$.datos[0].nombre").value("Sesion 1"));
+        verify(sesiones).execute(ACTOR, MATERIA, 2, 5);
     }
 }

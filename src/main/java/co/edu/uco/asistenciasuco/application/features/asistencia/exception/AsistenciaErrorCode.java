@@ -31,7 +31,13 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     // SES-01: ventana de registro ordinario [inicio, fin) contra el reloj del servidor; DB: SES_007 / SES_008 / SES_009.
     ERR_SESION_NO_INICIADA("ERR_SESION_NO_INICIADA", "La sesion aun no ha iniciado; la asistencia solo se registra durante la sesion.", ErrorKind.CONFLICT),
     ERR_SESION_CERRADA("ERR_SESION_CERRADA", "La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.", ErrorKind.CONFLICT),
-    ERR_SESION_HORARIO_INDETERMINADO("ERR_SESION_HORARIO_INDETERMINADO", "El horario de la sesion no esta confirmado; no es posible registrar asistencia.", ErrorKind.CONFLICT);
+    ERR_SESION_HORARIO_INDETERMINADO("ERR_SESION_HORARIO_INDETERMINADO", "El horario de la sesion no esta confirmado; no es posible registrar asistencia.", ErrorKind.CONFLICT),
+    // CULM-001 B.1 (NB-1): la sesion fue cancelada (DB: SES_010); no admite registro de asistencia.
+    ERR_SESION_CANCELADA("ERR_SESION_CANCELADA", "La sesión fue cancelada; no admite registro de asistencia.", ErrorKind.CONFLICT),
+    // CULM-001 D.1 (HU026B): plazo de excusas. DB: REV_020 (vencido, el SP informa la ultima fecha local admitida) y REV_025
+    // (faltan ASISTENCIA/DIAS_LIMITE_JUSTIFICACION o TIEMPO/ZONA_HORARIA_SQLSERVER). Java no recalcula el plazo.
+    ERR_PLAZO_JUSTIFICACION_VENCIDO("ERR_PLAZO_JUSTIFICACION_VENCIDO", "El plazo para justificar esta inasistencia ya venció.", ErrorKind.CONFLICT),
+    ERR_CONFIGURACION_PLAZO_JUSTIFICACION("ERR_CONFIGURACION_PLAZO_JUSTIFICACION", "No es posible validar el plazo de justificación en este momento.", ErrorKind.TECHNICAL);
 
     private final String code;
     private final String defaultMessage;

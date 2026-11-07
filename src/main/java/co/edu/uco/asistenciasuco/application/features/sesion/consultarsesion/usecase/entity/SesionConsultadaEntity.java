@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.consultarsesion.usecase.entity;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 
 
 
@@ -28,6 +29,7 @@ public final class SesionConsultadaEntity {
     private final String nombreGrupo;
     private final LocalDateTime fechaHoraInicio;
     private final LocalDateTime fechaHoraFin;
+    private final CancelacionSesionDTO cancelacion;
 
     public SesionConsultadaEntity(
             final UUID sesion,
@@ -41,6 +43,23 @@ public final class SesionConsultadaEntity {
             final LocalDateTime fechaHoraInicio,
             final LocalDateTime fechaHoraFin
     ) {
+        this(sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin, null);
+    }
+
+    /** CULM-001 B.1: {@code cancelacion} es {@code null} si la sesion esta programada. */
+    public SesionConsultadaEntity(
+            final UUID sesion,
+            final UUID grupo,
+            final String nombre,
+            final Integer numero,
+            final String codigo,
+            final Integer numeroSemana,
+            final String codigoGrupo,
+            final String nombreGrupo,
+            final LocalDateTime fechaHoraInicio,
+            final LocalDateTime fechaHoraFin,
+            final CancelacionSesionDTO cancelacion
+    ) {
         validarIdentificador(sesion, SesionErrorCode.ERR_SESION_REQUERIDA);
         validarIdentificador(grupo, GrupoErrorCode.ERR_GRUPO_REQUERIDO);
 
@@ -52,6 +71,7 @@ public final class SesionConsultadaEntity {
         this.nombreGrupo = TextHelper.trim(nombreGrupo);
         this.fechaHoraInicio = fechaHoraInicio;
         this.fechaHoraFin = fechaHoraFin;
+        this.cancelacion = cancelacion;
         this.sesion = sesion;
         this.grupo = grupo;
     }
@@ -114,5 +134,9 @@ public final class SesionConsultadaEntity {
 
     public LocalDateTime getFechaHoraFin() {
         return fechaHoraFin;
+    }
+
+    public CancelacionSesionDTO getCancelacion() {
+        return cancelacion;
     }
 }

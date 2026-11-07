@@ -58,8 +58,9 @@ class GrupoRepositoryMockAdapterTest {
 
     @Test
     void consultas_retornan_listas_vacias() {
-        assertTrue(adapter.consultarGrupos().isEmpty());
-        assertTrue(adapter.consultarEstudiantesGrupo(UUID.randomUUID()).isEmpty());
-        assertEquals(List.of(), adapter.consultarGrupos());
+        assertTrue(adapter.consultarGrupos(UUID.randomUUID()).isEmpty());
+        assertTrue(adapter.consultarEstudiantesGrupo(UUID.randomUUID(), UUID.randomUUID()).isEmpty());
+        assertEquals(List.of(), adapter.consultarGrupos(UUID.randomUUID()));
+        assertTrue(adapter.buscarEstudiantePorDocumento(UUID.randomUUID(), UUID.randomUUID(), 123456, UUID.randomUUID()).isEmpty());
     }
 }

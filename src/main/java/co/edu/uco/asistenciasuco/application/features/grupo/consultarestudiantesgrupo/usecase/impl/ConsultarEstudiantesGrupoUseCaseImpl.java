@@ -13,9 +13,10 @@ import java.util.Objects;
 
 /**
  * Autorizacion: el matcher HTTP admite DOCENTE, COORDINADOR y ADMINISTRADOR sobre
- * {@code GET /api/v1/grupos/{grupoId}/estudiantes}. Coordinador/Administrador conservan
- * visibilidad institucional amplia (no resuelven a una identidad Docente); si el usuario
- * autenticado SI resuelve a un Docente, debe tener titularidad sobre el grupo consultado.
+ * {@code GET /api/v1/grupos/{grupoId}/estudiantes}. CULM-001 A.2-2: el SP
+ * {@code usp_consultar_estudiantes_grupo_ambito_paginado} es la autoridad de ambito para los tres roles (DOCENTE
+ * titular, COORDINADOR del programa del grupo, ADMINISTRADOR de la institucion); un grupo inexistente o ajeno responde
+ * 403. El control previo de titularidad del docente se conserva como defensa adicional.
  */
 public final class ConsultarEstudiantesGrupoUseCaseImpl implements ConsultarEstudiantesGrupoUseCase {
 
@@ -37,7 +38,7 @@ public final class ConsultarEstudiantesGrupoUseCaseImpl implements ConsultarEstu
             throw new ForbiddenException("El docente autenticado no tiene titularidad sobre el grupo consultado.");
         }
         return ConsultarEstudiantesGrupoRepositoryMapper.toEntities(
-                grupoRepositoryPort.consultarEstudiantesGrupo(domain.grupoId())
+                grupoRepositoryPort.consultarEstudiantesGrupo(domain.grupoId(), domain.usuarioEjecutor())
         );
     }
 }

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.primaryports.interactor.ActualizarSesionInteractor;
 import co.edu.uco.asistenciasuco.application.features.sesion.actualizarsesion.usecase.impl.ActualizarSesionUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.sesion.cerrarsesion.primaryports.interactor.CerrarSesionInteractor;
@@ -54,7 +55,7 @@ class SesionWiringConfigurationTest {
         assertInstanceOf(ActualizarSesionUseCaseImpl.class, actualizarSesionUseCase);
         assertInstanceOf(ActualizarSesionInteractor.class, config.actualizarSesionInputPort(actualizarSesionUseCase));
 
-        final var generarSesionesGrupoUseCase = config.generarSesionesGrupoUseCase(sesionRepositoryPort);
+        final var generarSesionesGrupoUseCase = config.generarSesionesGrupoUseCase(sesionRepositoryPort, mock(AsegurarFestivosPeriodoInputPort.class));
         assertInstanceOf(GenerarSesionesGrupoUseCaseImpl.class, generarSesionesGrupoUseCase);
         assertInstanceOf(GenerarSesionesGrupoInteractor.class,
                 config.generarSesionesGrupoInputPort(generarSesionesGrupoUseCase));

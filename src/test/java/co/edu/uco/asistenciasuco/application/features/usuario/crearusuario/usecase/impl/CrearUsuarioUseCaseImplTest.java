@@ -106,6 +106,11 @@ class CrearUsuarioUseCaseImplTest {
     private UsuarioRepositoryPort usuarioRepositoryPort(final CrearUsuarioExecutor executor) {
         return new UsuarioRepositoryPort() {
             @Override
+            public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
+                throw new UnsupportedOperationException();
+            }
+
+            @Override
             public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
                 return executor.crearUsuario(dto);
             }

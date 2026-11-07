@@ -13,6 +13,7 @@ public record ConsultarEstudiantesDTO(
         UUID grupoId,
         Boolean activo,
         Integer page,
-        Integer size
+        Integer size,
+        UUID actorUsuarioId
 ) {
 }

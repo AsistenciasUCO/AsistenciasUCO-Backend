@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.interactor;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.ConsultarFacultadDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.dto.ConsultasFacultadDecanoDTO.EstudianteFacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.decano.consultarfacultad.primaryports.dto.ConsultasFacultadDecanoDTO.FacultadNodoDTO;
@@ -89,7 +90,8 @@ public final class ConsultarFacultadDecanoInteractor implements ConsultarFaculta
                 .map(s -> new SesionFacultadDTO(s.id(), s.nombre(), s.codigo(), s.numeroSemana(),
                         s.fechaHoraInicio(), s.fechaHoraFin(), s.idGrupo(), s.codigoGrupo(), s.nombreGrupo(),
                         s.idAsignatura(), s.nombreAsignatura(), s.idPrograma(), s.nombrePrograma(),
-                        s.fechaHoraInicioUtc(), s.fechaHoraFinUtc(), s.estadoTemporal().name()))
+                        s.fechaHoraInicioUtc(), s.fechaHoraFinUtc(), s.estadoTemporal().name(),
+                        EstadoSesion.de(s.cancelacion() != null).name(), s.cancelacion()))
                 .toList(), resultado.total());
     }
 }

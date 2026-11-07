@@ -41,17 +41,17 @@ class ConsultarOfertaGruposUseCaseImplTest {
     private final OfertaGruposEstudianteQueryPort port = mock(OfertaGruposEstudianteQueryPort.class);
     private final ConsultarOfertaGruposUseCaseImpl useCase = new ConsultarOfertaGruposUseCaseImpl(scope, port);
 
-    private static GrupoOfertaEstudianteProjection grupo(final String codigoSolicitud, final boolean matriculado) {
+    private static GrupoOfertaEstudianteProjection grupo(final boolean matriculado) {
         return new GrupoOfertaEstudianteProjection(UUID.randomUUID(), 7, "Grupo 7", UUID.randomUUID(), "MAT1", "Algebra", "Ana Perez",
                 UUID.randomUUID(), "2026-2", LocalDate.of(2026, 7, 20), LocalDate.of(2026, 12, 10), "VIGENTE",
-                "Lunes 08:00-10:00", 30, 25, 5, matriculado, codigoSolicitud == null ? null : UUID.randomUUID(), codigoSolicitud, "ESP");
+                "Lunes 08:00-10:00", 30, 25, 5, matriculado, "ESP");
     }
 
     @Test
     void OG01_consulta_la_oferta_con_busqueda_recortada_y_paginacion() {
         when(scope.findEstudianteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         when(port.consultarOferta(ACTOR, "algebra", 2, 5))
-                .thenReturn(new OfertaGruposEstudiantePagina(List.of(grupo(null, false)), 6));
+                .thenReturn(new OfertaGruposEstudiantePagina(List.of(grupo(false)), 6));
 
         final OfertaGruposPaginaDomain pagina = useCase.execute(new ConsultarOfertaGruposDomain(ACTOR, "  algebra ", 2, 5));
 
@@ -59,7 +59,6 @@ class ConsultarOfertaGruposUseCaseImplTest {
         assertEquals("Algebra", pagina.grupos().getFirst().nombreAsignatura());
         assertEquals(5, pagina.grupos().getFirst().cuposDisponibles());
         assertEquals("Lunes 08:00-10:00", pagina.grupos().getFirst().horario());
-        assertNull(pagina.grupos().getFirst().estadoSolicitud());
     }
 
     @Test
@@ -73,18 +72,18 @@ class ConsultarOfertaGruposUseCaseImplTest {
         verify(port).consultarOferta(ACTOR, null, 1, 10);
     }
 
+    // CULM-001 A.1: HU053-HU055 descartadas; la oferta ya no traduce estados de solicitud de ingreso. Se conserva la
+    // marca de matricula (solo la matricula A cuenta, la resuelve el SP).
     @Test
-    void OG03_traduce_el_estado_de_la_solicitud_abierta() {
+    void OG03_conserva_la_marca_de_matricula_sin_estado_de_solicitud() {
         when(scope.findEstudianteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         when(port.consultarOferta(eq(ACTOR), any(), anyInt(), anyInt())).thenReturn(new OfertaGruposEstudiantePagina(
-                List.of(grupo("P", false), grupo("E", false), grupo("Z", false), grupo(null, true)), 4));
+                List.of(grupo(false), grupo(true)), 2));
 
         final var grupos = useCase.execute(new ConsultarOfertaGruposDomain(ACTOR, null, 1, 10)).grupos();
 
-        assertEquals("PENDIENTE", grupos.get(0).estadoSolicitud());
-        assertEquals("EN_ESPERA", grupos.get(1).estadoSolicitud());
-        assertEquals("Z", grupos.get(2).estadoSolicitud());
-        assertTrue(grupos.get(3).matriculado());
+        assertFalse(grupos.get(0).matriculado());
+        assertTrue(grupos.get(1).matriculado());
     }
 
     @Test
@@ -108,7 +107,7 @@ class ConsultarOfertaGruposUseCaseImplTest {
 
     private static GrupoOfertaEstudianteProjection conComponente(final String componente) {
         return new GrupoOfertaEstudianteProjection(UUID.randomUUID(), 1, "Grupo 1", UUID.randomUUID(), "C1", "Asignatura", "Doc",
-                UUID.randomUUID(), "2026-2", null, null, "VIGENTE", null, 10, 0, 10, false, null, null, componente);
+                UUID.randomUUID(), "2026-2", null, null, "VIGENTE", null, 10, 0, 10, false, componente);
     }
 
     @Test
@@ -134,12 +133,12 @@ class ConsultarOfertaGruposUseCaseImplTest {
     void OG06_interactor_mapea_a_dto() {
         when(scope.findEstudianteIdByUsuario(ACTOR)).thenReturn(Optional.of(UUID.randomUUID()));
         when(port.consultarOferta(eq(ACTOR), any(), anyInt(), anyInt()))
-                .thenReturn(new OfertaGruposEstudiantePagina(List.of(grupo("E", false)), 1));
+                .thenReturn(new OfertaGruposEstudiantePagina(List.of(grupo(false)), 1));
 
         final OfertaGruposPaginaDTO dto = new ConsultarOfertaGruposInteractor(useCase).execute(new ConsultarOfertaGruposDTO(ACTOR, null, 1, 10));
 
         assertEquals(1, dto.total());
-        assertEquals("EN_ESPERA", dto.grupos().getFirst().estadoSolicitud());
+        assertFalse(dto.grupos().getFirst().matriculado());
         assertEquals("Ana Perez", dto.grupos().getFirst().nombreDocente());
         assertEquals(LocalDate.of(2026, 7, 20), dto.grupos().getFirst().fechaInicioPeriodo());
         assertEquals("ESPECIFICA", dto.grupos().getFirst().tipoAsignatura());

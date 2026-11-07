@@ -109,6 +109,7 @@ class OpenApiGoldenPathConformanceTest {
         addMapping(controllerMappings, SesionController.class, "actualizarSesion", UUID.class, ActualizarSesionRequest.class);
         addMapping(controllerMappings, SesionController.class, "actualizarSesionLegacy", UUID.class, ActualizarSesionRequest.class);
         // MAINT-003F: contrato 1.1.0 agrega UTC v2 de sesiones (UTC-D01: POST, PATCH, GET id, GET grupo; sin PUT).
+        // CULM-001 A.2 (DEC-032): contrato 1.2.0 solo cambia x-roles y descripcion de GET /api/v1/estudiantes (DOCENTE con ambito).
         addMapping(controllerMappings, SesionV2Controller.class, "crearSesion", Map.class);
         addMapping(controllerMappings, SesionV2Controller.class, "actualizarSesion", UUID.class, Map.class);
         addMapping(controllerMappings, SesionV2ConsultaController.class, "consultarSesion", UUID.class);
@@ -187,9 +188,9 @@ class OpenApiGoldenPathConformanceTest {
                         "horaInicio", "horaFin", "totalEstudiantes"));
         assertObjectSchema("Sesion",
                 Set.of("sesion", "grupo", "nombre", "numero", "codigo", "numeroSemana", "codigoGrupo",
-                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin"),
+                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion"),
                 Set.of("sesion", "grupo", "nombre", "numero", "codigo", "numeroSemana", "codigoGrupo",
-                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin"));
+                        "nombreGrupo", "fechaHoraInicio", "fechaHoraFin", "estado", "cancelacion"));
         assertObjectSchema("EstudianteGrupo",
                 Set.of("id", "idEstudiante", "documento", "nombreCompleto", "correo", "codigoEstado", "nombreEstado"),
                 Set.of("id", "idEstudiante", "documento", "nombreCompleto", "correo", "codigoEstado", "nombreEstado"));
@@ -224,6 +225,7 @@ class OpenApiGoldenPathConformanceTest {
                 Set.of("timestamp", "status", "error", "code", "message", "path", "correlationId"));
     }
 
+    // CULM-001 B (CONTRACT 3.10.1, DEC-032): golden path 1.3.0, Sesion recibe estado y cancelacion (SesionConsultadaDTO).
     @Test
     void criticalOpenApiSchemasMatchProviderDtoPropertyShapes() {
         final Map<String, Class<?>> providerDtos = new LinkedHashMap<>();
@@ -359,6 +361,7 @@ class OpenApiGoldenPathConformanceTest {
                 mock(co.edu.uco.asistenciasuco.application.features.asistencia.resolversolicitudrevisionasistencia.primaryports.ResolverSolicitudRevisionAsistenciaInputPort.class),
                 mock(co.edu.uco.asistenciasuco.application.features.docente.consultarreclamos.primaryports.ConsultarReclamosDocenteInputPort.class),
                 mock(co.edu.uco.asistenciasuco.application.features.docente.consultardetallereclamo.primaryports.ConsultarDetalleReclamoDocenteInputPort.class),
+                mock(co.edu.uco.asistenciasuco.application.features.sesioncancelacion.cancelarsesion.primaryports.CancelarSesionInputPort.class),
                 identity
         );
 

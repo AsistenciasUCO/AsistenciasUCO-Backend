@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.coordinador.consultarasistenciaprograma.primaryports.dto;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
+import co.edu.uco.asistenciasuco.application.features.sesion.common.dto.CancelacionSesionDTO;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -27,7 +29,18 @@ public final class ConsultasAsistenciaProgramaDTO {
     public record SesionGrupoDTO(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,
                                  Integer numero, String codigo, Integer numeroSemana, LocalDateTime fechaHoraInicio,
                                  LocalDateTime fechaHoraFin, LocalDateTime fechaHoraInicioUtc,
-                                 LocalDateTime fechaHoraFinUtc, String estadoTemporal) {
+                                 LocalDateTime fechaHoraFinUtc, String estadoTemporal, String estado,
+                                 CancelacionSesionDTO cancelacion) {
+
+        /** Sesion programada (sin cancelacion). */
+        public SesionGrupoDTO(UUID id, UUID idGrupo, Integer codigoGrupo, String nombreGrupo, String nombre,
+                              Integer numero, String codigo, Integer numeroSemana, LocalDateTime fechaHoraInicio,
+                              LocalDateTime fechaHoraFin, LocalDateTime fechaHoraInicioUtc,
+                              LocalDateTime fechaHoraFinUtc, String estadoTemporal) {
+            this(id, idGrupo, codigoGrupo, nombreGrupo, nombre, numero, codigo, numeroSemana, fechaHoraInicio,
+                    fechaHoraFin, fechaHoraInicioUtc, fechaHoraFinUtc, estadoTemporal, EstadoSesion.PROGRAMADA.name(),
+                    null);
+        }
     }
 
     public record AsistenciaSesionDTO(UUID idDetalleAsistencia, UUID idSesion, String nombreSesion, UUID idEstudiante,

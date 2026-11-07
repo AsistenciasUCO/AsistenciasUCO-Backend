@@ -54,13 +54,12 @@ class GrupoRepositorySqlServerIT {
         final Optional<UUID> ejecutorAutorizado = firstUuid("""
                 SELECT TOP 1 idUsuario AS id
                 FROM dbo.uv_usuario_perfil
-                WHERE codigoPerfil IN ('DOCENTE', 'COORDINADOR')
+                WHERE codigoPerfil = 'DOCENTE'
                    OR UPPER(nombrePerfil) LIKE '%DOCENTE%'
-                   OR UPPER(nombrePerfil) LIKE '%COORDINADOR%'
                 ORDER BY idUsuario
                 """);
         assumeTrue(tipoIdentificacion.isPresent(), "No hay tipos de identificacion para ejecutar la IT.");
-        assumeTrue(ejecutorAutorizado.isPresent(), "No hay usuario DOCENTE/COORDINADOR para ejecutar la IT.");
+        assumeTrue(ejecutorAutorizado.isPresent(), "No hay usuario DOCENTE para ejecutar la IT (F-COO-004: el coordinador no matricula).");
 
         final TestIdentity identity = uniqueIdentity("rollback");
         assertCounts(identity, 0, 0, 0, 0);

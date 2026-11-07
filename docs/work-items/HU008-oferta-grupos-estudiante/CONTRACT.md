@@ -8,6 +8,8 @@ last-reviewed: 2026-10-27
 
 # CONTRACT — HU008: oferta de grupos del estudiante
 
+> **CULM-001 A.1 (2026-11-07):** HU053-HU055 se descartan. La respuesta pierde `idSolicitudAbierta` y `estadoSolicitud` (19 campos) y el resultset de `usp_consultar_oferta_grupos_estudiante` pasa de 21 a 19 columnas (`codigoComponente` en 17, `totalRegistros` en 18; guarda `COLUMNAS_OFERTA = 19`). El boton "Solicitar ingreso" y `POST /estudiante/solicitudes-matricula` se retiran.
+
 ## 1. HTTP
 
 `GET /api/v1/estudiante/oferta-academica`

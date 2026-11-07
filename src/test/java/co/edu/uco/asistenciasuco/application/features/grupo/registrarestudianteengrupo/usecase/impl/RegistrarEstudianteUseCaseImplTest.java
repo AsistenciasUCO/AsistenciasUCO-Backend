@@ -303,6 +303,34 @@ class RegistrarEstudianteUseCaseImplTest {
         assertNotEquals(null, exception.getCause());
     }
 
+    /**
+     * CULM-001 A (suite E2E): matricular a un estudiante que YA tiene cuenta (Carlos, uco-estudiante) respondia 500 porque
+     * el proveedor no pudo reconciliar la cuenta existente, aunque la matricula ya estaba confirmada en BD. La persona ya
+     * tenia cuenta y credenciales: el desfase del proveedor no invalida la matricula y la respuesta es la del caso nuevo.
+     */
+    @Test
+    void usuario_existente_con_fallo_de_identity_conserva_la_matricula_y_responde_como_el_caso_nuevo() {
+        final AtomicInteger spLlamadas = new AtomicInteger();
+        final FakeIdentityProviderPort identityProviderPort = FakeIdentityProviderPort.fallido();
+        final UUID existente = UUID.fromString("aaaaaaaa-e3cd-485c-b275-47e7b731e18c");
+        final RegistrarEstudianteUseCaseImpl useCase = useCase(
+                grupoRepositoryPort(dto -> {
+                    spLlamadas.incrementAndGet();
+                    return new RegistrarEstudianteRepositoryProjection("Estudiante registrado.");
+                }),
+                usuarioRepositoryPort(existente, List.of(existente, existente)),
+                new FakePasswordEncoderPort(),
+                identityProviderPort
+        );
+
+        final var resultado = useCase.execute(domainValido());
+
+        assertTrue(resultado.isExitoso());
+        assertEquals(1, spLlamadas.get());
+        assertEquals(1, identityProviderPort.crearCuentaCount.get());
+        assertEquals(0, identityProviderPort.eliminarCuentaCount.get());
+    }
+
     // -------------------------------------------------------------------------
     // Caso I: DB success pero UUID no resuelto post-command -> InternalApplicationException, Identity no llamado
     // -------------------------------------------------------------------------
@@ -555,13 +583,19 @@ class RegistrarEstudianteUseCaseImplTest {
             }
 
             @Override
-            public List<GrupoRepositoryProjection> consultarGrupos() {
+            public List<GrupoRepositoryProjection> consultarGrupos(final UUID usuarioEjecutor) {
                 return List.of();
             }
 
             @Override
-            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId) {
+            public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
                 throw new UnsupportedOperationException("No usado por este test.");
+            }
+
+            @Override
+            public Optional<co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection> buscarEstudiantePorDocumento(
+                    final UUID grupoId, final UUID tipoIdentificacionId, final Integer numeroIdentificacion, final UUID usuarioEjecutor) {
+                throw new UnsupportedOperationException("Con correo informado no se busca por documento.");
             }
         };
     }
@@ -587,6 +621,11 @@ class RegistrarEstudianteUseCaseImplTest {
     ) {
         final Iterator<UUID> secuencia = secuenciaPorIdentificacion.iterator();
         return new UsuarioRepositoryPort() {
+            @Override
+            public Optional<String> consultarCorreoPorEstudiante(final UUID idEstudiante) {
+                throw new UnsupportedOperationException("Con correo informado no se resuelve el correo por estudiante.");
+            }
+
             @Override
             public CrearUsuarioRepositoryProjection crearUsuario(final CrearUsuarioRepositoryDTO dto) {
                 throw new UnsupportedOperationException("No usado por este test.");

@@ -1,5 +1,9 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseErrorCode;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.query.NativeRowValues;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.ProcedureRow;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoCommandPort.CrearDecanoCommand;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQueryPort;
@@ -44,6 +48,16 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
             """;
 
     static final String OP_CREAR_DECANO = "crearDecano";
+    static final String OP_CAMBIAR_ESTADO_DECANO = "cambiarEstadoDecano";
+
+    // CULM-001 A.2-8: resultset canonico mas idUsuario, personaSinRolesActivos y estaActivoDecano.
+    static final String SQL_CAMBIAR_ESTADO_DECANO = """
+            EXEC dbo.usp_cambiar_estado_decano
+                 @idDecano = :idDecano,
+                 @estaActivo = :estaActivo,
+                 @idCorrelacion = :idCorrelacion,
+                 @idUsuarioEjecutor = :idUsuarioEjecutor
+            """;
 
     private final EntityManager entityManager;
     private final JpaProcedureExecutor procedureExecutor;
@@ -58,6 +72,41 @@ public class DecanoJpaRepository implements DecanoQueryPort, DecanoCommandPort {
     @Override
     public void crearDecano(final CrearDecanoCommand command) {
         ejecutarCrearDecano(command);
+    }
+
+    @Override
+    public ResultadoCambioEstadoDecano cambiarEstadoDecano(final UUID idDecano, final Boolean estaActivo, final UUID usuarioEjecutor) {
+        final UUID correlationId = CorrelationIdContext.require();
+        final Map<String, Object> parametros = new LinkedHashMap<>();
+        parametros.put("idDecano", idDecano);
+        // Un Boolean nulo sin tipo no tiene JdbcType en Hibernate: viaja como texto o NULL (NULL = invertir el estado).
+        parametros.put("estaActivo", estaActivo == null ? null : (Boolean.TRUE.equals(estaActivo) ? "1" : "0"));
+        parametros.put("idCorrelacion", correlationId);
+        parametros.put("idUsuarioEjecutor", usuarioEjecutor);
+        final ProcedureRow fila = procedureExecutor.executeWithExtras(
+                OP_CAMBIAR_ESTADO_DECANO, SQL_CAMBIAR_ESTADO_DECANO, parametros, correlationId, 3);
+        return new ResultadoCambioEstadoDecano(idUsuario(fila.extras().get(0)), flag(fila.extras().get(1)), flag(fila.extras().get(2)));
+    }
+
+    private static UUID idUsuario(final Object valor) {
+        try {
+            final UUID id = NativeRowValues.uuid(valor);
+            if (id != null) {
+                return id;
+            }
+        } catch (final IllegalArgumentException exception) {
+            throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                    "El procedimiento " + OP_CAMBIAR_ESTADO_DECANO + " retorno un usuario con formato invalido.", exception);
+        }
+        throw new DatabaseOperationException(DatabaseErrorCode.ERR_DB_CANONICAL_CONTRACT,
+                "El procedimiento " + OP_CAMBIAR_ESTADO_DECANO + " no retorno el usuario del decano.");
+    }
+
+    private static boolean flag(final Object valor) {
+        if (valor instanceof Boolean bit) {
+            return bit;
+        }
+        return valor instanceof Number numero && numero.intValue() == 1;
     }
 
     // QUERIES

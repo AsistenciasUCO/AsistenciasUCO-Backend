@@ -29,6 +29,10 @@ public class SpKpisDecanoEntity {
     @Column(name = "tasaAforo") private BigDecimal tasaAforo;
     @Column(name = "umbralAdvertencia") private BigDecimal umbralAdvertencia;
     @Column(name = "umbralPerdida") private BigDecimal umbralPerdida;
+    // CULM-001 B.2 (DEC-012): columnas de horas que el SP agrega al final (se leen por nombre).
+    @Column(name = "tomasDictadas") private Integer tomasDictadas;
+    @Column(name = "horasDictadas") private BigDecimal horasDictadas;
+    @Column(name = "horasFalta") private BigDecimal horasFalta;
 
     protected SpKpisDecanoEntity() {
     }
@@ -111,5 +115,17 @@ public class SpKpisDecanoEntity {
 
     public BigDecimal umbralPerdida() {
         return umbralPerdida;
+    }
+
+    public Integer tomasDictadas() {
+        return tomasDictadas;
+    }
+
+    public BigDecimal horasDictadas() {
+        return horasDictadas;
+    }
+
+    public BigDecimal horasFalta() {
+        return horasFalta;
     }
 }

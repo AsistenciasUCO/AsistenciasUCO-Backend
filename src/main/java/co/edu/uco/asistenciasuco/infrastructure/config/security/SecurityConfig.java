@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.security;
 
+import jakarta.servlet.DispatcherType;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.InstitutionalJwtAuthenticationConverter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.jwt.contract.JwtClaimsExtractor;
 import org.springframework.beans.factory.ObjectProvider;
@@ -96,6 +97,9 @@ public class SecurityConfig {
                 .accessDeniedHandler(accessDeniedHandler)
             )
             .authorizeHttpRequests(auth -> auth
+                // CULM-001 A.2-5: un error lanzado en un filtro se despacha a /error; ese despacho muestra el estado real (y el
+                // PEP ya exime /error, SecurityPublicEndpoints.ERROR_VIEW) en vez de un 401 falso por no estar autenticado.
+                .dispatcherTypeMatchers(DispatcherType.ERROR).permitAll()
                 .requestMatchers(SecurityPublicEndpoints.ACTUATOR).permitAll()
                 // permitAll de AUTORIZACION: la autenticacion la exige AzureEventGridAuthFilter (header
                 // aeg-sas-token, fail-closed). No equivale a un endpoint sin autenticacion.
@@ -119,10 +123,14 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.GET, "/api/v1/admin/areas", "/api/v1/admin/areas/**")
                     .hasAnyRole(ROLE_ADMINISTRADOR, ROLE_DECANO, ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/admin/**").hasRole(ROLE_ADMINISTRADOR)
-                .requestMatchers("/api/v1/decano/**").hasAnyRole(ROLE_DECANO, ROLE_ADMINISTRADOR)
-                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
+                // CULM-001 A.2-3 (F-TRX-018, DEC-022 §2): el ADMINISTRADOR no opera las vistas de decano ni de coordinador.
+                .requestMatchers("/api/v1/decano/**").hasRole(ROLE_DECANO)
+                // Unica excepcion: el catalogo de periodos lo consume la pantalla del administrador (admin-periodos, admin-system).
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/periodos-academicos")
                     .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                .requestMatchers("/api/v1/coordinador/**").hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                .requestMatchers(HttpMethod.GET, "/api/v1/coordinador/planes-estudio", "/api/v1/coordinador/planes-estudio/**", "/api/v1/coordinador/periodos-academicos/**", "/api/v1/coordinador/asignaturas", "/api/v1/coordinador/asignaturas/**")
+                    .hasAnyRole(ROLE_DECANO, ROLE_COORDINADOR)
+                .requestMatchers("/api/v1/coordinador/**").hasRole(ROLE_COORDINADOR)
                 .requestMatchers("/api/v1/docente/**").hasRole(ROLE_DOCENTE)
                 // Directorio general de docentes (crear/consultar/asignar a grupo): hoy sin
                 // contrato funcional explícito de quién debe administrarlo; se restringe a los
@@ -133,8 +141,8 @@ public class SecurityConfig {
                 // IDENT-001: dominio institucional vigente para validar el formulario de registro manual del estudiante.
                 .requestMatchers(HttpMethod.GET, "/api/v1/configuracion/registro-estudiante")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
-                // Directorio general/institucional de estudiantes: permite a DOCENTE consultar y validar
-                // la existencia del estudiante a matricular en su grupo (junto con COORDINADOR y ADMINISTRADOR).
+                // Directorio de estudiantes (golden path 1.2.0, DEC-027/DEC-032): DOCENTE, COORDINADOR y ADMINISTRADOR; el ambito
+                // (grupos propios, programas, institucion) lo aplica usp_consultar_directorio_estudiantes_paginado.
                 .requestMatchers("/api/v1/estudiantes/**").hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
                 .requestMatchers(HttpMethod.POST, "/api/v1/usuarios").authenticated()
                 // Estado de acceso y reconciliacion de cuentas: administrador, decano y coordinador; el alcance (facultad /
@@ -144,8 +152,10 @@ public class SecurityConfig {
                 .requestMatchers(HttpMethod.POST, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PUT, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
                 .requestMatchers(HttpMethod.PATCH, "/api/v1/sesiones/**").hasRole(ROLE_DOCENTE)
-                // Generación del QR/PIN de una sesión: acción del docente que dicta la sesión.
-                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/qr-token").hasRole(ROLE_DOCENTE)
+                // CULM-001 B.2: tomas de asistencia de la sesion (POST cubierto por /api/v1/sesiones/**) y operaciones sobre
+                // una toma (cierre, lote, consultas, QR). Titularidad en Application y en la DB.
+                .requestMatchers(HttpMethod.GET, "/api/v1/sesiones/*/tomas").hasRole(ROLE_DOCENTE)
+                .requestMatchers("/api/v1/tomas/**").hasRole(ROLE_DOCENTE)
                 // Sesiones agrupadas por grupo: usadas por el docente para elegir la sesion sobre
                 // la que va a tomar asistencia. La titularidad sobre el grupo se valida en
                 // Application via InstitutionalScopePort (ver ConsultarSesionesPorGrupoUseCaseImpl).
@@ -172,18 +182,20 @@ public class SecurityConfig {
                 // Abrir este listado a DOCENTE permitiria enumerar grupos de otros docentes.
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos")
                     .hasAnyRole(ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
+                // CULM-001 A.2-15 (DEC-027): busqueda por documento exacto del estudiante a matricular, solo del DOCENTE
+                // titular (la titularidad la valida usp_buscar_estudiante_por_documento_grupo, SEC_002). Va ANTES de
+                // GET /api/v1/grupos/** para no abrirla a COORDINADOR ni ADMINISTRADOR.
+                .requestMatchers(HttpMethod.GET, "/api/v1/grupos/*/estudiantes/busqueda").hasRole(ROLE_DOCENTE)
                 // Sub-recursos de un grupo especifico (estudiantes, asistencias): el DOCENTE si
                 // los necesita, pero scopeados a su propio grupo en Application via
                 // InstitutionalScopePort (ver ConsultarEstudiantesGrupoUseCaseImpl /
                 // ConsultarAsistenciasPorGrupoUseCaseImpl).
                 .requestMatchers(HttpMethod.GET, "/api/v1/grupos/**")
                     .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR, ROLE_ADMINISTRADOR)
-                // Matricula de estudiante en grupo: la DB controla titularidad (DOCENTE titular del
-                // grupo O COORDINADOR del programa, ver usp_registrar_estudiante_en_grupo, SEC_002).
-                // ADMINISTRADOR no tiene bypass en la DB para esta operacion; por eso no se incluye
-                // aqui, a diferencia de crear/actualizar grupo.
+                // F-COO-004 (CULM-001 A): matricula solo del DOCENTE titular (la DB valida titularidad, SEC_002).
+                // COORDINADOR y ADMINISTRADOR no matriculan (usp_registrar_estudiante_en_grupo exige perfil DOCENTE).
                 .requestMatchers(HttpMethod.POST, "/api/v1/grupos/*/estudiantes", "/api/v1/grupos/{grupoId}/estudiantes")
-                    .hasAnyRole(ROLE_DOCENTE, ROLE_COORDINADOR)
+                    .hasRole(ROLE_DOCENTE)
                 // IDENT-001: reenvio del enlace de verificacion de correo. Mismo criterio que la matricula manual: la DB valida
                 // que el ejecutor sea docente titular del grupo o coordinador de su programa.
                 // HU176B: el docente abre (POST), regenera (POST /rotacion) y cierra (DELETE) la ventana de matricula por QR de su

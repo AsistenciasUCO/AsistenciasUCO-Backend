@@ -2,6 +2,8 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.SesionProcedenciaRepositoryProjection;
 import co.edu.uco.asistenciasuco.crosscutting.exception.CrosscuttingException;
+import co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.CancelacionSesionProjection;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionEstadoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvSesionV2Entity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.repository.SesionProcedenciaJpaRepository;
 import jakarta.persistence.EntityManager;
@@ -31,12 +33,13 @@ class SesionProcedenciaJpaRepositoryTest {
     private static final LocalDateTime FIN = LocalDateTime.parse("2042-07-15T15:30:00.7654321");
 
     private final EntityManager entityManager = mock(EntityManager.class);
-    private final TypedQuery<UvSesionV2Entity> query = mock(TypedQuery.class);
+    // CULM-001 B.1 (3.2.4): la lectura v2 se une a uv_sesion_estado; cada fila es [UvSesionV2Entity, UvSesionEstadoEntity].
+    private final TypedQuery<Object[]> query = mock(TypedQuery.class);
     private final SesionProcedenciaJpaRepository repository = new SesionProcedenciaJpaRepository(entityManager);
 
     @BeforeEach
     void prepareQuery() {
-        when(entityManager.createQuery(anyString(), eq(UvSesionV2Entity.class))).thenReturn(query);
+        when(entityManager.createQuery(anyString(), eq(Object[].class))).thenReturn(query);
         when(query.setParameter(anyString(), any())).thenReturn(query);
         when(query.setMaxResults(anyInt())).thenReturn(query);
     }
@@ -44,7 +47,7 @@ class SesionProcedenciaJpaRepositoryTest {
     @Test
     void consulta_por_id_mapea_la_fila_y_retorna_vacio_si_no_existe() {
         final UvSesionV2Entity entity = entity("UTC_V2");
-        when(query.getResultList()).thenReturn(List.of(entity));
+        when(query.getResultList()).thenReturn(List.<Object[]>of(new Object[]{entity, estado(false)}));
         final Optional<SesionProcedenciaRepositoryProjection> result = repository.consultarSesion(SESION);
         assertEquals(Optional.of(new SesionProcedenciaRepositoryProjection(
                 SESION, GRUPO, "Sesion", 1, "S-1", 2, "7", "Grupo", INICIO, FIN, "UTC_V2")), result);
@@ -57,11 +60,24 @@ class SesionProcedenciaJpaRepositoryTest {
     void consulta_por_grupo_preserva_orden_y_convierte_codigo_nulo() {
         final UvSesionV2Entity entity = entity(null);
         set(entity, "codigoGrupo", null);
-        when(query.getResultList()).thenReturn(List.of(entity));
+        when(query.getResultList()).thenReturn(List.<Object[]>of(new Object[]{entity, null}));
         final List<SesionProcedenciaRepositoryProjection> result = repository.consultarSesionesPorGrupo(GRUPO);
         assertEquals(1, result.size());
         assertEquals(null, result.getFirst().codigoGrupo());
         assertEquals(null, result.getFirst().procedenciaTemporal());
+    }
+
+    @Test
+    void una_sesion_cancelada_trae_su_cancelacion_de_uv_sesion_estado() {
+        final UvSesionEstadoEntity cancelada = estado(true);
+        when(query.getResultList()).thenReturn(List.<Object[]>of(new Object[]{entity("UTC_V2"), cancelada}));
+
+        final SesionProcedenciaRepositoryProjection result = repository.consultarSesion(SESION).orElseThrow();
+
+        assertEquals(new CancelacionSesionProjection("FESTIVO", "Día festivo: San José", "San José",
+                LocalDateTime.of(2042, 7, 1, 5, 0)), result.cancelacion());
+        when(query.getResultList()).thenReturn(List.<Object[]>of(new Object[]{entity("UTC_V2"), null}));
+        assertEquals(null, repository.consultarSesion(SESION).orElseThrow().cancelacion());
     }
 
     @Test
@@ -93,9 +109,30 @@ class SesionProcedenciaJpaRepositoryTest {
         return entity;
     }
 
-    private static void set(final UvSesionV2Entity target, final String name, final Object value) {
+    private static UvSesionEstadoEntity estado(final boolean cancelada) {
+        final UvSesionEstadoEntity estado;
         try {
-            final var field = UvSesionV2Entity.class.getDeclaredField(name);
+            final var constructor = UvSesionEstadoEntity.class.getDeclaredConstructor();
+            constructor.setAccessible(true);
+            estado = constructor.newInstance();
+        } catch (ReflectiveOperationException exception) {
+            throw new AssertionError(exception);
+        }
+        set(estado, "idSesion", SESION);
+        set(estado, "idGrupo", GRUPO);
+        set(estado, "estaCancelada", cancelada);
+        if (cancelada) {
+            set(estado, "codigoTipoCancelacion", "FESTIVO");
+            set(estado, "motivoCancelacion", "Día festivo: San José");
+            set(estado, "nombreDiaFestivo", "San José");
+            set(estado, "fechaCancelacionUtc", LocalDateTime.of(2042, 7, 1, 5, 0));
+        }
+        return estado;
+    }
+
+    private static void set(final Object target, final String name, final Object value) {
+        try {
+            final var field = target.getClass().getDeclaredField(name);
             field.setAccessible(true);
             field.set(target, value);
         } catch (ReflectiveOperationException exception) {

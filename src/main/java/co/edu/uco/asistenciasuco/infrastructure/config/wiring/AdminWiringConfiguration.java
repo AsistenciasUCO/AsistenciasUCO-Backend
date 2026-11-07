@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.identidad.sincronizarcuenta.SincronizarCuentaInstitucionalService;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.impl.CambiarEstadoDecanoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.usecase.CambiarEstadoDecanoUseCase;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.interactor.CambiarEstadoDecanoInteractor;
+import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.CambiarEstadoDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.ConsultarAreasInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.primaryports.interactor.ConsultarAreasInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.usecase.ConsultarAreasUseCase;
@@ -63,6 +68,14 @@ import org.springframework.context.annotation.Configuration;
 @Configuration(proxyBeanMethods = false)
 public class AdminWiringConfiguration {
 
+    /** CULM-001 A.2-8: cambio de estado del decano (toggle) con sincronizacion de identidad. */
+    @Bean CambiarEstadoDecanoUseCase cambiarEstadoDecanoUseCase(final DecanoCommandPort commandPort, final DecanoQueryPort queryPort,
+            final SincronizarCuentaInstitucionalService sincronizacion) {
+        return new CambiarEstadoDecanoUseCaseImpl(commandPort, queryPort, sincronizacion);
+    }
+    @Bean CambiarEstadoDecanoInputPort cambiarEstadoDecanoInputPort(final CambiarEstadoDecanoUseCase useCase) {
+        return new CambiarEstadoDecanoInteractor(useCase);
+    }
     @Bean ConsultarDecanosUseCase consultarDecanosUseCase(final DecanoQueryPort port) { return new ConsultarDecanosUseCaseImpl(port); }
     @Bean ConsultarDecanosInputPort consultarDecanosInputPort(final ConsultarDecanosUseCase useCase) { return new ConsultarDecanosInteractor(useCase); }
     @Bean CrearDecanoUseCase crearDecanoUseCase(

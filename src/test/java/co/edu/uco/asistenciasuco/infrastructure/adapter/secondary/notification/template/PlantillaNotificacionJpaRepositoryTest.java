@@ -112,20 +112,20 @@ class PlantillaNotificacionJpaRepositoryTest {
                 .thenReturn(List.of((Object) plantillaV2))
                 .thenReturn(List.of((Object) marcadorGrupo));
 
-        final Optional<PlantillaNotificacion> primera = repository.consultarActiva("SOLICITUD_INGRESO_REGISTRADA", "es");
+        final Optional<PlantillaNotificacion> primera = repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es");
         assertTrue(primera.isPresent());
         assertEquals(1, primera.get().version());
 
         // Avanzar 30s (dentro de TTL de 60s): no debe consultar BD
         clock.advance(Duration.ofSeconds(30));
-        final Optional<PlantillaNotificacion> segunda = repository.consultarActiva("SOLICITUD_INGRESO_REGISTRADA", "es");
+        final Optional<PlantillaNotificacion> segunda = repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es");
         assertTrue(segunda.isPresent());
         assertEquals(1, segunda.get().version());
         verify(entityManager, times(1)).createStoredProcedureQuery("dbo.usp_consultar_plantilla_notificacion_activa");
 
         // Avanzar otros 31s (TTL vencido): vuelve a consultar BD y obtiene v2
         clock.advance(Duration.ofSeconds(31));
-        final Optional<PlantillaNotificacion> tercera = repository.consultarActiva("SOLICITUD_INGRESO_REGISTRADA", "es");
+        final Optional<PlantillaNotificacion> tercera = repository.consultarActiva("RETIRO_ESTUDIANTE_GRUPO", "es");
         assertTrue(tercera.isPresent());
         assertEquals(2, tercera.get().version());
         verify(entityManager, times(2)).createStoredProcedureQuery("dbo.usp_consultar_plantilla_notificacion_activa");

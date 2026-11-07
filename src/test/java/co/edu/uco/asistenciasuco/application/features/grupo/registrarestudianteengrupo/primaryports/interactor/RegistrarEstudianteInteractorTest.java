@@ -46,7 +46,7 @@ class RegistrarEstudianteInteractorTest {
         useCase = mock(RegistrarEstudianteUseCase.class);
         usuarioRepositoryPort = mock(UsuarioRepositoryPort.class);
         estudianteRepositoryPort = mock(EstudianteRepositoryPort.class);
-        interactor = new RegistrarEstudianteInteractor(useCase, usuarioRepositoryPort, estudianteRepositoryPort);
+        interactor = new RegistrarEstudianteInteractor(useCase, estudianteRepositoryPort);
     }
 
     @Test
@@ -106,7 +106,7 @@ class RegistrarEstudianteInteractorTest {
                 resumen,
                 Collections.emptyList()
         );
-        when(estudianteRepositoryPort.consultarEstudiantePorId(ESTUDIANTE_ID)).thenReturn(Optional.of(detalle));
+        when(estudianteRepositoryPort.consultarEstudiantePorId(ESTUDIANTE_ID, USUARIO_EJECUTOR)).thenReturn(Optional.of(detalle));
         when(useCase.execute(any(RegistrarEstudianteDomain.class)))
                 .thenReturn(new RegistrarEstudianteResultadoEntity(true, "Estudiante matriculado."));
 
@@ -132,56 +132,32 @@ class RegistrarEstudianteInteractorTest {
         dto.setGrupoId(GRUPO_ID);
         dto.setUsuarioEjecutor(USUARIO_EJECUTOR);
 
-        when(estudianteRepositoryPort.consultarEstudiantePorId(ESTUDIANTE_ID)).thenReturn(Optional.empty());
+        when(estudianteRepositoryPort.consultarEstudiantePorId(ESTUDIANTE_ID, USUARIO_EJECUTOR)).thenReturn(Optional.empty());
 
         assertThrows(ResourceNotFoundException.class, () -> interactor.execute(dto));
     }
 
+    // CULM-001 A.2-15 (REVIEW-3 B1): cambio formal. Con solo el documento (sin correo), el interactor ya NO resuelve al
+    // usuario con consultarUsuarioPorIdentificacion (no exigia fila Estudiante ni la misma institucion): entrega al caso de
+    // uso un dominio pendiente, que lo resuelve con usp_buscar_estudiante_por_documento_grupo (ver
+    // RegistrarEstudianteSinCorreoUseCaseImplTest). Sustituye a los dos casos de resolucion por documento libre.
     @Test
-    void execute_con_solo_identificacion_resuelve_usuario_existente_y_delega_al_caso_de_uso() {
+    void execute_con_solo_identificacion_entrega_un_dominio_pendiente_sin_consultar_por_documento_libre() {
         final RegistrarEstudianteDTO dto = new RegistrarEstudianteDTO();
         dto.setTipoIdentificacionId(TIPO_ID);
         dto.setNumeroIdentificacion(1017123456);
         dto.setGrupoId(GRUPO_ID);
         dto.setUsuarioEjecutor(USUARIO_EJECUTOR);
-
-        final UsuarioIdentidadRepositoryProjection usuario = new UsuarioIdentidadRepositoryProjection(
-                UUID.randomUUID(),
-                TIPO_ID,
-                1017123456,
-                "Maria",
-                "Rodriguez",
-                "maria.rodriguez@uco.edu.co"
-        );
-        when(usuarioRepositoryPort.consultarUsuarioPorIdentificacion(TIPO_ID, 1017123456))
-                .thenReturn(Optional.of(usuario));
         when(useCase.execute(any(RegistrarEstudianteDomain.class)))
                 .thenReturn(new RegistrarEstudianteResultadoEntity(true, "Estudiante matriculado."));
 
-        final RegistrarEstudianteResultadoDTO resultado = interactor.execute(dto);
-
-        assertNotNull(resultado);
-        assertTrue(resultado.isExitoso());
+        assertTrue(interactor.execute(dto).isExitoso());
 
         final ArgumentCaptor<RegistrarEstudianteDomain> captor = ArgumentCaptor.forClass(RegistrarEstudianteDomain.class);
         verify(useCase).execute(captor.capture());
-        final RegistrarEstudianteDomain domain = captor.getValue();
-        assertEquals("MARIA", domain.getPrimerNombre());
-        assertEquals("RODRIGUEZ", domain.getPrimerApellido());
-        assertEquals("maria.rodriguez@uco.edu.co", domain.getCorreo());
-    }
-
-    @Test
-    void execute_con_solo_identificacion_no_encontrada_lanza_ValidationException() {
-        final RegistrarEstudianteDTO dto = new RegistrarEstudianteDTO();
-        dto.setTipoIdentificacionId(TIPO_ID);
-        dto.setNumeroIdentificacion(1017999999);
-        dto.setGrupoId(GRUPO_ID);
-        dto.setUsuarioEjecutor(USUARIO_EJECUTOR);
-
-        when(usuarioRepositoryPort.consultarUsuarioPorIdentificacion(TIPO_ID, 1017999999))
-                .thenReturn(Optional.empty());
-
-        assertThrows(ValidationException.class, () -> interactor.execute(dto));
+        assertTrue(captor.getValue().esPendienteDeResolverPorDocumento());
+        assertEquals(TIPO_ID, captor.getValue().getTipoIdentificacionId());
+        assertEquals(1017123456, captor.getValue().getNumeroIdentificacion());
+        org.mockito.Mockito.verifyNoInteractions(usuarioRepositoryPort);
     }
 }

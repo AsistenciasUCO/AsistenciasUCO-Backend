@@ -1,5 +1,10 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.impl.BuscarEstudiantePorDocumentoUseCaseImpl;
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.usecase.BuscarEstudiantePorDocumentoUseCase;
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.interactor.BuscarEstudiantePorDocumentoInteractor;
+import co.edu.uco.asistenciasuco.application.features.grupo.buscarestudiantepordocumento.primaryports.BuscarEstudiantePorDocumentoInputPort;
+import co.edu.uco.asistenciasuco.application.features.festivos.asegurarfestivos.primaryports.AsegurarFestivosPeriodoInputPort;
 import co.edu.uco.asistenciasuco.application.features.usuario.correoinstitucional.CorreoInstitucionalPolicy;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
@@ -37,8 +42,11 @@ import org.springframework.context.annotation.Configuration;
 public class GrupoWiringConfiguration {
 
     @Bean
-    public CrearGrupoUseCase crearGrupoUseCase(final GrupoRepositoryPort grupoRepositoryPort) {
-        return new CrearGrupoUseCaseImpl(grupoRepositoryPort);
+    public CrearGrupoUseCase crearGrupoUseCase(
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final AsegurarFestivosPeriodoInputPort asegurarFestivosPeriodoInputPort
+    ) {
+        return new CrearGrupoUseCaseImpl(grupoRepositoryPort, asegurarFestivosPeriodoInputPort);
     }
 
     @Bean
@@ -47,8 +55,11 @@ public class GrupoWiringConfiguration {
     }
 
     @Bean
-    public ActualizarGrupoUseCase actualizarGrupoUseCase(final GrupoRepositoryPort grupoRepositoryPort) {
-        return new ActualizarGrupoUseCaseImpl(grupoRepositoryPort);
+    public ActualizarGrupoUseCase actualizarGrupoUseCase(
+            final GrupoRepositoryPort grupoRepositoryPort,
+            final AsegurarFestivosPeriodoInputPort asegurarFestivosPeriodoInputPort
+    ) {
+        return new ActualizarGrupoUseCaseImpl(grupoRepositoryPort, asegurarFestivosPeriodoInputPort);
     }
 
     @Bean
@@ -82,12 +93,22 @@ public class GrupoWiringConfiguration {
     @Bean
     public RegistrarEstudianteInputPort registrarEstudianteInputPort(
             final RegistrarEstudianteUseCase registrarEstudianteUseCase,
-            final UsuarioRepositoryPort usuarioRepositoryPort,
             final EstudianteRepositoryPort estudianteRepositoryPort
     ) {
         return new RegistrarEstudianteInteractor(
-                registrarEstudianteUseCase, usuarioRepositoryPort, estudianteRepositoryPort
+                registrarEstudianteUseCase, estudianteRepositoryPort
         );
+    }
+
+    /** CULM-001 A.2-15 (DEC-027): busqueda del estudiante por documento exacto en el grupo del docente titular. */
+    @Bean
+    public BuscarEstudiantePorDocumentoUseCase buscarEstudiantePorDocumentoUseCase(final GrupoRepositoryPort grupoRepositoryPort) {
+        return new BuscarEstudiantePorDocumentoUseCaseImpl(grupoRepositoryPort);
+    }
+
+    @Bean
+    public BuscarEstudiantePorDocumentoInputPort buscarEstudiantePorDocumentoInputPort(final BuscarEstudiantePorDocumentoUseCase useCase) {
+        return new BuscarEstudiantePorDocumentoInteractor(useCase);
     }
 
     @Bean

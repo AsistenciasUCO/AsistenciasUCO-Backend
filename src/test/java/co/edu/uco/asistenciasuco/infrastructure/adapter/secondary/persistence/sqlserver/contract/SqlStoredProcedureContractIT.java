@@ -312,6 +312,162 @@ class SqlStoredProcedureContractIT {
                         input("@codigoEstado", "nvarchar"),
                         input("@numeroPagina", "int"),
                         input("@tamanoPagina", "int")
+                )),
+                // CULM-001 B.1: cancelacion de sesion (HU047), festivos y generacion v2 que invoca el backend.
+                Arguments.of("usp_cancelar_sesion", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@motivo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_destinatarios_sesion_cancelada", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cargar_dias_festivos", List.of(
+                        input("@anio", "int"),
+                        input("@festivosJSON", "nvarchar"),
+                        input("@fuente", "nvarchar"),
+                        input("@diferenciasCalculoLocal", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cargar_dias_festivos_automatico", List.of(
+                        input("@anio", "int"),
+                        input("@festivosJSON", "nvarchar"),
+                        input("@fuente", "nvarchar"),
+                        input("@diferenciasCalculoLocal", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_aplicar_festivos_periodo", List.of(
+                        input("@idPeriodoAcademico", "uniqueidentifier"),
+                        input("@anio", "int"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_aplicar_festivos_automatico", List.of(
+                        input("@anio", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_carga_festivos_anio", List.of(
+                        input("@anio", "int"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_dias_festivos", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@anio", "int"),
+                        input("@incluirInactivos", "bit"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_sesiones_festivo_con_asistencia_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@anio", "int"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_generar_sesiones_grupo_v2", List.of(
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                // CULM-001 B.2 (CONTRACT 2.8, 3.11): tomas, QR de asistencia y resumenes por horas.
+                Arguments.of("usp_abrir_toma_asistencia", List.of(
+                        input("@idSesion", "uniqueidentifier"),
+                        input("@codigoModo", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cerrar_toma_asistencia", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@marcarAusentes", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cerrar_tomas_vencidas", List.of(
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_asistencias_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@asistenciaJSON", "nvarchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_abrir_qr_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_rotar_token_asistencia_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_rotar_token_asistencia_automatico", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@forzar", "bit"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_tomas_qr_por_rotar", List.of(
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_cerrar_qr_toma", List.of(
+                        input("@idToma", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_registrar_asistencia_por_token", List.of(
+                        input("@tokenHash", "varbinary"),
+                        input("@pin", "nchar"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_tomas_sesion", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idSesion", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_faltantes_toma_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idToma", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_asistencias_toma_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idToma", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_resumen_asistencia_grupo_docente_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idGrupo", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
+                )),
+                Arguments.of("usp_consultar_resumen_asistencia_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier")
+                )),
+                // CULM-001 D.1 (HU026B, CONTRACT §2.2): sesiones de la materia del estudiante con la fecha limite de excusa.
+                Arguments.of("usp_consultar_sesiones_materia_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idMateria", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
                 ))
         );
     }

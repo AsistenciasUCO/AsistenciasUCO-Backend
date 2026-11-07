@@ -16,8 +16,8 @@ import java.util.Objects;
 
 /**
  * HU008: oferta de grupos del estudiante autenticado en periodos vigentes o proximos: especificas de sus programas y
- * transversales (basicas e institucionales) de su institucion, con cupos y su relacion con cada grupo (matriculado /
- * solicitud de ingreso abierta). El ambito y el parametro OFERTA.INCLUIR_TRANSVERSALES los aplica el SP.
+ * transversales (basicas e institucionales) de su institucion, con cupos y la marca de matricula (solo
+ * la matricula inscrita cuenta, la resuelve el SP). El ambito y el parametro OFERTA.INCLUIR_TRANSVERSALES los aplica el SP.
  */
 public final class ConsultarOfertaGruposUseCaseImpl implements ConsultarOfertaGruposUseCase {
 
@@ -25,7 +25,6 @@ public final class ConsultarOfertaGruposUseCaseImpl implements ConsultarOfertaGr
     static final int TAMANO_POR_DEFECTO = 10;
     static final int TAMANO_MAXIMO = 100;
     static final int BUSQUEDA_MAXIMA = 50;
-    private static final Map<String, String> ESTADO_SOLICITUD = Map.of("P", "PENDIENTE", "E", "EN_ESPERA");
     /** Regla de John (2026-10-27): ESP es propia del programa; BAS e INS son transversales. */
     private static final Map<String, String> TIPO_ASIGNATURA = Map.of("ESP", "ESPECIFICA", "BAS", "BASICA", "INS", "INSTITUCIONAL");
 
@@ -63,12 +62,10 @@ public final class ConsultarOfertaGruposUseCaseImpl implements ConsultarOfertaGr
     }
 
     private static GrupoOfertaDomain toDomain(final GrupoOfertaEstudianteProjection g) {
-        final String estadoSolicitud = g.codigoEstadoSolicitud() == null ? null
-                : ESTADO_SOLICITUD.getOrDefault(g.codigoEstadoSolicitud(), g.codigoEstadoSolicitud());
         return new GrupoOfertaDomain(g.idGrupo(), g.codigoGrupo(), g.nombreGrupo(), g.idAsignatura(), g.codigoAsignatura(),
                 g.nombreAsignatura(), g.nombreDocente(), g.idPeriodoAcademico(), g.nombrePeriodoAcademico(), g.fechaInicioPeriodo(),
                 g.fechaFinPeriodo(), g.estadoPeriodo(), g.horario(), g.capacidadMaxima(), g.estudiantesActivos(), g.cuposDisponibles(),
-                g.matriculado(), g.idSolicitudAbierta(), estadoSolicitud,
+                g.matriculado(),
                 g.codigoComponente() == null ? null : TIPO_ASIGNATURA.getOrDefault(g.codigoComponente(), g.codigoComponente()),
                 "BAS".equals(g.codigoComponente()) || "INS".equals(g.codigoComponente()));
     }

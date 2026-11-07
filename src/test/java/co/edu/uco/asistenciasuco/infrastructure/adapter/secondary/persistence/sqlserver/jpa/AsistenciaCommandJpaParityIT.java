@@ -187,7 +187,7 @@ class AsistenciaCommandJpaParityIT {
 
         // Lectura via query JDBC.
         final List<AsistenciaRepositoryProjection> viaJdbcQuery = jdbcBaseline().consultarAsistenciasPorGrupo(
-                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoId(), sesion));
+                new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoId(), sesion, titular(fixture.grupoId())));
         final AsistenciaRepositoryProjection filaJdbc = soloDe(viaJdbcQuery, estudiante);
         assertEquals("EX", filaJdbc.getEstado());
         assertFalse(filaJdbc.isPresente());
@@ -196,7 +196,7 @@ class AsistenciaCommandJpaParityIT {
         // Lectura via query JPA (CMD-PAR-015: readback JDBC y JPA).
         final List<AsistenciaRepositoryProjection> viaJpaQuery = new AsistenciaJpaRepository(
                         entityManager, new JpaProcedureExecutor(entityManager))
-                .consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoId(), sesion));
+                .consultarAsistenciasPorGrupo(new ConsultarAsistenciasPorGrupoRepositoryDTO(fixture.grupoId(), sesion, titular(fixture.grupoId())));
         final AsistenciaRepositoryProjection filaJpa = soloDe(viaJpaQuery, estudiante);
         assertEquals("EX", filaJpa.getEstado());
         assertFalse(filaJpa.isPresente());
@@ -639,5 +639,13 @@ class AsistenciaCommandJpaParityIT {
                 jpa.exceptionClass(), jpa.stableApplicationCode(), jpa.persistedRows().size(), mismatches);
         assertEquals(0, mismatches, "PARITY_MISMATCH en escenario " + scenario);
         return mismatches;
+    }
+
+    /** CULM-001 A.2-2: la consulta por grupo exige el ejecutor; el docente titular ve todas las filas del grupo. */
+    private UUID titular(final UUID grupo) {
+        final java.util.List<UUID> ids = jdbcTemplate.query(
+                "SELECT d.usuario FROM dbo.Grupo g INNER JOIN dbo.Docente d ON d.id = g.docente WHERE g.id = ?",
+                (rs, row) -> UUID.fromString(rs.getString(1)), grupo);
+        return ids.isEmpty() ? UUID.fromString("00000000-0000-0000-0000-0000000000a1") : ids.getFirst();
     }
 }

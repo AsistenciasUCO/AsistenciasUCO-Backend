@@ -2,7 +2,7 @@ openapi: 3.1.2
 jsonSchemaDialect: https://json-schema.org/draft/2020-12/schema
 info:
   title: AsistenciasUCO — Golden Path API
-  version: 1.1.0
+  version: 1.3.0
   description: |
     Contrato canónico LB-001C.1 para el Golden Path del backend AsistenciasUCO.
     Sigue el estilo PRAGMATIC_RESOURCE_PLUS_BUSINESS_COMMAND. HTTP/DB es la fuente
@@ -11,6 +11,9 @@ info:
     MAINT-001, el directorio paginado GET /api/v1/estudiantes en su comportamiento AS-IS.
     1.1.0 (MAINT-003F): agrega el contrato UTC v2 de sesiones (/api/v2/sesiones, UTC-D01..D09)
     sin modificar ninguna operación ni schema v1; v1 conserva su wire ISO local sin offset.
+    1.2.0 (CULM-001 A, DEC-027/DEC-032): DOCENTE se agrega a x-roles de GET /api/v1/estudiantes.
+    1.3.0 (CULM-001 B, DEC-032): Sesion/SesionV2 + estado, cancelacion; lote escribe en la toma
+    vigente; 409 ERR_SESION_CANCELADA.
 servers:
   - url: /
     description: Servidor que publica esta especificación
@@ -112,6 +115,8 @@ paths:
                         nombreGrupo: Estadística III - 01
                         fechaHoraInicio: '2026-09-24T13:00:00'
                         fechaHoraFin: '2026-09-24T15:00:00'
+                        estado: PROGRAMADA
+                        cancelacion: null
                     total: 1
         '400':
           $ref: '#/components/responses/BadRequest'
@@ -178,10 +183,11 @@ paths:
         Devuelve identidades distintas de estudiante desde uv_estudiante_identidad + uv_usuario;
         los filtros académicos usan EXISTS sobre uv_estudiante, de modo que un estudiante
         inscrito en varios grupos aparece una sola vez. Orden fijo: primerApellido,
-        primerNombre, numeroIdentificacion, id. No se abre a DOCENTE (usa
-        /api/v1/grupos/{grupoId}/estudiantes) ni a ESTUDIANTE. Todos los filtros son
-        opcionales y se combinan con AND. Respuesta sin envoltorio exitoso/datos.
-      x-roles: [COORDINADOR, ADMINISTRADOR]
+        primerNombre, numeroIdentificacion, id. DOCENTE solo ve a los estudiantes de sus
+        grupos (ámbito en usp_consultar_directorio_estudiantes_paginado); no se abre a
+        ESTUDIANTE. Todos los filtros son opcionales y se combinan con AND. Respuesta sin
+        envoltorio exitoso/datos.
+      x-roles: [DOCENTE, COORDINADOR, ADMINISTRADOR]
       x-idempotency: YES
       security:
         - bearerAuth: []
@@ -322,6 +328,8 @@ paths:
       description: |
         Devuelve únicamente registros persistidos. La ausencia de una fila no significa AN.
         La lista es completa, sin paginación ni orden público garantizado.
+        CULM-001 B: una fila por estudiante y sesión con el estado consolidado de las tomas de la
+        sesión (SJC si alguna toma es SJC; si no, EX si alguna es EX; si no, AN). El esquema no cambia.
       x-roles: [DOCENTE, COORDINADOR, ADMINISTRADOR]
       x-idempotency: YES
       security:
@@ -409,6 +417,9 @@ paths:
         posterior al cierre. Fuera de la ventana responde 409 sin modificar filas; la DB repite la
         validación dentro de la transacción del lote. Las correcciones posteriores al cierre solo se
         realizan por el flujo formal de reclamos.
+
+        CULM-001 B: con varias tomas, el lote escribe en la toma abierta o, si no hay, en la última.
+        Una sesión cancelada responde 409 `ERR_SESION_CANCELADA` sin modificar filas.
       x-roles: [DOCENTE]
       x-idempotency: NOT_DEFINED
       x-atomicity: ALL_OR_NOTHING
@@ -753,6 +764,8 @@ paths:
                       fechaHoraFin: '2026-07-16T03:00:00Z'
                       estadoTemporal: CONFIRMADA
                       procedenciaTemporal: UTC_V2
+                      estado: PROGRAMADA
+                      cancelacion: null
                 indeterminada:
                   value:
                     exitoso: true
@@ -769,6 +782,8 @@ paths:
                       fechaHoraFin: null
                       estadoTemporal: INDETERMINADA
                       procedenciaTemporal: null
+                      estado: PROGRAMADA
+                      cancelacion: null
         '400':
           $ref: '#/components/responses/BadRequest'
         '401':
@@ -1000,7 +1015,8 @@ components:
       description: |
         SES-01: la sesión no está activa para el registro ordinario de asistencia. `code` distingue
         `ERR_SESION_NO_INICIADA` (antes del inicio), `ERR_SESION_CERRADA` (en el fin exacto o después)
-        y `ERR_SESION_HORARIO_INDETERMINADO` (procedencia temporal no confirmada). No se modificó ninguna fila.
+        y `ERR_SESION_HORARIO_INDETERMINADO` (procedencia temporal no confirmada). CULM-001 B agrega
+        `ERR_SESION_CANCELADA` (la sesión está cancelada). No se modificó ninguna fila.
       headers:
         X-Correlation-Id:
           $ref: '#/components/headers/CorrelationId'
@@ -1008,14 +1024,25 @@ components:
         application/json:
           schema:
             $ref: '#/components/schemas/ApiErrorResponse'
-          example:
-            timestamp: '2026-11-03T17:00:00Z'
-            status: 409
-            error: Conflict
-            code: ERR_SESION_CERRADA
-            message: La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.
-            path: /api/v1/asistencias/lote
-            correlationId: 43ecb554-7527-45f5-8107-8ef896f63455
+          examples:
+            cerrada:
+              value:
+                timestamp: '2026-11-03T17:00:00Z'
+                status: 409
+                error: Conflict
+                code: ERR_SESION_CERRADA
+                message: La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.
+                path: /api/v1/asistencias/lote
+                correlationId: 43ecb554-7527-45f5-8107-8ef896f63455
+            cancelada:
+              value:
+                timestamp: '2026-11-03T17:00:00Z'
+                status: 409
+                error: Conflict
+                code: ERR_SESION_CANCELADA
+                message: La sesion esta cancelada; no admite registro de asistencia.
+                path: /api/v1/asistencias/lote
+                correlationId: 43ecb554-7527-45f5-8107-8ef896f63455
     InternalError:
       description: Error interno seguro; no expone DBCODE, SQL, stack trace ni detalles del IdP.
       headers:
@@ -1081,7 +1108,7 @@ components:
     Sesion:
       type: object
       additionalProperties: false
-      required: [sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin]
+      required: [sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin, estado, cancelacion]
       properties:
         sesion:
           type: string
@@ -1109,6 +1136,12 @@ components:
           $ref: '#/components/schemas/LocalSessionDateTime'
         fechaHoraFin:
           $ref: '#/components/schemas/LocalSessionDateTime'
+        estado:
+          type: string
+          enum: [PROGRAMADA, CANCELADA]
+          description: CULM-001 B. CANCELADA si y solo si cancelacion no es null.
+        cancelacion:
+          $ref: '#/components/schemas/CancelacionSesion'
     EstudianteGrupo:
       type: object
       additionalProperties: false
@@ -1486,7 +1519,7 @@ components:
     SesionV2:
       type: object
       additionalProperties: false
-      required: [sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin, estadoTemporal, procedenciaTemporal]
+      required: [sesion, grupo, nombre, numero, codigo, numeroSemana, codigoGrupo, nombreGrupo, fechaHoraInicio, fechaHoraFin, estadoTemporal, procedenciaTemporal, estado, cancelacion]
       properties:
         sesion:
           type: string
@@ -1521,6 +1554,30 @@ components:
           type: [string, 'null']
           enum: [UTC_V2, UTC_GENERADOR, UTC_OWNER, null]
           description: Origen confirmado de las horas; null en sesiones INDETERMINADAS.
+        estado:
+          type: string
+          enum: [PROGRAMADA, CANCELADA]
+          description: CULM-001 B. CANCELADA si y solo si cancelacion no es null.
+        cancelacion:
+          $ref: '#/components/schemas/CancelacionSesion'
+    CancelacionSesion:
+      type: [object, 'null']
+      additionalProperties: false
+      description: |
+        CULM-001 B. Cancelación de la sesión; null cuando está PROGRAMADA. Una sesión cancelada
+        no admite registro de asistencia.
+      required: [tipo, motivo, nombreFestivo, fechaCancelacionUtc]
+      properties:
+        tipo:
+          type: string
+          enum: [DOCENTE, FESTIVO]
+        motivo:
+          type: string
+        nombreFestivo:
+          type: [string, 'null']
+          description: Nombre del festivo cuando la cancelación es del sistema; null si la cancela el docente.
+        fechaCancelacionUtc:
+          $ref: '#/components/schemas/UtcInstantResponse'
     SesionV2DataResponse:
       type: object
       additionalProperties: false

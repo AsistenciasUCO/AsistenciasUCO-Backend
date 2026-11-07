@@ -44,12 +44,18 @@ public final class GrupoRepositoryMockAdapter implements GrupoRepositoryPort {
     }
 
     @Override
-    public List<GrupoRepositoryProjection> consultarGrupos() {
+    public List<GrupoRepositoryProjection> consultarGrupos(final UUID usuarioEjecutor) {
         return List.of();
     }
 
     @Override
-    public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId) {
+    public List<EstudianteGrupoRepositoryProjection> consultarEstudiantesGrupo(final UUID grupoId, final UUID usuarioEjecutor) {
         return List.of();
+    }
+
+    @Override
+    public java.util.Optional<co.edu.uco.asistenciasuco.application.secondaryports.repository.projection.EstudianteBusquedaRepositoryProjection> buscarEstudiantePorDocumento(
+            final UUID grupoId, final UUID tipoIdentificacionId, final Integer numeroIdentificacion, final UUID usuarioEjecutor) {
+        return java.util.Optional.empty();
     }
 }

@@ -38,6 +38,11 @@ spring:
 
 server:
   port: 8080
+  # CULM-001 A.2-5: el despacho ERROR (excepcion en un filtro) nunca expone traza, mensaje ni excepcion.
+  error:
+    include-stacktrace: never
+    include-message: never
+    include-exception: false
 
 asistencias:
   swagger-ui:
@@ -175,7 +180,6 @@ app:
         "[ERR_SESION_NO_EXISTE]": ERR018
         "[ERR_TOKEN_VERIFICACION_INVALIDO]": ERR019
         "[ERR_PROGRAMA_FACULTAD_INCONSISTENTE]": ERR020
-        "[ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA]": ERR021
         "[ERR_INESPERADO_REGISTRO_ESTUDIANTE]": ERR022
         "[ERR_INESPERADO_REGISTRO_DOCENTE]": ERR023
         "[ERR_INESPERADO_REGISTRO_ASISTENCIA]": ERR024

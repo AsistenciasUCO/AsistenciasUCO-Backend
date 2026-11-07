@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.estudiante;
 
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.CancelacionSesionResponse;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionMateriaEstudianteDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.HttpUtcInstantCodec;
 
@@ -11,12 +12,14 @@ import java.util.UUID;
  * cambios ({@code fechaHoraInicio}/{@code fechaHoraFin}: {@code LocalDateTime} sin zona). APP-04 agrega, de forma
  * aditiva y con la misma regla que HU060 coordinador, {@code fechaHoraInicioUtc}/{@code fechaHoraFinUtc} con sufijo
  * {@code Z} solo cuando {@code estadoTemporal = CONFIRMADA}; en otro caso son nulos y la SPA no inventa una zona.
+ * CULM-001 B.1 (3.2.4): el {@code codigo} de la sesion deja de viajar al estudiante (ya no es una credencial de
+ * asistencia, SUPUESTO-B-18) y se agregan {@code estado} y {@code cancelacion}; una sesion cancelada responde
+ * {@code estadoAsistencia = NO_DISPONIBLE} y {@code reclamable = false}.
  */
 public record SesionMateriaEstudianteResponse(
         UUID id,
         String nombre,
         Integer numero,
-        String codigo,
         Integer numeroSemana,
         UUID idGrupo,
         String codigoGrupo,
@@ -28,14 +31,20 @@ public record SesionMateriaEstudianteResponse(
         String estadoTemporal,
         String estadoAsistencia,
         String estadoSolicitudRevision,
-        boolean reclamable
+        boolean reclamable,
+        String estado,
+        CancelacionSesionResponse cancelacion,
+        String fechaLimiteJustificacionUtc,
+        boolean plazoJustificacionVigente
 ) {
 
     public static SesionMateriaEstudianteResponse from(final SesionMateriaEstudianteDTO dto) {
-        return new SesionMateriaEstudianteResponse(dto.id(), dto.nombre(), dto.numero(), dto.codigo(),
+        return new SesionMateriaEstudianteResponse(dto.id(), dto.nombre(), dto.numero(),
                 dto.numeroSemana(), dto.idGrupo(), dto.codigoGrupo(), dto.nombreGrupo(), dto.fechaHoraInicio(),
                 dto.fechaHoraFin(), utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal(),
-                dto.estadoAsistencia(), dto.estadoSolicitudRevision(), dto.reclamable());
+                dto.estadoAsistencia(), dto.estadoSolicitudRevision(), dto.reclamable(), dto.estado(),
+                CancelacionSesionResponse.from(dto.cancelacion()), utc(dto.fechaLimiteJustificacionUtc()),
+                dto.plazoJustificacionVigente());
     }
 
     private static String utc(final LocalDateTime value) {

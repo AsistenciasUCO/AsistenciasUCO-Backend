@@ -75,9 +75,10 @@ public final class SesionRepositoryMockAdapter implements SesionRepositoryPort {
     }
 
     @Override
-    public void generarSesionesGrupo(final GenerarSesionesGrupoRepositoryDTO dto) {
+    public GeneracionSesiones generarSesionesGrupo(final GenerarSesionesGrupoRepositoryDTO dto) {
         if (ObjectHelper.isNull(dto)) {
             throw new CrosscuttingException("El dominio para generar sesiones de grupo es obligatorio.");
         }
+        return new GeneracionSesiones(0, 0);
     }
 }

@@ -8,8 +8,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.HydratedViewRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsignaturaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsistenciaSesionEstudianteQueryRow;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.EstudianteGrupoQueryRow;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.SesionMateriaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import jakarta.persistence.EntityManager;
@@ -80,10 +78,11 @@ class JpaQueryAdapterContractTest {
     void sesiones_por_id_y_por_grupo() {
         final UvSesionEntity sesion = HydratedViewRow.of(UvSesionEntity.class, Map.of("id", ID, "idGrupo", OTHER,
                 "nombre", "Parcial", "fechaHoraInicio", LocalDateTime.of(2026, 10, 8, 13, 0)));
-        final TypedQuery<UvSesionEntity> porId = query(SesionJpaRepository.HQL_POR_ID, UvSesionEntity.class,
-                List.of(sesion));
-        final TypedQuery<UvSesionEntity> porGrupo = query(SesionJpaRepository.HQL_POR_GRUPO, UvSesionEntity.class,
-                List.of(sesion, sesion));
+        // CULM-001 B.1 (3.2.4): la lectura v1 se une a uv_sesion_estado y cada fila es [UvSesionEntity, UvSesionEstadoEntity].
+        final TypedQuery<Object[]> porId = query(SesionJpaRepository.HQL_POR_ID, Object[].class,
+                List.<Object[]>of(new Object[]{sesion, null}));
+        final TypedQuery<Object[]> porGrupo = query(SesionJpaRepository.HQL_POR_GRUPO, Object[].class,
+                List.<Object[]>of(new Object[]{sesion, null}, new Object[]{sesion, null}));
         final SesionJpaRepository repository = new SesionJpaRepository(manager, new JpaProcedureExecutor(manager));
 
         assertEquals(LocalDateTime.of(2026, 10, 8, 13, 0),
@@ -96,7 +95,7 @@ class JpaQueryAdapterContractTest {
 
     @Test
     void sesion_inexistente_conserva_null_y_entradas_nulas_se_rechazan() {
-        query(SesionJpaRepository.HQL_POR_ID, UvSesionEntity.class, List.of());
+        query(SesionJpaRepository.HQL_POR_ID, Object[].class, List.of());
         final SesionJpaRepository repository = new SesionJpaRepository(manager, new JpaProcedureExecutor(manager));
 
         assertNull(repository.consultarSesion(new ConsultarSesionRepositoryDTO(ID)));
@@ -178,22 +177,6 @@ class JpaQueryAdapterContractTest {
     }
 
     @Test
-    void sesiones_de_materia_filtran_por_estudiante_y_asignatura() {
-        final SesionMateriaQueryRow row = new SesionMateriaQueryRow(ID, "Parcial", 1, "S-1", 2, OTHER, null, "G1",
-                LocalDateTime.of(2026, 10, 8, 13, 0), null);
-        final TypedQuery<SesionMateriaQueryRow> sesiones = query(
-                SesionMateriaEstudianteJpaRepository.HQL_POR_ESTUDIANTE_Y_ASIGNATURA, SesionMateriaQueryRow.class,
-                List.of(row));
-
-        final var result = new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ID, OTHER);
-
-        verify(sesiones).setParameter("idEstudiante", ID);
-        verify(sesiones).setParameter("idAsignatura", OTHER);
-        assertNull(result.getFirst().codigoGrupo());
-        assertEquals(LocalDateTime.of(2026, 10, 8, 13, 0), result.getFirst().fechaHoraInicio());
-    }
-
-    @Test
     void asistencia_de_sesiones_filtra_por_estudiante_resuelto_y_asignatura_y_conserva_nulos() {
         final var sinDetalle = new AsistenciaSesionEstudianteQueryRow(ID, null, null, null, null, null, null);
         final var conSolicitud = new AsistenciaSesionEstudianteQueryRow(OTHER, 3, Boolean.FALSE, "SJC", ID,
@@ -215,27 +198,56 @@ class JpaQueryAdapterContractTest {
         assertEquals(3, result.get(1).codigoDetalle());
     }
 
+    // CULM-001 A.2-2 (A2-B-05): consultarGrupos(actor) recorre las paginas de usp_consultar_grupos_paginado hasta
+    // totalRegistros y une los horarios; los estudiantes del grupo salen de usp_consultar_estudiantes_grupo_ambito_paginado.
     @Test
     void grupos_y_estudiantes_de_grupo() {
-        query(GrupoJpaRepository.HQL_GRUPOS, UvGrupoEntity.class, List.of(HydratedViewRow.of(UvGrupoEntity.class,
-                Map.of("id", ID, "codigo", 508, "grupoEstaHablitado", 1))));
-        query(GrupoJpaRepository.HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class, List.of(
-                HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", OTHER, "idGrupo", ID, "codigoDia", "MI", "nombreDia",
-                        "Miercoles", "horaInicio", LocalTime.of(14, 0), "horaFin", LocalTime.of(16, 0))),
-                HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", UUID.randomUUID(), "idGrupo", ID, "codigoDia", "LU",
-                        "nombreDia", "Lunes", "horaInicio", LocalTime.of(8, 0), "horaFin", LocalTime.of(10, 0)))));
-        final TypedQuery<EstudianteGrupoQueryRow> estudiantes = query(GrupoJpaRepository.HQL_ESTUDIANTES,
-                EstudianteGrupoQueryRow.class,
-                List.of(new EstudianteGrupoQueryRow(ID, OTHER, null, "Ana", "ana@uco.edu.co", "A", "Activo")));
-        final GrupoJpaRepository repository = new GrupoJpaRepository(manager, mock(TransactionOperations.class),
-                new JpaProcedureExecutor(manager));
+        final UUID actor = UUID.randomUUID();
+        final UUID segundo = UUID.randomUUID();
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
+        try {
+            final jakarta.persistence.Query paginaGrupos = mock(jakarta.persistence.Query.class, RETURNS_SELF);
+            when(paginaGrupos.getResultList()).thenReturn(
+                    java.util.Collections.<Object>singletonList(grupoFila(ID, 2)),
+                    java.util.Collections.<Object>singletonList(grupoFila(segundo, 2)));
+            when(manager.createNativeQuery(eq(GrupoJpaRepository.SQL_GRUPOS_PAGINADO))).thenReturn(paginaGrupos);
+            query(GrupoJpaRepository.HQL_HORARIOS_DE_GRUPOS, UvHorarioEntity.class, List.of(
+                    HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", OTHER, "idGrupo", ID, "codigoDia", "MI", "nombreDia",
+                            "Miercoles", "horaInicio", LocalTime.of(14, 0), "horaFin", LocalTime.of(16, 0))),
+                    HydratedViewRow.of(UvHorarioEntity.class, Map.of("id", UUID.randomUUID(), "idGrupo", ID, "codigoDia", "LU",
+                            "nombreDia", "Lunes", "horaInicio", LocalTime.of(8, 0), "horaFin", LocalTime.of(10, 0)))));
+            final jakarta.persistence.Query estudiantes = mock(jakarta.persistence.Query.class, RETURNS_SELF);
+            when(estudiantes.getResultList()).thenReturn(java.util.Collections.<Object>singletonList(
+                    new Object[]{ID, OTHER.toString(), null, "Ana", "ana@uco.edu.co", "A", "Activo", 1}));
+            when(manager.createNativeQuery(eq(GrupoJpaRepository.SQL_ESTUDIANTES_GRUPO))).thenReturn(estudiantes);
+            final GrupoJpaRepository repository = new GrupoJpaRepository(manager, mock(TransactionOperations.class),
+                    new JpaProcedureExecutor(manager));
 
-        assertTrue(repository.consultarGrupos().getFirst().isGrupoHabilitado());
-        // F1: el listado trae el horario semanal ordenado de lunes a domingo
-        assertEquals(List.of("LU", "MI"), repository.consultarGrupos().getFirst().getFranjas().stream()
-                .map(franja -> franja.codigoDia()).toList());
-        assertNull(repository.consultarEstudiantesGrupo(OTHER).getFirst().documento());
-        verify(estudiantes).setParameter("idGrupo", OTHER);
+            final var grupos = repository.consultarGrupos(actor);
+
+            assertEquals(List.of(ID, segundo), grupos.stream().map(g -> g.getId()).toList());
+            assertTrue(grupos.getFirst().isGrupoHabilitado());
+            assertEquals("508", grupos.getFirst().getCodigo());
+            // F1: el listado trae el horario semanal ordenado de lunes a domingo
+            assertEquals(List.of("LU", "MI"), grupos.getFirst().getFranjas().stream().map(franja -> franja.codigoDia()).toList());
+            verify(paginaGrupos, org.mockito.Mockito.times(2)).setParameter("idUsuarioEjecutor", actor);
+            verify(paginaGrupos).setParameter("numeroPagina", 1);
+            verify(paginaGrupos).setParameter("numeroPagina", 2);
+            verify(paginaGrupos, org.mockito.Mockito.times(2)).setParameter("tamanoPagina", GrupoJpaRepository.TAMANO_PAGINA_GRUPOS);
+
+            final var filas = repository.consultarEstudiantesGrupo(OTHER, actor);
+            assertNull(filas.getFirst().documento());
+            assertEquals(OTHER, filas.getFirst().idEstudiante());
+            verify(estudiantes).setParameter("idGrupo", OTHER);
+            verify(estudiantes).setParameter("idUsuarioEjecutor", actor);
+        } finally {
+            co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.clear();
+        }
+    }
+
+    private static Object[] grupoFila(final UUID id, final int total) {
+        return new Object[]{id, 508, "Grupo", UUID.randomUUID(), "Backend", UUID.randomUUID(), 30, 10, 20, 1,
+                java.time.LocalDate.of(2026, 1, 20), java.time.LocalDate.of(2026, 5, 30), total};
     }
 
     @Test
@@ -279,8 +291,6 @@ class JpaQueryAdapterContractTest {
                 .consultarPeriodosAcademicos());
         assertThrows(DatabaseOperationException.class, () -> new FacultadJpaRepository(manager)
                 .consultarFacultadPorId(ID));
-        assertThrows(DatabaseOperationException.class, () -> new SesionMateriaEstudianteJpaRepository(manager)
-                .consultarSesionesMateria(ID, OTHER));
         assertThrows(DatabaseOperationException.class, () -> new AsistenciaSesionEstudianteJpaRepository(manager)
                 .consultarAsistenciaSesiones(ID, OTHER));
         assertThrows(DatabaseOperationException.class, () -> new AsignaturaJpaRepository(manager,

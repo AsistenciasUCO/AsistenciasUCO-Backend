@@ -237,4 +237,22 @@ class AdminNotificacionControllerTest {
 
         verify(administracionPort).enviarCorreoPrueba(ADMIN_ID, null, "test@uco.edu.co");
     }
+
+    @Test
+    @DisplayName("CULM-001 A.2-6 (A2-B-11): POST /versiones con {} responde 400 VALIDATION_ERROR sin llegar al adaptador")
+    void crearVersionPlantilla_sin_asunto_ni_cuerpo_responde_400() throws Exception {
+        mockMvc.perform(post("/api/v1/admin/notificaciones/plantillas/RETIRO_ESTUDIANTE_GRUPO/versiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{}"))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.code").value("VALIDATION_ERROR"))
+                .andExpect(jsonPath("$.details[0].field").value("asunto"))
+                .andExpect(jsonPath("$.details[1].field").value("cuerpo"));
+        mockMvc.perform(post("/api/v1/admin/notificaciones/plantillas/RETIRO_ESTUDIANTE_GRUPO/versiones")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("{\"asunto\":\"  \",\"cuerpo\":\"Cuerpo\"}"))
+                .andExpect(status().isBadRequest());
+
+        org.mockito.Mockito.verifyNoInteractions(administracionPort);
+    }
 }

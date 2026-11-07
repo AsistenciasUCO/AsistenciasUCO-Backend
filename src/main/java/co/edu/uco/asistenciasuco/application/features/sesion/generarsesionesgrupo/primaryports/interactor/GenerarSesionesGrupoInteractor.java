@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.interactor;
 
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.GenerarSesionesGrupoInputPort;
+import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.dto.GeneracionSesionesGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.dto.GenerarSesionesGrupoDTO;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.primaryports.mapper.GenerarSesionesGrupoMapper;
 import co.edu.uco.asistenciasuco.application.features.sesion.generarsesionesgrupo.usecase.GenerarSesionesGrupoUseCase;
@@ -16,7 +17,8 @@ public final class GenerarSesionesGrupoInteractor implements GenerarSesionesGrup
     }
 
     @Override
-    public void execute(final GenerarSesionesGrupoDTO dto) {
-        useCase.execute(GenerarSesionesGrupoMapper.toDomain(dto));
+    public GeneracionSesionesGrupoDTO execute(final GenerarSesionesGrupoDTO dto) {
+        final var generacion = useCase.execute(GenerarSesionesGrupoMapper.toDomain(dto));
+        return new GeneracionSesionesGrupoDTO(generacion.sesionesCanceladasPorFestivo(), generacion.sesionesFestivoConAsistencia());
     }
 }

@@ -48,8 +48,9 @@ class OpenApiEstudiantesDirectoryConformanceTest {
     void directoryOperationIsPublishedWithStableIdRolesAndBearer() {
         final Operation operation = operation();
         assertEquals("consultarEstudiantes", operation.getOperationId());
-        assertEquals(List.of("COORDINADOR", "ADMINISTRADOR"), operation.getExtensions().get("x-roles"),
-                "Solo COORDINADOR y ADMINISTRADOR acceden al directorio general (SecurityConfig)");
+        // Golden path 1.2.0 (CULM-001 A.2, DEC-027/DEC-032): DOCENTE accede con el ambito del SP (solo sus grupos).
+        assertEquals(List.of("DOCENTE", "COORDINADOR", "ADMINISTRADOR"), operation.getExtensions().get("x-roles"),
+                "DOCENTE, COORDINADOR y ADMINISTRADOR acceden al directorio con ambito en el SP (SecurityConfig)");
         assertNotNull(operation.getSecurity());
         assertEquals(1, operation.getSecurity().size());
         assertEquals(List.of(), operation.getSecurity().getFirst().get("bearerAuth"));
@@ -158,7 +159,7 @@ class OpenApiEstudiantesDirectoryConformanceTest {
     void controllerSuccessStatusIsTheDeclared200() {
         final ConsultarEstudiantesInputPort port = mock(ConsultarEstudiantesInputPort.class);
         when(port.execute(any())).thenReturn(new EstudiantePaginaDTO(List.of(), 0L, 0, 0, 20));
-        final EstudianteController controller = new EstudianteController(port, mock(ConsultarEstudiantePorIdInputPort.class));
+        final EstudianteController controller = new EstudianteController(port, mock(ConsultarEstudiantePorIdInputPort.class), java.util.UUID::randomUUID);
         final int status = controller.consultarEstudiantes(null, null, null, null, null, null, null, null, null, 0, 20)
                 .getStatusCode().value();
         assertEquals(200, status);

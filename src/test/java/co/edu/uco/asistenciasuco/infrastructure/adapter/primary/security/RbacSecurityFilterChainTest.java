@@ -135,14 +135,13 @@ class RbacSecurityFilterChainTest {
     }
 
     @Test
-    void coordinador_indicadores_solo_coordinador_y_administrador_pasan_el_filtro() throws Exception {
+    // CULM-001 A.2-3 (DEC-022 §2, F-TRX-018): cambio formal de expectativa; el ADMINISTRADOR pasa de 200 a 403.
+    void coordinador_indicadores_solo_coordinador_pasa_el_filtro() throws Exception {
         for (final String ruta : INDICADORES_COORDINADOR) {
-            for (final String rol : new String[]{"DOCENTE", "ESTUDIANTE"}) {
+            for (final String rol : new String[]{"DOCENTE", "ESTUDIANTE", "ADMINISTRADOR"}) {
                 mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
             }
-            for (final String rol : new String[]{"COORDINADOR", "ADMINISTRADOR"}) {
-                mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isOk());
-            }
+            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR"))).andExpect(status().isOk());
         }
     }
 
@@ -154,13 +153,51 @@ class RbacSecurityFilterChainTest {
     }
 
     @Test
-    void decano_indicadores_coordinador_docente_y_estudiante_reciben_403_y_administrador_pasa_el_filtro() throws Exception {
+    // CULM-001 A.2-3 (DEC-022 §2, F-TRX-018): cambio formal de expectativa; el ADMINISTRADOR pasa de 200 a 403.
+    void decano_indicadores_solo_el_decano_pasa_el_filtro() throws Exception {
         for (final String ruta : INDICADORES_DECANO) {
-            for (final String rol : new String[]{"COORDINADOR", "DOCENTE", "ESTUDIANTE"}) {
+            for (final String rol : new String[]{"COORDINADOR", "DOCENTE", "ESTUDIANTE", "ADMINISTRADOR"}) {
                 mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
             }
-            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR"))).andExpect(status().isOk());
+            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("DECANO"))).andExpect(status().isOk());
         }
+    }
+
+    // CULM-001 A.2-3 (A2-B-06): muestra de rutas coordinador/* y decano/* sin ADMINISTRADOR; la unica excepcion es el
+    // catalogo de periodos, que consume la pantalla del administrador.
+    @Test
+    void administrador_no_opera_coordinador_ni_decano_salvo_el_catalogo_de_periodos() throws Exception {
+        mockMvc.perform(get("/api/v1/coordinador/estudiantes").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/decano/estructura").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(post("/api/v1/decano/coordinadores").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/coordinador/planes-estudio").header(HttpHeaders.AUTHORIZATION, bearer("ADMINISTRADOR")))
+                .andExpect(status().isForbidden());
+        for (final String rol : List.of("ADMINISTRADOR", "DECANO", "COORDINADOR")) {
+            mockMvc.perform(get("/api/v1/coordinador/periodos-academicos").header(HttpHeaders.AUTHORIZATION, bearer(rol)))
+                    .andExpect(status().isOk());
+        }
+        mockMvc.perform(get("/api/v1/coordinador/periodos-academicos").header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE")))
+                .andExpect(status().isForbidden());
+        mockMvc.perform(get("/api/v1/coordinador/estudiantes").header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/decano/estructura").header(HttpHeaders.AUTHORIZATION, bearer("DECANO")))
+                .andExpect(status().isOk());
+        mockMvc.perform(get("/api/v1/coordinador/planes-estudio").header(HttpHeaders.AUTHORIZATION, bearer("DECANO")))
+                .andExpect(status().isOk());
+    }
+
+    // CULM-001 A.2-15 (A2-B-18, DEC-027): la busqueda por documento es solo del DOCENTE (regla antes de GET /grupos/**).
+    @Test
+    void busqueda_de_estudiante_por_documento_solo_docente() throws Exception {
+        final String ruta = "/api/v1/grupos/11111111-1111-1111-1111-111111111111/estudiantes/busqueda";
+        mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer("DOCENTE"))).andExpect(status().isOk());
+        for (final String rol : List.of("COORDINADOR", "ADMINISTRADOR", "DECANO", "ESTUDIANTE")) {
+            mockMvc.perform(get(ruta).header(HttpHeaders.AUTHORIZATION, bearer(rol))).andExpect(status().isForbidden());
+        }
+        mockMvc.perform(get(ruta)).andExpect(status().isUnauthorized());
     }
 
     @Test
@@ -407,8 +444,8 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
-    // --- POST /api/v1/grupos/{grupoId}/estudiantes : matricula. La DB controla titularidad
-    // (DOCENTE titular del grupo O COORDINADOR del programa); ADMINISTRADOR no tiene bypass. ---
+    // --- POST /api/v1/grupos/{grupoId}/estudiantes : matricula manual (HU050). F-COO-004 (CULM-001 A): solo el DOCENTE
+    // titular; la DB exige perfil DOCENTE y titularidad (SEC_002). COORDINADOR y ADMINISTRADOR reciben 403 en el filtro. ---
 
     @Test
     void matricular_estudiante_docente_es_permitido_por_security_filter_chain() throws Exception {
@@ -418,10 +455,10 @@ class RbacSecurityFilterChainTest {
     }
 
     @Test
-    void matricular_estudiante_coordinador_es_permitido_por_security_filter_chain() throws Exception {
+    void matricular_estudiante_coordinador_recibe_403() throws Exception {
         mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
                         .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     @Test
@@ -782,6 +819,18 @@ class RbacSecurityFilterChainTest {
 
         @GetMapping("/api/v1/estudiantes")
         String estudiantes() {
+            return "ok";
+        }
+
+        @GetMapping({"/api/v1/coordinador/estudiantes", "/api/v1/coordinador/periodos-academicos",
+                "/api/v1/coordinador/planes-estudio", "/api/v1/decano/estructura",
+                "/api/v1/grupos/{grupoId}/estudiantes/busqueda"})
+        String rutasCulm001A() {
+            return "ok";
+        }
+
+        @PostMapping("/api/v1/decano/coordinadores")
+        String crearCoordinador() {
             return "ok";
         }
 

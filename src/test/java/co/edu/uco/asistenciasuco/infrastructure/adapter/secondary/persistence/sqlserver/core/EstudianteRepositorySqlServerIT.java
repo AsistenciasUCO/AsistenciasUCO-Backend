@@ -32,6 +32,11 @@ class EstudianteRepositorySqlServerIT {
     @Autowired
     private JdbcTemplate jdbcTemplate;
 
+    @org.junit.jupiter.api.BeforeEach
+    void correlacion() {
+        co.edu.uco.asistenciasuco.infrastructure.observability.correlation.CorrelationIdContext.set(UUID.randomUUID());
+    }
+
     @Test
     void consultar_estudiantes_ejecuta_sql_real_paginado_sin_duplicar_estudiante() {
         final EstudiantePaginaRepositoryProjection pagina = estudianteRepositoryPort.consultarEstudiantes(
@@ -46,7 +51,8 @@ class EstudianteRepositorySqlServerIT {
                         null,
                         null,
                         0,
-                        10
+                        10,
+                        actorAdministrador()
                 )
         );
 
@@ -67,12 +73,13 @@ class EstudianteRepositorySqlServerIT {
                 SELECT TOP 1 e.id
                 FROM dbo.Estudiante e
                 INNER JOIN dbo.Usuario u ON e.usuario = u.id
+                WHERE EXISTS (SELECT 1 FROM dbo.EstudianteGrupo eg WHERE eg.estudiante = e.id)
                 ORDER BY u.primerApellido, u.primerNombre, u.numeroIdentificacion, e.id
                 """);
 
         assumeTrue(estudiante.isPresent(), "No hay estudiantes para validar detalle real.");
 
-        final var detalle = estudianteRepositoryPort.consultarEstudiantePorId(estudiante.get());
+        final var detalle = estudianteRepositoryPort.consultarEstudiantePorId(estudiante.get(), actorAdministrador());
 
         assertTrue(detalle.isPresent());
         assertEquals(estudiante.get(), detalle.get().datosPersonales().id());
@@ -86,5 +93,16 @@ class EstudianteRepositorySqlServerIT {
                 (resultSet, rowNumber) -> UUID.fromString(String.valueOf(resultSet.getObject("id")))
         );
         return resultado.stream().findFirst();
+    }
+
+    /**
+     * CULM-001 A.2-1: el directorio se consulta por SP con el ejecutor; las paridades usan un ADMINISTRADOR (ambito de su
+     * institucion). Los estudiantes sin vinculo con la institucion no aparecen (fail-closed, DEC-031 §3).
+     */
+    private UUID actorAdministrador() {
+        final List<UUID> ids = jdbcTemplate.query("SELECT TOP 1 a.usuario FROM dbo.Administrador a ORDER BY a.usuario",
+                (rs, row) -> UUID.fromString(rs.getString(1)));
+        org.junit.jupiter.api.Assumptions.assumeFalse(ids.isEmpty(), "No hay administrador para consultar el directorio.");
+        return ids.getFirst();
     }
 }

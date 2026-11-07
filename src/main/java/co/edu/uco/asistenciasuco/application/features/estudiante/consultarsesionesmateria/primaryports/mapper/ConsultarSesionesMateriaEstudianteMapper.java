@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.mapper;
 
+import co.edu.uco.asistenciasuco.application.features.sesion.common.entity.EstadoSesion;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.primaryports.dto.SesionMateriaEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.estudiante.consultarsesionesmateria.usecase.domain.SesionMateriaEstudianteDomain;
 
@@ -13,6 +14,8 @@ public final class ConsultarSesionesMateriaEstudianteMapper {
                 domain.numeroSemana(), domain.idGrupo(), domain.codigoGrupo(), domain.nombreGrupo(),
                 domain.fechaHoraInicio(), domain.fechaHoraFin(), domain.fechaHoraInicioUtc(), domain.fechaHoraFinUtc(),
                 domain.estadoTemporal().name(), domain.estadoAsistencia().name(),
-                domain.estadoSolicitudRevision(), domain.reclamable());
+                domain.estadoSolicitudRevision(), domain.reclamable(),
+                EstadoSesion.de(domain.cancelacion() != null).name(), domain.cancelacion(),
+                domain.fechaLimiteJustificacionUtc(), domain.plazoJustificacionVigente());
     }
 }

@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.ProvisionarUsuarioInputPort;
 import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.dto.ProvisionarUsuarioDTO;
 import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.dto.ProvisionarUsuarioResultadoDTO;
@@ -12,6 +11,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.util.UUID;
 
+import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.Mockito.mock;
@@ -29,17 +29,13 @@ class UsuarioControllerTest {
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
 
+    // CULM-001 A.2-14 (A2-B-16): el stub 501 PUT /usuarios/perfil se retira (el perfil propio es de solo consulta, HU006).
     @Test
-    void actualizarPerfil_no_implementado_lanza_featureUnavailable() {
-        assertEquals("FEATURE_UNAVAILABLE",
-                assertThrows(FeatureUnavailableException.class,
-                        () -> controller.actualizarPerfilUsuarioAutenticado(new Object())).getCode());
-    }
-
-    @Test
-    void actualizarPerfil_via_http_retorna_501() throws Exception {
+    void put_perfil_retirado_no_tiene_ruta() throws Exception {
+        assertTrue(java.util.Arrays.stream(UsuarioController.class.getDeclaredMethods())
+                .noneMatch(metodo -> metodo.isAnnotationPresent(org.springframework.web.bind.annotation.PutMapping.class)));
         mvc.perform(put("/api/v1/usuarios/perfil").contentType("application/json").content("{}"))
-                .andExpect(status().isNotImplemented());
+                .andExpect(result -> org.junit.jupiter.api.Assertions.assertNull(result.getHandler()));
     }
 
     @Test
