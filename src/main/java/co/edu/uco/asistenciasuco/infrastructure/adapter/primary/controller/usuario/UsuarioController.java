@@ -1,13 +1,13 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario;
 
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
+
 import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.ProvisionarUsuarioInputPort;
 import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.dto.ProvisionarUsuarioDTO;
 import co.edu.uco.asistenciasuco.application.features.usuario.provisionarusuario.primaryports.dto.ProvisionarUsuarioResultadoDTO;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditRequestAttributes;
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
+
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.mapper.CrearUsuarioHttpMapper;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.request.CrearUsuarioRequest;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.usuario.response.CrearUsuarioResponse;
@@ -16,7 +16,7 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.valid
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.PutMapping;
+
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
@@ -42,12 +42,7 @@ public final class UsuarioController {
         );
     }
 
-    @PutMapping("/perfil")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarPerfilUsuarioAutenticado(@RequestBody final Object request) {
-        throw new FeatureUnavailableException(
-                "La actualizacion de perfil requiere un command publico de DB; no se permite UPDATE directo."
-        );
-    }
+    // CULM-001 A.2-14: el stub 501 PUT /perfil se retira; el perfil propio es de solo consulta (HU006, GET).
 
     @PostMapping
     @AuditableOperation(
