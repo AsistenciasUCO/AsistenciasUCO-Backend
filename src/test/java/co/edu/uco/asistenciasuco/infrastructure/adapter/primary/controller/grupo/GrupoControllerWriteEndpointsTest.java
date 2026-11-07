@@ -284,9 +284,11 @@ class GrupoControllerWriteEndpointsTest {
         verify(registrarEstudiantePort).execute(any());
     }
 
+    // CULM-001 A.1 (F-COO-004): el stub 501 DELETE /grupos/{grupoId}/estudiantes/{estudianteId} se retira; el retiro
+    // vigente es POST /api/v1/docente/grupos/{grupoId}/estudiantes/{estudianteId}/retiro (HU051).
     @Test
-    void retirar_estudiante_responde_como_capacidad_no_disponible() throws Exception {
+    void retirar_estudiante_por_delete_ya_no_tiene_ruta() throws Exception {
         mockMvc.perform(delete("/api/v1/grupos/{grupoId}/estudiantes/{estudianteId}", GRUPO, ESTUDIANTE))
-                .andExpect(jsonPath("$.code").value("FEATURE_UNAVAILABLE"));
+                .andExpect(status().isNotFound());
     }
 }

@@ -274,4 +274,15 @@ class GrupoControllerTest {
                 }
                 """.formatted(TIPO_IDENTIFICACION, GRUPO_BODY_IGNORADO);
     }
+
+    // CULM-001 A.1 (B-RED-03): GrupoController no expone DELETE (el stub 501 de retiro se elimina, F-COO-004).
+    @Test
+    void grupo_controller_no_tiene_delete_mapping() {
+        final java.util.List<String> metodos = java.util.Arrays.stream(GrupoController.class.getDeclaredMethods())
+                .filter(metodo -> metodo.isAnnotationPresent(org.springframework.web.bind.annotation.DeleteMapping.class))
+                .map(java.lang.reflect.Method::getName)
+                .toList();
+
+        org.junit.jupiter.api.Assertions.assertTrue(metodos.isEmpty(), () -> "DeleteMapping retirado aun presente: " + metodos);
+    }
 }

@@ -20,6 +20,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertInstanceOf;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -31,7 +32,10 @@ import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
-/** HU008: EXEC de la oferta de grupos con binding nombrado, correlacion y mapeo de columnas (OR-01..OR-06). */
+/**
+ * HU008: EXEC de la oferta de grupos con binding nombrado, correlacion y mapeo de columnas (OR-01..OR-09). CULM-001 A.1:
+ * el resultset pasa de 21 a 19 columnas (sin idSolicitudAbierta ni codigoEstadoSolicitud; HU053-HU055 descartadas).
+ */
 class OfertaGruposEstudianteJpaRepositoryTest {
 
     private static final UUID CORRELATION = UUID.fromString("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa");
@@ -54,18 +58,17 @@ class OfertaGruposEstudianteJpaRepositoryTest {
         CorrelationIdContext.clear();
     }
 
-    private static Object[] fila(final UUID grupo, final Object inicio, final Object matriculado, final UUID solicitud, final String estado) {
+    private static Object[] fila(final UUID grupo, final Object inicio, final Object matriculado) {
         return new Object[]{grupo, 7, "Grupo 7 ", UUID.randomUUID(), "MAT1", "Algebra", "Ana Perez", UUID.randomUUID(), "2026-2",
-                inicio, LocalDate.of(2026, 12, 10), "VIGENTE", "Lunes 08:00-10:00", 30, 25, 5, matriculado, solicitud, estado, "INS", 3};
+                inicio, LocalDate.of(2026, 12, 10), "VIGENTE", "Lunes 08:00-10:00", 30, 25, 5, matriculado, "INS", 3};
     }
 
     @Test
     void OR01_ejecuta_el_sp_con_parametros_nombrados_y_mapea_las_columnas() {
         final UUID grupo = UUID.randomUUID();
-        final UUID solicitud = UUID.randomUUID();
         when(query.getResultList()).thenReturn(List.<Object>of(
-                fila(grupo, LocalDate.of(2026, 7, 20), false, solicitud, "P"),
-                fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), true, null, null)));
+                fila(grupo, LocalDate.of(2026, 7, 20), false),
+                fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), true)));
 
         final var pagina = repository.consultarOferta(ACTOR, "algebra", 2, 5);
 
@@ -90,8 +93,6 @@ class OfertaGruposEstudianteJpaRepositoryTest {
         assertEquals(25, g.estudiantesActivos());
         assertEquals(5, g.cuposDisponibles());
         assertFalse(g.matriculado());
-        assertEquals(solicitud, g.idSolicitudAbierta());
-        assertEquals("P", g.codigoEstadoSolicitud());
         assertEquals("INS", g.codigoComponente());
         assertTrue(pagina.grupos().get(1).matriculado());
     }
@@ -131,10 +132,11 @@ class OfertaGruposEstudianteJpaRepositoryTest {
 
     @Test
     void OR06_columnas_nulas_se_mapean_con_valores_seguros() {
-        final Object[] fila = fila(UUID.randomUUID(), null, null, null, null);
+        final Object[] fila = fila(UUID.randomUUID(), null, null);
         fila[1] = null;
         fila[12] = null;
         fila[15] = null;
+        fila[17] = null;
         when(query.getResultList()).thenReturn(Collections.singletonList(fila));
 
         final var g = repository.consultarOferta(ACTOR, null, 1, 10).grupos().getFirst();
@@ -144,24 +146,52 @@ class OfertaGruposEstudianteJpaRepositoryTest {
         assertNull(g.fechaInicioPeriodo());
         assertEquals(0, g.cuposDisponibles());
         assertFalse(g.matriculado());
-        assertNull(g.codigoEstadoSolicitud());
+        assertNull(g.codigoComponente());
     }
 
     @Test
     void OR07_uniqueidentifier_como_texto_del_driver_sqlserver() {
         final UUID grupo = UUID.randomUUID();
-        final UUID solicitud = UUID.randomUUID();
-        final Object[] fila = fila(null, LocalDate.of(2026, 7, 20), false, null, "P");
+        final UUID asignatura = UUID.randomUUID();
+        final UUID periodo = UUID.randomUUID();
+        final Object[] fila = fila(null, LocalDate.of(2026, 7, 20), false);
         fila[0] = grupo.toString().toUpperCase();
-        fila[3] = UUID.randomUUID().toString();
-        fila[7] = UUID.randomUUID().toString();
-        fila[17] = solicitud.toString();
+        fila[3] = asignatura.toString();
+        fila[7] = periodo.toString();
         when(query.getResultList()).thenReturn(Collections.singletonList(fila));
 
         final var g = repository.consultarOferta(ACTOR, null, 1, 10).grupos().getFirst();
 
         assertEquals(grupo, g.idGrupo());
-        assertEquals(solicitud, g.idSolicitudAbierta());
+        assertEquals(asignatura, g.idAsignatura());
+        assertEquals(periodo, g.idPeriodoAcademico());
+    }
+
+    @Test
+    void OR08_fila_de_19_columnas_mapea_componente_en_17_y_total_en_18() {
+        final Object[] fila = fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), true);
+        fila[17] = "ESP";
+        fila[18] = 41;
+        when(query.getResultList()).thenReturn(Collections.singletonList(fila));
+
+        final var pagina = repository.consultarOferta(ACTOR, null, 1, 10);
+
+        assertEquals(19, OfertaGruposEstudianteJpaRepository.COLUMNAS_OFERTA);
+        assertEquals("ESP", pagina.grupos().getFirst().codigoComponente());
+        assertEquals(41, pagina.total());
+        assertTrue(pagina.grupos().getFirst().matriculado());
+    }
+
+    @Test
+    void OR09_fila_con_longitud_distinta_falla() {
+        final Object[] fila21 = new Object[21];
+        System.arraycopy(fila(UUID.randomUUID(), LocalDate.of(2026, 7, 20), false), 0, fila21, 0, 19);
+        when(query.getResultList()).thenReturn(Collections.singletonList(fila21));
+
+        final DatabaseOperationException error = assertThrows(DatabaseOperationException.class,
+                () -> repository.consultarOferta(ACTOR, null, 1, 10));
+
+        assertInstanceOf(IllegalStateException.class, error.getCause());
     }
 
     @Test

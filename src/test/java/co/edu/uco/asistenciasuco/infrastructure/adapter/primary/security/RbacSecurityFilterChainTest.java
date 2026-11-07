@@ -407,8 +407,8 @@ class RbacSecurityFilterChainTest {
                 .andExpect(status().isOk());
     }
 
-    // --- POST /api/v1/grupos/{grupoId}/estudiantes : matricula. La DB controla titularidad
-    // (DOCENTE titular del grupo O COORDINADOR del programa); ADMINISTRADOR no tiene bypass. ---
+    // --- POST /api/v1/grupos/{grupoId}/estudiantes : matricula manual (HU050). F-COO-004 (CULM-001 A): solo el DOCENTE
+    // titular; la DB exige perfil DOCENTE y titularidad (SEC_002). COORDINADOR y ADMINISTRADOR reciben 403 en el filtro. ---
 
     @Test
     void matricular_estudiante_docente_es_permitido_por_security_filter_chain() throws Exception {
@@ -418,10 +418,10 @@ class RbacSecurityFilterChainTest {
     }
 
     @Test
-    void matricular_estudiante_coordinador_es_permitido_por_security_filter_chain() throws Exception {
+    void matricular_estudiante_coordinador_recibe_403() throws Exception {
         mockMvc.perform(post("/api/v1/grupos/{grupoId}/estudiantes", "11111111-1111-1111-1111-111111111111")
                         .header(HttpHeaders.AUTHORIZATION, bearer("COORDINADOR")))
-                .andExpect(status().isOk());
+                .andExpect(status().isForbidden());
     }
 
     @Test
