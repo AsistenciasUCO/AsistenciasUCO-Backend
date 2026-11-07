@@ -12,7 +12,9 @@ import jakarta.servlet.http.HttpServletRequest;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.TypeMismatchException;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -42,6 +44,7 @@ import java.util.UUID;
 public final class GlobalExceptionHandler {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(GlobalExceptionHandler.class);
+    static final String RETRY_AFTER_SEGUNDOS = "60";
 
     private final ResolverMensajeUsuarioInputPort resolverMensajeUsuario;
 
@@ -199,7 +202,13 @@ public final class GlobalExceptionHandler {
         } else {
             logControlled(descriptor, exception, request);
         }
-        return buildResponse(descriptor, request);
+        final ResponseEntity<ApiErrorResponse> respuesta = buildResponse(descriptor, request);
+        if (descriptor.status() == HttpStatus.TOO_MANY_REQUESTS) {
+            // CULM-001 B.2 (3.2.7): un limite de intentos del caso de uso indica cuando reintentar (ventana de un minuto).
+            return ResponseEntity.status(respuesta.getStatusCode()).headers(respuesta.getHeaders())
+                    .header(HttpHeaders.RETRY_AFTER, RETRY_AFTER_SEGUNDOS).body(respuesta.getBody());
+        }
+        return respuesta;
     }
 
     @ExceptionHandler(TechnicalException.class)

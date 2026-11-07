@@ -7,5 +7,7 @@ public enum ErrorKind {
     CONFLICT,
     FORBIDDEN,
     UNAUTHORIZED,
+    /** CULM-001 B.2: limite de intentos superado (429). */
+    TOO_MANY_REQUESTS,
     TECHNICAL
 }
