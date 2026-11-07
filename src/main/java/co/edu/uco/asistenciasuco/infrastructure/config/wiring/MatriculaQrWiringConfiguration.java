@@ -32,7 +32,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.security.PasswordEnc
 import co.edu.uco.asistenciasuco.application.secondaryports.security.TokenGeneratorPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.MatriculaQrRateLimitFilter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.NetworkClientIpResolver;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.SlidingWindowRateLimiter;
+import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.matriculaqr.MatriculaQrPublicaController;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.scheduler.RotacionTokenMatriculaScheduler;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;

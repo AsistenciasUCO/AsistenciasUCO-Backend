@@ -3,7 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.NetworkClientIpResolver;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.OperacionAutenticadaRateLimitFilter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.filter.SlidingWindowRateLimiter;
+import co.edu.uco.asistenciasuco.infrastructure.ratelimit.SlidingWindowRateLimiter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.handler.SecurityErrorResponseWriter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.composite.ParametrosPorDefecto;
 import org.springframework.beans.factory.ObjectProvider;
