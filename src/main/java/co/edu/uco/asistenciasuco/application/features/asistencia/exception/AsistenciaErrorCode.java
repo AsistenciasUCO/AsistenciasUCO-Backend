@@ -33,7 +33,11 @@ public enum AsistenciaErrorCode implements ErrorDefinition {
     ERR_SESION_CERRADA("ERR_SESION_CERRADA", "La sesion ya finalizo; la asistencia solo puede modificarse mediante un reclamo.", ErrorKind.CONFLICT),
     ERR_SESION_HORARIO_INDETERMINADO("ERR_SESION_HORARIO_INDETERMINADO", "El horario de la sesion no esta confirmado; no es posible registrar asistencia.", ErrorKind.CONFLICT),
     // CULM-001 B.1 (NB-1): la sesion fue cancelada (DB: SES_010); no admite registro de asistencia.
-    ERR_SESION_CANCELADA("ERR_SESION_CANCELADA", "La sesión fue cancelada; no admite registro de asistencia.", ErrorKind.CONFLICT);
+    ERR_SESION_CANCELADA("ERR_SESION_CANCELADA", "La sesión fue cancelada; no admite registro de asistencia.", ErrorKind.CONFLICT),
+    // CULM-001 D.1 (HU026B): plazo de excusas. DB: REV_020 (vencido, el SP informa la ultima fecha local admitida) y REV_025
+    // (faltan ASISTENCIA/DIAS_LIMITE_JUSTIFICACION o TIEMPO/ZONA_HORARIA_SQLSERVER). Java no recalcula el plazo.
+    ERR_PLAZO_JUSTIFICACION_VENCIDO("ERR_PLAZO_JUSTIFICACION_VENCIDO", "El plazo para justificar esta inasistencia ya venció.", ErrorKind.CONFLICT),
+    ERR_CONFIGURACION_PLAZO_JUSTIFICACION("ERR_CONFIGURACION_PLAZO_JUSTIFICACION", "No es posible validar el plazo de justificación en este momento.", ErrorKind.TECHNICAL);
 
     private final String code;
     private final String defaultMessage;

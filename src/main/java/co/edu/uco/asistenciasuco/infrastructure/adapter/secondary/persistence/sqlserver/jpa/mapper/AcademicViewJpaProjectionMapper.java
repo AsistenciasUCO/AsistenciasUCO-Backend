@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ParametroProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PlanEstudioProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.report.ReporteAsistenciaRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvDocenteEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvProgramaEntity;
@@ -30,7 +29,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvPeriodoAcademicoEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.entity.UvPlanEstudioEntity;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.ReporteAsistenciaQueryRow;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.SesionMateriaQueryRow;
 
 import java.time.LocalTime;
 
@@ -92,13 +90,6 @@ public final class AcademicViewJpaProjectionMapper {
         return new HorarioEstudianteProjection(row.id(), row.idEstudiante(), row.idGrupo(), row.codigoMateria(),
                 row.nombreMateria(), row.grupo(), row.dia(), localTime(row.horaInicio()), localTime(row.horaFin()),
                 row.docente());
-    }
-
-    public static SesionMateriaEstudianteProjection toSesionMateria(final SesionMateriaQueryRow row) {
-        return new SesionMateriaEstudianteProjection(row.id(), row.nombre(), row.numero(), row.codigo(),
-                row.numeroSemana(), row.idGrupo(), text(row.codigoGrupo()), row.nombreGrupo(),
-                row.fechaHoraInicio(),
-                row.fechaHoraFin());
     }
 
     public static PeriodoAcademicoProjection toPeriodoAcademico(final UvPeriodoAcademicoEntity row) {

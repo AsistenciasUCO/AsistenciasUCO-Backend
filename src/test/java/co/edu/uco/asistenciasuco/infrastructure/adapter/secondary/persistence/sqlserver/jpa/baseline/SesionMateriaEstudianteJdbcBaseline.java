@@ -1,6 +1,5 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline;
 
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.SesionMateriaEstudianteQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.mapping.JdbcBaselineValueMapper;
 import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
@@ -10,7 +9,12 @@ import java.util.List;
 import java.util.Objects;
 import java.util.UUID;
 
-public final class SesionMateriaEstudianteJdbcBaseline implements SesionMateriaEstudianteQueryPort {
+/**
+ * Oraculo historico (CULM-001 D.1): la consulta sobre {@code uv_sesion} que sustituyo {@code usp_consultar_sesiones_materia_estudiante}.
+ * Ya no implementa el puerto (cuya firma ahora lleva el usuario ejecutor y la pagina); la prueba de paridad D1-10 lo compara
+ * con el adaptador nuevo solo con matriculas inscritas.
+ */
+public final class SesionMateriaEstudianteJdbcBaseline {
 
     private final NamedParameterJdbcOperations jdbcOperations;
 
@@ -18,7 +22,6 @@ public final class SesionMateriaEstudianteJdbcBaseline implements SesionMateriaE
         this.jdbcOperations = Objects.requireNonNull(jdbcOperations, "NamedParameterJdbcOperations es obligatorio.");
     }
 
-    @Override
     public List<SesionMateriaEstudianteProjection> consultarSesionesMateria(final UUID idEstudiante, final UUID idAsignatura) {
         return jdbcOperations.query("""
                 SELECT s.id, s.nombre, s.numero, s.codigo, s.numeroSemana, s.idGrupo, s.codigoGrupo, s.nombreGrupo,
