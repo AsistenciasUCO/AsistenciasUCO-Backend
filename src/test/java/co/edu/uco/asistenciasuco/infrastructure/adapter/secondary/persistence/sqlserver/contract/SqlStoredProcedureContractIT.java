@@ -460,6 +460,28 @@ class SqlStoredProcedureContractIT {
                 Arguments.of("usp_consultar_resumen_asistencia_estudiante", List.of(
                         input("@idUsuarioEjecutor", "uniqueidentifier"),
                         input("@idCorrelacion", "uniqueidentifier")
+                )),
+                // CULM-001 D.4 (HU156, CONTRACT §5.2)
+                Arguments.of("usp_admitir_estudiante", List.of(
+                        input("@idTipoIdIdentificacion", "uniqueidentifier"),
+                        input("@numeroIdentificacion", "int"),
+                        input("@primerNombre", "nvarchar"),
+                        input("@segundoNombre", "nvarchar"),
+                        input("@primerApellido", "nvarchar"),
+                        input("@segundoApellido", "nvarchar"),
+                        input("@correo", "nvarchar"),
+                        input("@password", "nvarchar"),
+                        input("@idPrograma", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idUsuarioEjecutor", "uniqueidentifier")
+                )),
+                Arguments.of("usp_consultar_programas_institucion_paginado", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int"),
+                        input("@texto", "nvarchar"),
+                        input("@idFacultad", "uniqueidentifier")
                 ))
         );
     }

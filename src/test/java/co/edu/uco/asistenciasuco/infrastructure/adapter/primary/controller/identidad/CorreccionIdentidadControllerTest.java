@@ -111,4 +111,30 @@ class CorreccionIdentidadControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.datos.permitirCorregirDocumento").value(false));
     }
+
+    /** CULM-001 D.4 (HU156, OBS-6): el administrador corrige al estudiante de su institucion con el mismo cuerpo y respuesta. */
+    @Test
+    void D4_administrador_corrige_al_estudiante_de_su_institucion() throws Exception {
+        when(inputPort.corregir(any())).thenReturn(new ResultadoCorreccionIdentidadDTO(REGISTRO, "OK", null));
+
+        mvc.perform(put("/api/v1/admin/estudiantes/" + REGISTRO + "/identidad").contentType("application/json").content(CUERPO))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos.idRegistro").value(REGISTRO.toString()))
+                .andExpect(jsonPath("$.datos.sincronizacionIdentidad").value("OK"));
+
+        final ArgumentCaptor<CorregirIdentidadDTO> captor = ArgumentCaptor.forClass(CorregirIdentidadDTO.class);
+        verify(inputPort).corregir(captor.capture());
+        assertEquals("ESTUDIANTE", captor.getValue().tipoUsuario());
+        assertEquals(REGISTRO, captor.getValue().idRegistro());
+        assertEquals("Ana", captor.getValue().primerNombre());
+        assertEquals("Digitacion", captor.getValue().motivo());
+        assertEquals(ACTOR, captor.getValue().actorUsuario());
+    }
+
+    @Test
+    void D4_la_correccion_del_administrador_sin_motivo_es_400() throws Exception {
+        mvc.perform(put("/api/v1/admin/estudiantes/" + REGISTRO + "/identidad").contentType("application/json")
+                        .content("{\"primerNombre\":\"Luis\",\"primerApellido\":\"Ruiz\"}"))
+                .andExpect(status().isBadRequest());
+    }
 }
