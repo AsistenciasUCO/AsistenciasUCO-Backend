@@ -26,7 +26,7 @@ public class ConsultarOfertaGruposInteractor implements ConsultarOfertaGruposInp
                 .map(g -> new GrupoOfertaDTO(g.idGrupo(), g.codigoGrupo(), g.nombreGrupo(), g.idAsignatura(), g.codigoAsignatura(),
                         g.nombreAsignatura(), g.nombreDocente(), g.idPeriodoAcademico(), g.nombrePeriodoAcademico(),
                         g.fechaInicioPeriodo(), g.fechaFinPeriodo(), g.estadoPeriodo(), g.horario(), g.capacidadMaxima(),
-                        g.estudiantesActivos(), g.cuposDisponibles(), g.matriculado(), g.idSolicitudAbierta(), g.estadoSolicitud(),
+                        g.estudiantesActivos(), g.cuposDisponibles(), g.matriculado(),
                         g.tipoAsignatura(), g.transversal()))
                 .toList(), pagina.total());
     }

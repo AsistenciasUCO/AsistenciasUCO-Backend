@@ -4,7 +4,6 @@ import java.time.LocalDate;
 import java.util.UUID;
 
 /**
- * estadoSolicitud: PENDIENTE o EN_ESPERA si el estudiante tiene una solicitud abierta; null si no.
  * tipoAsignatura: ESPECIFICA (propia del programa), BASICA o INSTITUCIONAL (transversales, {@code transversal = true}).
  */
 public record GrupoOfertaDomain(
@@ -25,8 +24,6 @@ public record GrupoOfertaDomain(
         int estudiantesActivos,
         int cuposDisponibles,
         boolean matriculado,
-        UUID idSolicitudAbierta,
-        String estadoSolicitud,
         String tipoAsignatura,
         boolean transversal
 ) {
