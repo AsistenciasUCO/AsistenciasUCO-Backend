@@ -105,8 +105,9 @@ final class AttendanceCommandParityFixture {
         final String nombreUnico = IT_PREFIX + tag + UUID.randomUUID().toString().substring(0, 12);
         // SES-01: el registro ordinario exige la sesion activa con procedencia UTC confirmada (contrato v2).
         final LocalDateTime inicio = LocalDateTime.now(ZoneOffset.UTC).minusHours(1);
+        final LocalDateTime libre = primerHuecoLibreDelDocente(LocalDateTime.now(ZoneOffset.UTC).plusHours(1));
         sesionRepositoryPort.crearSesion(new CrearSesionRepositoryDTO(
-                grupoId, nombreUnico, inicio, inicio.plusHours(2), docenteUsuarioId, ContratoHorarioSesion.UTC_CONFIRMADO_V2));
+                grupoId, nombreUnico, libre, libre.plusHours(2), docenteUsuarioId, ContratoHorarioSesion.UTC_CONFIRMADO_V2));
         final List<UUID> encontrada = jdbcTemplate.query(
                 "SELECT id FROM dbo.Sesion WHERE grupo = ? AND nombre = ?",
                 (rs, n) -> UUID.fromString(String.valueOf(rs.getObject("id"))),
@@ -116,6 +117,7 @@ final class AttendanceCommandParityFixture {
             creados.add(new String[]{"Sesion", id.toString()});
         }
         assertEquals(1, encontrada.size(), "La sesion de prueba debe ser resoluble de forma unica por nombre.");
+        moverAVentanaViva(encontrada.get(0), inicio, inicio.plusHours(2));
         return encontrada.get(0);
     }
 
@@ -367,5 +369,24 @@ final class AttendanceCommandParityFixture {
     private static UUID uuid(final Object valor) {
         assertNotNull(valor);
         return UUID.fromString(String.valueOf(valor));
+    }
+
+    /**
+     * CULM-001 A.2-10 (SES_017): el grupo y el docente ya no admiten sesiones solapadas al crearlas. La sesion se crea por
+     * el SP en el primer hueco libre despues de las sesiones del docente y luego se lleva a la ventana viva de la prueba
+     * con un UPDATE directo del fixture que reafirma procedenciaTemporal (UTC_D06); el SP no revalida filas preexistentes.
+     */
+    private LocalDateTime primerHuecoLibreDelDocente(final LocalDateTime minimo) {
+        final List<java.sql.Timestamp> fin = jdbcTemplate.query("""
+                SELECT MAX(s.fechaHoraFin) FROM dbo.Sesion s INNER JOIN dbo.Grupo g ON g.id = s.grupo
+                WHERE g.docente = (SELECT docente FROM dbo.Grupo WHERE id = ?)
+                """, (rs, n) -> rs.getTimestamp(1), grupoId.toString());
+        final LocalDateTime ultimo = fin.isEmpty() || fin.getFirst() == null ? minimo : fin.getFirst().toLocalDateTime();
+        return (ultimo.isAfter(minimo) ? ultimo : minimo).plusMinutes(1).withSecond(0).withNano(0);
+    }
+
+    private void moverAVentanaViva(final UUID sesion, final LocalDateTime inicio, final LocalDateTime fin) {
+        jdbcTemplate.update("UPDATE dbo.Sesion SET fechaHoraInicio = ?, fechaHoraFin = ?, procedenciaTemporal = procedenciaTemporal WHERE id = ?",
+                java.sql.Timestamp.valueOf(inicio), java.sql.Timestamp.valueOf(fin), sesion.toString());
     }
 }
