@@ -15,15 +15,14 @@ import java.util.concurrent.ConcurrentHashMap;
 
 /**
  * Catalogo en recursos del backend para plantillas por defecto cuando BD no responde o no tiene plantilla.
+ * {@link #TIPOS_CONOCIDOS} es tambien la lista de tipos entregables: un tipo retirado (CULM-001 A.1: SOLICITUD_INGRESO_*)
+ * que el administrador reencole se marca como fallo definitivo en el canal.
  */
 public class PlantillaPorDefectoCatalogo {
 
     private static final String RESOURCE_PATTERN = "notification/templates/%s.%s.properties";
     public static final List<String> TIPOS_CONOCIDOS = List.of(
             Notificacion.TIPO_RETIRO_ESTUDIANTE_GRUPO,
-            Notificacion.TIPO_SOLICITUD_INGRESO_REGISTRADA,
-            Notificacion.TIPO_SOLICITUD_INGRESO_RESUELTA,
-            Notificacion.TIPO_SOLICITUD_INGRESO_RETIRADA,
             Notificacion.TIPO_VERIFICACION_CORREO,
             Notificacion.TIPO_RECLAMO_ASISTENCIA_RADICADO,
             Notificacion.TIPO_RECLAMO_ASISTENCIA_RESUELTO,

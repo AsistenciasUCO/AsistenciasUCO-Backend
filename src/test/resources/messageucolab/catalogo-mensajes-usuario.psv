@@ -72,7 +72,6 @@ SEC_002|SEC002|Funcional|Error|SEC_002 - No tiene autorización sobre el recurso
 NTF_001|NTF001|Funcional|Error|NTF_001 - Los datos de la notificación no son…|Los datos de la notificación no son válidos.
 NTF_002|NTF002|Funcional|Error|NTF_002 - La notificación especificada no existe…|La notificación especificada no existe en el sistema.
 NTF_003|NTF003|Funcional|Error|NTF_003 - La notificación ya no está reservada…|La notificación ya no está reservada por este proceso.
-ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA|ERR021|Funcional|Error|ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA|La gestión de solicitudes de matrícula aún no se encuentra disponible.
 SYS_001|SYS001|Técnico|Error|SYS_001 - Ocurrió un error inesperado al…|Ocurrió un error inesperado al procesar la solicitud.
 ERR_INESPERADO_REGISTRO_ESTUDIANTE|ERR022|Técnico|Error|ERR_INESPERADO_REGISTRO_ESTUDIANTE|Hubo un error inesperado al procesar el registro completo del estudiante.
 ERR_INESPERADO_REGISTRO_DOCENTE|ERR023|Técnico|Error|ERR_INESPERADO_REGISTRO_DOCENTE|Hubo un error inesperado al procesar el registro completo del docente.
@@ -121,21 +120,6 @@ RET_002|RET002|Funcional|Error|RET_002 - El estudiante no tiene una matrícula�
 RET_003|RET003|Funcional|Error|RET_003 - El período académico del grupo ya…|El período académico del grupo ya terminó; no se puede retirar al estudiante.
 RET_004|RET004|Funcional|Error|RET_004 - El motivo del retiro es obligatorio y…|El motivo del retiro es obligatorio y no puede superar 500 caracteres.
 RET_005|RET005|Funcional|Confirmación|RET_005 - El estudiante fue retirado del grupo.|El estudiante fue retirado del grupo.
-SIG_001|SIG001|Funcional|Error|SIG_001 - Solo un estudiante puede solicitar el…|Solo un estudiante puede solicitar el ingreso a un grupo.
-SIG_002|SIG002|Funcional|Error|SIG_002 - El grupo indicado no existe.|El grupo indicado no existe.
-SIG_003|SIG003|Funcional|Error|SIG_003 - El período académico del grupo ya…|El período académico del grupo ya terminó.
-SIG_004|SIG004|Funcional|Error|SIG_004 - El estudiante ya está matriculado en…|El estudiante ya está matriculado en este grupo.
-SIG_005|SIG005|Funcional|Error|SIG_005 - Ya existe una solicitud abierta para…|Ya existe una solicitud abierta para este grupo.
-SIG_006|SIG006|Funcional|Confirmación|SIG_006 - La solicitud de ingreso al grupo fue…|La solicitud de ingreso al grupo fue registrada.
-SIG_007|SIG007|Funcional|Error|SIG_007 - La solicitud indicada no existe o no…|La solicitud indicada no existe o no está a su cargo.
-SIG_008|SIG008|Funcional|Error|SIG_008 - La solicitud ya fue resuelta o retirada.|La solicitud ya fue resuelta o retirada.
-SIG_009|SIG009|Funcional|Error|SIG_009 - La acción indicada no es válida; use…|La acción indicada no es válida; use ACEPTAR o RECHAZAR.
-SIG_010|SIG010|Funcional|Error|SIG_010 - El motivo del rechazo es obligatorio y…|El motivo del rechazo es obligatorio y no puede superar 500 caracteres.
-SIG_011|SIG011|Funcional|Confirmación|SIG_011 - La solicitud fue aceptada y el…|La solicitud fue aceptada y el estudiante quedó matriculado en el grupo.
-SIG_012|SIG012|Funcional|Confirmación|SIG_012 - El grupo no tiene cupo: la solicitud…|El grupo no tiene cupo: la solicitud quedó en lista de espera.
-SIG_013|SIG013|Funcional|Error|SIG_013 - El grupo sigue sin cupo; la solicitud…|El grupo sigue sin cupo; la solicitud permanece en lista de espera.
-SIG_014|SIG014|Funcional|Confirmación|SIG_014 - La solicitud fue rechazada.|La solicitud fue rechazada.
-SIG_015|SIG015|Funcional|Confirmación|SIG_015 - La solicitud fue retirada.|La solicitud fue retirada.
 VCE_001|VCE001|Funcional|Error|VCE_001 - El correo del estudiante debe ser…|El correo del estudiante debe ser institucional y terminar en {}.
 VCE_002|VCE002|Funcional|Error|VCE_002 - El enlace de verificación no es válido…|El enlace de verificación no es válido o ya venció.
 VCE_003|VCE003|Funcional|Error|VCE_003 - Debe esperar unos minutos antes de…|Debe esperar unos minutos antes de volver a enviar el enlace de verificación.

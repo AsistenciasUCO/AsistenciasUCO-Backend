@@ -58,8 +58,9 @@ class MessageUcoLabCatalogoTest {
     }
 
     @Test
-    void el_catalogo_trae_los_144_codigos_de_usuario_de_los_seeds() throws Exception {
-        assertEquals(144, catalogo().size());
+    void el_catalogo_trae_los_128_codigos_de_usuario_de_los_seeds() throws Exception {
+        // CULM-001 A.1: - SIG_001..SIG_015 y ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (seeds 23 y 04 retirados).
+        assertEquals(128, catalogo().size());
     }
 
     @Test
@@ -88,7 +89,8 @@ class MessageUcoLabCatalogoTest {
             }
         }
 
-        assertEquals(27, esperados.size());
+        // CULM-001 A.1: - ERR_SOLICITUD_MATRICULA_NO_IMPLEMENTADA (ERR021 queda libre, no se renumera).
+        assertEquals(26, esperados.size());
         assertEquals(esperados, aliasesDeApplicationYml());
     }
 
