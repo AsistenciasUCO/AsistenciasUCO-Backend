@@ -4,6 +4,7 @@ import co.edu.uco.asistenciasuco.application.features.asistencia.exception.Asist
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
@@ -121,11 +122,13 @@ final class DbFailureClassifier {
             // CULM-001 A.2-7: retiro del reclamo propio. REV_006 inexistente o ajeno (indistinguibles); REV_007 no pendiente.
             case "REV_006" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "REV_007" -> CommonErrorCode.CONFLICT;
-            // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos.
-            case "DEC_002" -> CommonErrorCode.CONFLICT;
+            // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
+            // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
+            case "DEC_002" -> DecanoErrorCode.DEC_002;
             // CULM-001 A.2-10: sesion solapada en el grupo o con otro grupo del docente. 400 como SES_004: el OpenAPI de
-            // POST/PATCH/PUT /api/v1/sesiones y POST /api/v2/sesiones declara 400 y no 409 (§8.1 del contrato).
-            case "SES_017" -> CommonErrorCode.VALIDATION_ERROR;
+            // POST/PATCH/PUT /api/v1/sesiones y POST /api/v2/sesiones declara 400 y no 409 (§8.1 del contrato). Con su
+            // codigo de catalogo para que el formulario muestre el texto del solape (A2-F-09, N11, F-A-S04).
+            case "SES_017" -> SesionErrorCode.SES_017;
             case "ERR_UNICIDAD_DOCUMENTO" -> UsuarioErrorCode.ERR_UNICIDAD_DOCUMENTO;
             case "USU_002" -> UsuarioErrorCode.ERR_USUARIO_INACTIVO;
             case "HOR_001" -> GrupoErrorCode.ERR_CRUCE_HORARIO_ESTUDIANTE;

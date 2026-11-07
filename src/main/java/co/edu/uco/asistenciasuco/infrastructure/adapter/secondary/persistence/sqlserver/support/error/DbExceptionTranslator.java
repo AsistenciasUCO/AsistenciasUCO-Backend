@@ -2,6 +2,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
@@ -70,6 +71,7 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_DOCENTE_INACTIVO,
             DocenteErrorCode.ERR_DOCENTE_YA_REGISTRADO,
             CoordinadorErrorCode.COO_001,
+            DecanoErrorCode.DEC_002,
             CatalogoErrorCode.TPR_002,
             CatalogoErrorCode.ARE_002,
             DocenteErrorCode.ERR_PERSONA_YA_REGISTRADA,
@@ -90,6 +92,7 @@ public final class DbExceptionTranslator {
             DocenteErrorCode.ERR_TIPO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_MODO_VINCULACION_INVALIDO,
             DocenteErrorCode.ERR_BUSQUEDA_CANDIDATOS_CORTA,
+            SesionErrorCode.SES_017,
             CommonErrorCode.VALIDATION_ERROR
     );
 
