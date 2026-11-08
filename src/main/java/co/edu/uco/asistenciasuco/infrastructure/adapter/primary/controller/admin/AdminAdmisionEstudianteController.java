@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.primaryports.AdmitirEstudianteInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.primaryports.dto.AdmisionEstudianteDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.admitirestudiante.primaryports.dto.AdmitirEstudianteCommandDTO;
@@ -49,6 +50,7 @@ public final class AdminAdmisionEstudianteController {
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver, "AuthenticatedUserResolver es obligatorio.");
     }
 
+    @AuditableOperation(action = "ADMITIR_ESTUDIANTE", resourceType = "ESTUDIANTE", resourceIdResponseField = "idEstudiante")
     @PostMapping("/api/v1/admin/estudiantes/admision")
     public ResponseEntity<ApiDataResponse<AdmisionEstudianteDTO>> admitir(@RequestBody final AdmitirEstudianteRequest request) {
         RequestValidationGuard.validate(VALIDATOR.validate(request));
