@@ -80,7 +80,7 @@ class EstudiantePortalControllerTest {
 
     @Test
     void consultarSesionesMateria_usa_actor_y_materia() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
+        when(sesiones.execute(ACTOR, MATERIA, null, null)).thenReturn(List.of(new SesionMateriaEstudianteDTO(
                 UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1", "Grupo 1",
                 java.time.LocalDateTime.of(2026, 1, 20, 8, 0), java.time.LocalDateTime.of(2026, 1, 20, 10, 0),
                 null, null, "INDETERMINADA", "AUSENTE", null, true)));
@@ -91,13 +91,13 @@ class EstudiantePortalControllerTest {
                 .andExpect(jsonPath("$.datos[0].estadoAsistencia").value("AUSENTE"))
                 .andExpect(jsonPath("$.datos[0].estadoSolicitudRevision").doesNotExist())
                 .andExpect(jsonPath("$.datos[0].reclamable").value(true));
-        verify(sesiones).execute(ACTOR, MATERIA);
+        verify(sesiones).execute(ACTOR, MATERIA, null, null);
     }
 
     /** APP-04: aditivo; v1 sin zona se conserva y los instantes UTC llevan sufijo Z solo si la procedencia es CONFIRMADA. */
     @Test
     void APP04_consultarSesionesMateria_expone_instantes_utc_confirmados_sin_alterar_v1() throws Exception {
-        when(sesiones.execute(ACTOR, MATERIA)).thenReturn(List.of(
+        when(sesiones.execute(ACTOR, MATERIA, null, null)).thenReturn(List.of(
                 new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
                         "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
                         java.time.LocalDateTime.of(2026, 8, 17, 15, 0), java.time.LocalDateTime.of(2026, 8, 17, 13, 0),
@@ -197,5 +197,27 @@ class EstudiantePortalControllerTest {
                 .anyMatch(metodo -> metodo.isAnnotationPresent(PostMapping.class));
 
         assertFalse(hayPost);
+    }
+
+    /** CULM-001 D.1 (HU026B): fecha limite en UTC (sufijo Z), plazo vigente y paginacion opcional. */
+    @Test
+    void D1_consultarSesionesMateria_expone_la_fecha_limite_utc_y_el_plazo_vigente_y_acepta_pagina_y_tamano() throws Exception {
+        when(sesiones.execute(ACTOR, MATERIA, 2, 5)).thenReturn(List.of(
+                new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 1", 1, "SES-01", 1, UUID.randomUUID(), "G1",
+                        "Grupo 1", java.time.LocalDateTime.of(2026, 11, 4, 12, 0), java.time.LocalDateTime.of(2026, 11, 4, 13, 0),
+                        null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null,
+                        java.time.LocalDateTime.of(2026, 11, 10, 5, 0), true),
+                new SesionMateriaEstudianteDTO(UUID.randomUUID(), "Sesion 2", 2, "SES-02", 2, UUID.randomUUID(), "G1",
+                        "Grupo 1", java.time.LocalDateTime.of(2026, 8, 17, 13, 0), java.time.LocalDateTime.of(2026, 8, 17, 15, 0),
+                        null, null, "INDETERMINADA", "AUSENTE", null, true, "PROGRAMADA", null, null, false)));
+
+        mvc.perform(get("/api/v1/estudiante/materias/{materiaId}/sesiones", MATERIA).param("pagina", "2").param("tamano", "5"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.datos[0].fechaLimiteJustificacionUtc").value("2026-11-10T05:00:00Z"))
+                .andExpect(jsonPath("$.datos[0].plazoJustificacionVigente").value(true))
+                .andExpect(jsonPath("$.datos[1].fechaLimiteJustificacionUtc").doesNotExist())
+                .andExpect(jsonPath("$.datos[1].plazoJustificacionVigente").value(false))
+                .andExpect(jsonPath("$.datos[0].nombre").value("Sesion 1"));
+        verify(sesiones).execute(ACTOR, MATERIA, 2, 5);
     }
 }

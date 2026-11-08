@@ -15,6 +15,7 @@ public final class ConsultarSesionesMateriaEstudianteMapper {
                 domain.fechaHoraInicio(), domain.fechaHoraFin(), domain.fechaHoraInicioUtc(), domain.fechaHoraFinUtc(),
                 domain.estadoTemporal().name(), domain.estadoAsistencia().name(),
                 domain.estadoSolicitudRevision(), domain.reclamable(),
-                EstadoSesion.de(domain.cancelacion() != null).name(), domain.cancelacion());
+                EstadoSesion.de(domain.cancelacion() != null).name(), domain.cancelacion(),
+                domain.fechaLimiteJustificacionUtc(), domain.plazoJustificacionVigente());
     }
 }

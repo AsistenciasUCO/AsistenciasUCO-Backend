@@ -1,7 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.azure;
 
 import co.edu.uco.asistenciasuco.infrastructure.config.adapters.catalog.composite.ParametroConValorPorDefectoConfiguration;
-import org.springframework.beans.factory.annotation.Qualifier;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigParameterCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.config.properties.providers.AzureAppConfigProviderProperties;
@@ -30,8 +29,7 @@ import org.springframework.context.annotation.Configuration;
 public class AzureAppConfigAdapterConfiguration {
 
     /** CULM-001 A.2-6: proveedor real; los consumidores reciben el decorador con valores por defecto (DEC-018). */
-    @Bean
-    @Qualifier(ParametroConValorPorDefectoConfiguration.DELEGADO)
+    @Bean(ParametroConValorPorDefectoConfiguration.DELEGADO)
     public ParameterCatalogPort parameterCatalogPort(final AzureAppConfigProviderProperties properties) {
         final ConfigurationClient client = new ConfigurationClientBuilder()
                 .endpoint(properties.endpoint())

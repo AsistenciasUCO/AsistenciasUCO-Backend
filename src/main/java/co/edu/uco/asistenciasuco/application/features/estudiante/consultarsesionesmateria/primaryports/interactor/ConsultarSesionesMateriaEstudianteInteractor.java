@@ -11,8 +11,9 @@ public final class ConsultarSesionesMateriaEstudianteInteractor implements Consu
     public ConsultarSesionesMateriaEstudianteInteractor(final ConsultarSesionesMateriaEstudianteUseCase useCase) {
         this.useCase = Objects.requireNonNull(useCase);
     }
-    @Override public List<SesionMateriaEstudianteDTO> execute(final UUID actorUsuarioId, final UUID idAsignatura) {
-        return useCase.execute(actorUsuarioId, idAsignatura).stream()
+    @Override public List<SesionMateriaEstudianteDTO> execute(final UUID actorUsuarioId, final UUID idAsignatura,
+                                                              final Integer pagina, final Integer tamano) {
+        return useCase.execute(actorUsuarioId, idAsignatura, pagina, tamano).stream()
                 .map(ConsultarSesionesMateriaEstudianteMapper::toDTO)
                 .toList();
     }

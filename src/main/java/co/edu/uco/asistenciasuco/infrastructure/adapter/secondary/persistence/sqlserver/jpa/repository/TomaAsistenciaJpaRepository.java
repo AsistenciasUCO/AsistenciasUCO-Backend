@@ -41,6 +41,9 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
     private static final String P_CORRELACION = "idCorrelacion";
     private static final String P_USUARIO = "idUsuarioEjecutor";
     private static final String P_TOMA = "idToma";
+    private static final String P_SESION = "idSesion";
+    private static final String C_GRUPO = "idGrupo";
+    private static final String C_ESTUDIANTE = "idEstudiante";
     private static final String C_TOTAL = "totalRegistros";
 
     static final String SQL_ABRIR = """
@@ -87,7 +90,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
     public TomaAbierta abrir(final UUID sesionId, final String codigoModo, final UUID usuarioEjecutor) {
         final UUID correlacion = CorrelationIdContext.require();
         final Map<String, Object> parametros = new LinkedHashMap<>();
-        parametros.put("idSesion", sesionId);
+        parametros.put(P_SESION, sesionId);
         parametros.put("codigoModo", codigoModo);
         parametros.put(P_CORRELACION, correlacion);
         parametros.put(P_USUARIO, usuarioEjecutor);
@@ -119,8 +122,8 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<Tuple> filas = tuplas(SQL_CERRAR_VENCIDAS, Map.of(P_CORRELACION, correlacion));
             final List<TomaCerradaAutomaticamente> cerradas = new ArrayList<>(filas.size());
             for (final Tuple f : filas) {
-                cerradas.add(new TomaCerradaAutomaticamente(NativeRowValues.uuid(f.get(P_TOMA)), NativeRowValues.uuid(f.get("idSesion")),
-                        NativeRowValues.uuid(f.get("idGrupo")), NativeRowValues.entero(f.get("totalAusentesMarcados"))));
+                cerradas.add(new TomaCerradaAutomaticamente(NativeRowValues.uuid(f.get(P_TOMA)), NativeRowValues.uuid(f.get(P_SESION)),
+                        NativeRowValues.uuid(f.get(C_GRUPO)), NativeRowValues.entero(f.get("totalAusentesMarcados"))));
             }
             return cerradas;
         });
@@ -156,7 +159,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
         final UUID correlacion = CorrelationIdContext.require();
         return JpaQueryExecutor.execute("consultarTomasSesion", "No fue posible consultar las tomas de la sesion.", () -> {
             final List<Tuple> filas = tuplas(SQL_TOMAS_SESION, Map.of(P_USUARIO, usuarioEjecutor, P_CORRELACION, correlacion,
-                    "idSesion", sesionId));
+                    P_SESION, sesionId));
             if (filas.isEmpty()) {
                 throw new IllegalStateException("usp_consultar_tomas_sesion no devolvio la fila de la sesion.");
             }
@@ -164,8 +167,8 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<TomaAsistenciaResumen> tomas = new ArrayList<>();
             for (final Tuple f : filas) {
                 if (f.get(P_TOMA) != null) {
-                    tomas.add(new TomaAsistenciaResumen(NativeRowValues.uuid(f.get(P_TOMA)), NativeRowValues.uuid(f.get("idSesion")),
-                            NativeRowValues.uuid(f.get("idGrupo")), NativeRowValues.entero(f.get("numero")),
+                    tomas.add(new TomaAsistenciaResumen(NativeRowValues.uuid(f.get(P_TOMA)), NativeRowValues.uuid(f.get(P_SESION)),
+                            NativeRowValues.uuid(f.get(C_GRUPO)), NativeRowValues.entero(f.get("numero")),
                             NativeRowValues.texto(f.get("codigoModo")), NativeRowValues.texto(f.get("codigoEstado")),
                             NativeRowValues.bit(f.get("estaAbierta")), NativeRowValues.bit(f.get("esImplicita")),
                             NativeRowValues.instanteUtc(f.get("fechaAperturaUtc")), NativeRowValues.instanteUtc(f.get("fechaCierreUtc")),
@@ -174,7 +177,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
                             NativeRowValues.entero(f.get("totalExcusas")), NativeRowValues.bit(f.get("tieneQrActivo"))));
                 }
             }
-            return new TomasSesionResumen(NativeRowValues.uuid(s.get("idSesion")), NativeRowValues.uuid(s.get("idGrupo")),
+            return new TomasSesionResumen(NativeRowValues.uuid(s.get(P_SESION)), NativeRowValues.uuid(s.get(C_GRUPO)),
                     NativeRowValues.decimal2(s.get("horasSesion")), NativeRowValues.bit(s.get("estaSesionCancelada")),
                     NativeRowValues.instanteUtc(s.get("ventanaAperturaUtc")), NativeRowValues.instanteUtc(s.get("ventanaCierreUtc")),
                     NativeRowValues.bit(s.get("ventanaAbierta")), NativeRowValues.entero(s.get("maximoTomas")), tomas);
@@ -189,7 +192,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<Tuple> filas = tuplas(SQL_ASISTENCIAS, paginacion(tomaId, numeroPagina, tamanoPagina, usuarioEjecutor, correlacion));
             final List<AsistenciaTomaFila> elementos = new ArrayList<>(filas.size());
             for (final Tuple f : filas) {
-                elementos.add(new AsistenciaTomaFila(NativeRowValues.uuid(f.get("idEstudiante")),
+                elementos.add(new AsistenciaTomaFila(NativeRowValues.uuid(f.get(C_ESTUDIANTE)),
                         NativeRowValues.texto(f.get("nombreCompletoEstudiante")), NativeRowValues.texto(f.get("codigoRazonCausa")),
                         NativeRowValues.bit(f.get("registradoPorEstudiante")), NativeRowValues.instanteUtc(f.get("fechaRegistroUtc"))));
             }
@@ -205,7 +208,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
             final List<Tuple> filas = tuplas(SQL_FALTANTES, paginacion(tomaId, numeroPagina, tamanoPagina, usuarioEjecutor, correlacion));
             final List<FaltanteTomaFila> elementos = new ArrayList<>(filas.size());
             for (final Tuple f : filas) {
-                elementos.add(new FaltanteTomaFila(NativeRowValues.uuid(f.get("idEstudiante")),
+                elementos.add(new FaltanteTomaFila(NativeRowValues.uuid(f.get(C_ESTUDIANTE)),
                         NativeRowValues.texto(f.get("nombreCompletoEstudiante")), NativeRowValues.bit(f.get("tieneRegistro")),
                         NativeRowValues.texto(f.get("codigoRazonCausa")), NativeRowValues.bit(f.get("fueMarcadoAlCerrar"))));
             }
@@ -250,7 +253,7 @@ public class TomaAsistenciaJpaRepository implements TomaAsistenciaRepositoryPort
         final List<Map<String, String>> items = new ArrayList<>(registros.size());
         for (final RegistroToma registro : registros) {
             final Map<String, String> item = new LinkedHashMap<>();
-            item.put("idEstudiante", registro.idEstudiante().toString());
+            item.put(C_ESTUDIANTE, registro.idEstudiante().toString());
             item.put("estado", registro.estado());
             items.add(item);
         }

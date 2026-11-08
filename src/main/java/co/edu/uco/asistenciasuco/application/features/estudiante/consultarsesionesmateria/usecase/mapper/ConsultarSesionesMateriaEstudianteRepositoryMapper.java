@@ -23,6 +23,7 @@ public final class ConsultarSesionesMateriaEstudianteRepositoryMapper {
                 procedencia == null ? null : procedencia.fechaHoraFinUtc(),
                 procedencia == null ? EstadoHorarioSesion.INDETERMINADA : procedencia.estadoTemporal(),
                 estadoAsistencia, estadoSolicitudRevision, reclamable,
-                procedencia == null ? null : procedencia.cancelacion());
+                procedencia == null ? null : procedencia.cancelacion(),
+                projection.fechaLimiteJustificacionUtc(), projection.plazoJustificacionVigente());
     }
 }

@@ -1,5 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.impl;
 
+import co.edu.uco.asistenciasuco.application.exception.business.ConflictException;
+import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistencia.solicitarrevisionasistencia.usecase.domain.SolicitarRevisionAsistenciaDomain;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DestinatariosReclamoPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.DestinatarioReclamoProjection;
@@ -16,6 +18,7 @@ import java.util.UUID;
 
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
@@ -133,5 +136,20 @@ class SolicitarRevisionAsistenciaAvisoTest {
         assertDoesNotThrow(() -> corto.execute(domain()));
 
         verify(repository).solicitarRevisionAsistencia(any());
+    }
+
+    /** CULM-001 D.1 (HU026B): el plazo vencido (REV_020) es 409 con el mensaje del catalogo; no hay aviso ni se consulta nada mas. */
+    @Test
+    void un_plazo_vencido_se_propaga_como_conflicto_con_el_mensaje_del_catalogo_y_sin_aviso() {
+        when(scope.findEstudianteIdByUsuario(USUARIO)).thenReturn(Optional.of(ESTUDIANTE));
+        final ConflictException vencido = new ConflictException(AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO);
+        doThrow(vencido).when(repository).solicitarRevisionAsistencia(any());
+
+        final ConflictException lanzada = assertThrows(ConflictException.class, () -> useCase.execute(domain()));
+
+        assertEquals("ERR_PLAZO_JUSTIFICACION_VENCIDO", lanzada.getCode());
+        assertEquals(AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO.defaultMessage(), lanzada.getMessage());
+        verify(destinatariosPort, never()).consultarDestinatariosPorSesion(any(), any());
+        verify(notificacionPort, never()).notificar(any());
     }
 }

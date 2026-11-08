@@ -8,7 +8,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.mapper.HydratedViewRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsignaturaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.AsistenciaSesionEstudianteQueryRow;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.projection.SesionMateriaQueryRow;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error.DatabaseOperationException;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.procedure.JpaProcedureExecutor;
 import jakarta.persistence.EntityManager;
@@ -178,22 +177,6 @@ class JpaQueryAdapterContractTest {
     }
 
     @Test
-    void sesiones_de_materia_filtran_por_estudiante_y_asignatura() {
-        final SesionMateriaQueryRow row = new SesionMateriaQueryRow(ID, "Parcial", 1, "S-1", 2, OTHER, null, "G1",
-                LocalDateTime.of(2026, 10, 8, 13, 0), null);
-        final TypedQuery<SesionMateriaQueryRow> sesiones = query(
-                SesionMateriaEstudianteJpaRepository.HQL_POR_ESTUDIANTE_Y_ASIGNATURA, SesionMateriaQueryRow.class,
-                List.of(row));
-
-        final var result = new SesionMateriaEstudianteJpaRepository(manager).consultarSesionesMateria(ID, OTHER);
-
-        verify(sesiones).setParameter("idEstudiante", ID);
-        verify(sesiones).setParameter("idAsignatura", OTHER);
-        assertNull(result.getFirst().codigoGrupo());
-        assertEquals(LocalDateTime.of(2026, 10, 8, 13, 0), result.getFirst().fechaHoraInicio());
-    }
-
-    @Test
     void asistencia_de_sesiones_filtra_por_estudiante_resuelto_y_asignatura_y_conserva_nulos() {
         final var sinDetalle = new AsistenciaSesionEstudianteQueryRow(ID, null, null, null, null, null, null);
         final var conSolicitud = new AsistenciaSesionEstudianteQueryRow(OTHER, 3, Boolean.FALSE, "SJC", ID,
@@ -308,8 +291,6 @@ class JpaQueryAdapterContractTest {
                 .consultarPeriodosAcademicos());
         assertThrows(DatabaseOperationException.class, () -> new FacultadJpaRepository(manager)
                 .consultarFacultadPorId(ID));
-        assertThrows(DatabaseOperationException.class, () -> new SesionMateriaEstudianteJpaRepository(manager)
-                .consultarSesionesMateria(ID, OTHER));
         assertThrows(DatabaseOperationException.class, () -> new AsistenciaSesionEstudianteJpaRepository(manager)
                 .consultarAsistenciaSesiones(ID, OTHER));
         assertThrows(DatabaseOperationException.class, () -> new AsignaturaJpaRepository(manager,

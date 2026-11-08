@@ -482,6 +482,14 @@ class SqlStoredProcedureContractIT {
                         input("@tamanoPagina", "int"),
                         input("@texto", "nvarchar"),
                         input("@idFacultad", "uniqueidentifier")
+                )),
+                // CULM-001 D.1 (HU026B, CONTRACT §2.2): sesiones de la materia del estudiante con la fecha limite de excusa.
+                Arguments.of("usp_consultar_sesiones_materia_estudiante", List.of(
+                        input("@idUsuarioEjecutor", "uniqueidentifier"),
+                        input("@idCorrelacion", "uniqueidentifier"),
+                        input("@idMateria", "uniqueidentifier"),
+                        input("@numeroPagina", "int"),
+                        input("@tamanoPagina", "int")
                 ))
         );
     }
