@@ -33,7 +33,9 @@ public record SesionMateriaEstudianteResponse(
         String estadoSolicitudRevision,
         boolean reclamable,
         String estado,
-        CancelacionSesionResponse cancelacion
+        CancelacionSesionResponse cancelacion,
+        String fechaLimiteJustificacionUtc,
+        boolean plazoJustificacionVigente
 ) {
 
     public static SesionMateriaEstudianteResponse from(final SesionMateriaEstudianteDTO dto) {
@@ -41,7 +43,8 @@ public record SesionMateriaEstudianteResponse(
                 dto.numeroSemana(), dto.idGrupo(), dto.codigoGrupo(), dto.nombreGrupo(), dto.fechaHoraInicio(),
                 dto.fechaHoraFin(), utc(dto.fechaHoraInicioUtc()), utc(dto.fechaHoraFinUtc()), dto.estadoTemporal(),
                 dto.estadoAsistencia(), dto.estadoSolicitudRevision(), dto.reclamable(), dto.estado(),
-                CancelacionSesionResponse.from(dto.cancelacion()));
+                CancelacionSesionResponse.from(dto.cancelacion()), utc(dto.fechaLimiteJustificacionUtc()),
+                dto.plazoJustificacionVigente());
     }
 
     private static String utc(final LocalDateTime value) {

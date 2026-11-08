@@ -16,16 +16,19 @@ import java.util.Optional;
  */
 public final class ParametrosPorDefecto {
 
+    private static final String GRUPO_MATRICULA_QR = "MATRICULA_QR";
+    private static final String GRUPO_ASISTENCIA_QR = "ASISTENCIA_QR";
+    private static final String CLAVE_LIMITE_IP_POR_MINUTO = "LIMITE_IP_POR_MINUTO";
     private static final Map<String, String> VALORES;
 
     static {
         final Map<String, String> valores = new LinkedHashMap<>();
         // HU176B: matricula por QR/PIN.
-        valores.put(clave("MATRICULA_QR", "HABILITADA"), "true");
-        valores.put(clave("MATRICULA_QR", "URL_BASE_FRONTEND"), "http://localhost:4200");
-        valores.put(clave("MATRICULA_QR", "LIMITE_IP_POR_MINUTO"), "20");
-        valores.put(clave("MATRICULA_QR", "LIMITE_REGISTROS_TOKEN_POR_MINUTO"), "5");
-        valores.put(clave("MATRICULA_QR", "ESTADO_MATRICULA"), "A");
+        valores.put(clave(GRUPO_MATRICULA_QR, "HABILITADA"), "true");
+        valores.put(clave(GRUPO_MATRICULA_QR, "URL_BASE_FRONTEND"), "http://localhost:4200");
+        valores.put(clave(GRUPO_MATRICULA_QR, CLAVE_LIMITE_IP_POR_MINUTO), "20");
+        valores.put(clave(GRUPO_MATRICULA_QR, "LIMITE_REGISTROS_TOKEN_POR_MINUTO"), "5");
+        valores.put(clave(GRUPO_MATRICULA_QR, "ESTADO_MATRICULA"), "A");
         // Red del campus y proxies.
         valores.put(clave("RED", "CIDRS_CAMPUS"), "127.0.0.1/32,::1/128");
         valores.put(clave("RED", "PROXIES_CONFIABLES"), "");
@@ -34,14 +37,14 @@ public final class ParametrosPorDefecto {
         valores.put(clave("REGISTRO", "DOMINIO_CORREO_ESTUDIANTE"), "@uco.edu.co");
         // CULM-001 A.2-4: limites de intentos por minuto (los administra el responsable en GET /admin/parametros).
         valores.put(clave("ARCHIVOS", "LIMITE_SUBIDAS_POR_MINUTO"), "10");
-        valores.put(clave("ASISTENCIA_QR", "LIMITE_IP_POR_MINUTO"), "20");
-        valores.put(clave("ASISTENCIA_QR", "LIMITE_ESTUDIANTE_POR_MINUTO"), "5");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, CLAVE_LIMITE_IP_POR_MINUTO), "20");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, "LIMITE_ESTUDIANTE_POR_MINUTO"), "5");
         // CULM-001 B.2 (semilla 35, DEC-018): QR de asistencia. LIMITE_ESTUDIANTE_POR_MINUTO se conserva en 5 (DEC-045).
-        valores.put(clave("ASISTENCIA_QR", "HABILITADA"), "true");
-        valores.put(clave("ASISTENCIA_QR", "ROTACION_SEGUNDOS"), "60");
-        valores.put(clave("ASISTENCIA_QR", "LIMITE_FALLIDOS_IP_POR_MINUTO"), "600");
-        valores.put(clave("ASISTENCIA_QR", "LIMITE_TOKEN_POR_MINUTO"), "120");
-        valores.put(clave("ASISTENCIA_QR", "URL_BASE_FRONTEND"), "http://localhost:4200");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, "HABILITADA"), "true");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, "ROTACION_SEGUNDOS"), "60");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, "LIMITE_FALLIDOS_IP_POR_MINUTO"), "600");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, "LIMITE_TOKEN_POR_MINUTO"), "120");
+        valores.put(clave(GRUPO_ASISTENCIA_QR, "URL_BASE_FRONTEND"), "http://localhost:4200");
         // CULM-001 A.2-7 y A.1 (E-08): codigos de estado que la BD resuelve por parametro.
         valores.put(clave("RECLAMO", "ESTADO_PENDIENTE"), "P");
         valores.put(clave("RECLAMO", "ESTADO_RETIRADO"), "X");

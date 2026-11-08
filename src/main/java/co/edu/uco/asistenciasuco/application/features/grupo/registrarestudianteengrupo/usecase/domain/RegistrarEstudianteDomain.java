@@ -115,19 +115,19 @@ public final class RegistrarEstudianteDomain {
     }
 
     public String getPrimerApellido() {
-        return usuarioRegistro.getPrimerApellido();
+        return usuarioRegistro == null ? null : usuarioRegistro.getPrimerApellido();
     }
 
     public String getSegundoApellido() {
-        return usuarioRegistro.getSegundoApellido();
+        return usuarioRegistro == null ? null : usuarioRegistro.getSegundoApellido();
     }
 
     public String getPrimerNombre() {
-        return usuarioRegistro.getPrimerNombre();
+        return usuarioRegistro == null ? null : usuarioRegistro.getPrimerNombre();
     }
 
     public String getSegundoNombre() {
-        return usuarioRegistro.getSegundoNombre();
+        return usuarioRegistro == null ? null : usuarioRegistro.getSegundoNombre();
     }
 
     public String getCorreo() {

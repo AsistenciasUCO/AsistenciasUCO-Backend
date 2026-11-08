@@ -9,6 +9,7 @@ import tools.jackson.databind.JsonNode;
 import java.net.http.HttpClient;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Optional;
 
 /**
@@ -20,7 +21,7 @@ import java.util.Optional;
  */
 public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
 
-    public static final String FUENTE = "FERIADOS_IO";
+    static final String CODIGO_FUENTE = "FERIADOS_IO";
     static final String CLAVE_URL = "URL_FERIADOS_IO";
     static final String URL_POR_DEFECTO = "https://api.feriados.io/v1/CO/holidays/{anio}";
     static final String CLAVE_NOMBRE_SECRETO = "NOMBRE_SECRETO_FERIADOS_IO";
@@ -38,7 +39,7 @@ public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
 
     @Override
     public String fuente() {
-        return FUENTE;
+        return CODIGO_FUENTE;
     }
 
     @Override
@@ -48,11 +49,11 @@ public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
 
     @Override
     public List<FestivoColombia> obtenerFestivos(final int anio) {
-        final String apiKey = apiKey().orElseThrow(() -> new CalendarioFestivosException(FUENTE + " no tiene API key."));
-        final JsonNode raiz = http.get(FUENTE, http.parametro(CLAVE_URL, URL_POR_DEFECTO), anio,
+        final String apiKey = apiKey().orElseThrow(() -> new CalendarioFestivosException(CODIGO_FUENTE + " no tiene API key."));
+        final JsonNode raiz = http.get(CODIGO_FUENTE, http.parametro(CLAVE_URL, URL_POR_DEFECTO), anio,
                 Map.of("Authorization", "Bearer " + apiKey));
         final JsonNode arreglo = raiz.isArray() ? raiz : raiz.has("holidays") ? raiz.get("holidays") : raiz.get("data");
-        return FestivosHttpSupport.leerFestivos(FUENTE, arreglo, anio);
+        return FestivosHttpSupport.leerFestivos(CODIGO_FUENTE, arreglo, anio);
     }
 
     private Optional<String> apiKey() {
@@ -60,8 +61,10 @@ public final class FeriadosIoFestivosAdapter implements CalendarioFestivosPort {
             return Optional.empty();
         }
         try {
-            final Optional<String> valor = secretos.getSecret(http.parametro(CLAVE_NOMBRE_SECRETO, NOMBRE_SECRETO_POR_DEFECTO));
-            return valor == null ? Optional.empty() : valor.filter(key -> !key.isBlank());
+            return Objects.requireNonNullElse(
+                            secretos.getSecret(http.parametro(CLAVE_NOMBRE_SECRETO, NOMBRE_SECRETO_POR_DEFECTO)),
+                            Optional.<String>empty())
+                    .filter(key -> !key.isBlank());
         } catch (final RuntimeException exception) {
             return Optional.empty();
         }

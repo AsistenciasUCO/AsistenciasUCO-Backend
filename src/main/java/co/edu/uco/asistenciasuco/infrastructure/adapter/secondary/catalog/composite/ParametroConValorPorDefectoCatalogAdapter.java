@@ -31,8 +31,8 @@ public final class ParametroConValorPorDefectoCatalogAdapter implements Paramete
     public Optional<String> getParameter(final String group, final String key) {
         final Optional<String> porDefecto = ParametrosPorDefecto.valor(group, key);
         try {
-            final Optional<String> valor = delegado.getParameter(group, key);
-            if (valor != null && valor.isPresent()) {
+            final Optional<String> valor = Objects.requireNonNullElse(delegado.getParameter(group, key), Optional.empty());
+            if (valor.isPresent()) {
                 return valor;
             }
             porDefecto.ifPresent(ignorado -> avisar(group, key, "sin valor en el proveedor"));
