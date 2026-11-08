@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.config.wiring;
 
 import co.edu.uco.asistenciasuco.application.features.identidad.accesocuenta.AccesoCuentaService;
+import co.edu.uco.asistenciasuco.application.features.identidad.asegurarcuenta.AsegurarCuentaIdentidadService;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.CorreccionIdentidadService;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
@@ -34,6 +35,14 @@ public class IdentidadWiringConfiguration {
             final UsuarioSincronizacionIdentidadPort usuarioSincronizacionIdentidadPort
     ) {
         return new SincronizarCuentaInstitucionalService(identityProviderPort, usuarioSincronizacionIdentidadPort);
+    }
+
+    @Bean
+    AsegurarCuentaIdentidadService asegurarCuentaIdentidadService(
+            final IdentityProviderPort identityProviderPort,
+            final UsuarioSincronizacionIdentidadPort usuarioSincronizacionIdentidadPort
+    ) {
+        return new AsegurarCuentaIdentidadService(identityProviderPort, usuarioSincronizacionIdentidadPort);
     }
 
     @Bean

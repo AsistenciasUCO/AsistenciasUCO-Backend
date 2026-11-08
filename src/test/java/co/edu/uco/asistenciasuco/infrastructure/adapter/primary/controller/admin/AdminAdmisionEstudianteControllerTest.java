@@ -32,6 +32,7 @@ import static org.junit.jupiter.api.Assertions.assertFalse;
 import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.doThrow;
 import static org.mockito.Mockito.mock;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
@@ -154,12 +155,12 @@ class AdminAdmisionEstudianteControllerTest {
         mvc.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json").content(CUERPO))
                 .andExpect(status().isForbidden());
 
-        when(admitir.execute(any())).thenThrow(new ConflictException(AdmisionEstudianteErrorCode.ADS_002));
+        doThrow(new ConflictException(AdmisionEstudianteErrorCode.ADS_002)).when(admitir).execute(any());
         mvc.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json").content(CUERPO))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("ADS_002"));
 
-        when(admitir.execute(any())).thenThrow(new ConflictException(AdmisionEstudianteErrorCode.ADS_004));
+        doThrow(new ConflictException(AdmisionEstudianteErrorCode.ADS_004)).when(admitir).execute(any());
         mvc.perform(post("/api/v1/admin/estudiantes/admision").contentType("application/json").content(CUERPO))
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.code").value("ADS_004"));

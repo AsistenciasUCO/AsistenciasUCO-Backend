@@ -6,6 +6,7 @@ import co.edu.uco.asistenciasuco.application.features.estudiante.exception.Estud
 import co.edu.uco.asistenciasuco.application.features.festivos.exception.FestivoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.AsistenciaQrErrorCode;
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
@@ -125,6 +126,12 @@ final class DbFailureClassifier {
             // CULM-001 A.2-7: retiro del reclamo propio. REV_006 inexistente o ajeno (indistinguibles); REV_007 no pendiente.
             case "REV_006" -> CommonErrorCode.RESOURCE_NOT_FOUND;
             case "REV_007" -> CommonErrorCode.CONFLICT;
+            // CULM-001 D.4 (HU156): admision de estudiantes. Codigos propios para que el usuario reciba el texto institucional.
+            case "ADS_002" -> AdmisionEstudianteErrorCode.ADS_002;
+            case "ADS_003" -> AdmisionEstudianteErrorCode.ADS_003;
+            case "ADS_004" -> AdmisionEstudianteErrorCode.ADS_004;
+            case "ADS_005" -> AdmisionEstudianteErrorCode.ADS_005;
+            case "ADS_006" -> AdmisionEstudianteErrorCode.ADS_006;
             // CULM-001 A.2-8: no se desactiva al decano de una facultad con programas activos. 409 con su codigo de
             // catalogo (como COO_001) para que el usuario reciba el texto institucional (F-A-S02).
             case "DEC_002" -> DecanoErrorCode.DEC_002;
