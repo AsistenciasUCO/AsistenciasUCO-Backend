@@ -57,7 +57,7 @@ class AdminConsultasTransversalesControllerTest {
         final OffsetDateTime desde = OffsetDateTime.parse("2026-11-01T05:00:00Z");
         final OffsetDateTime hasta = OffsetDateTime.parse("2026-11-04T05:00:00Z");
         when(inputPort.consultarAuditoria(ACTOR, new FiltroAuditoriaDTO(desde, hasta, "CREAR_SESION", null, null, null,
-                null, false), 1, 25)).thenReturn(new PaginaDTO<>(List.of(new EventoAuditoriaDTO(ID, hasta,
+                null, false, null, null), 1, 25)).thenReturn(new PaginaDTO<>(List.of(new EventoAuditoriaDTO(ID, hasta,
                 ACTOR.toString(), "USER", "Ana", "CREAR_SESION", "SESION", "S1", "SUCCESS", ID, "POST",
                 "/api/v1/sesiones", 201, null, null, null, true)), 1));
 
@@ -67,7 +67,9 @@ class AdminConsultasTransversalesControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.total").value(1))
                 .andExpect(jsonPath("$.datos[0].nombreActor").value("Ana"))
-                .andExpect(jsonPath("$.datos[0].accionAsistencia").value(true));
+                .andExpect(jsonPath("$.datos[0].accionAsistencia").value(true))
+                .andExpect(jsonPath("$.datos[0].idTraza").value(ID.toString()))
+                .andExpect(jsonPath("$.datos[0].idCorrelacion").value(ID.toString()));
     }
 
     @Test

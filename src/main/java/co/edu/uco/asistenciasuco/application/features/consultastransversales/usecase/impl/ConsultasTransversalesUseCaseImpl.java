@@ -20,6 +20,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTr
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.HistorialEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.Pagina;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.ConsultasTransversalesQueryPort.ProgramaCreditosProjection;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.crosscutting.util.ObjectHelper;
 
 import java.time.Clock;
@@ -158,7 +159,10 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
      */
     private FiltroAuditoria normalizar(final FiltroAuditoria filtro) {
         final FiltroAuditoria entrada = ObjectHelper.isNull(filtro)
-                ? new FiltroAuditoria(null, null, null, null, null, null, null, true) : filtro;
+                ? new FiltroAuditoria(null, null, null, null, null, null, null, true, null, false) : filtro;
+        if (entrada.soloAsistencia() && entrada.soloAdministracion()) {
+            throw new ValidationException(ParametroErrorCode.AUD_002);
+        }
         final OffsetDateTime hasta = ObjectHelper.isNull(entrada.hasta())
                 ? OffsetDateTime.now(clock) : entrada.hasta();
         final OffsetDateTime desde = ObjectHelper.isNull(entrada.desde())
@@ -180,7 +184,8 @@ public final class ConsultasTransversalesUseCaseImpl implements ConsultasTransve
                 hasta.withOffsetSameInstant(ZoneOffset.UTC),
                 ObjectHelper.isNull(accion) ? null : accion.toUpperCase(Locale.ROOT),
                 filtroTexto(entrada.tipoRecurso(), "tipo de recurso"), filtroTexto(entrada.idRecurso(), "recurso"),
-                entrada.idUsuarioActor(), resultadoNormalizado, entrada.soloAsistencia());
+                entrada.idUsuarioActor(), resultadoNormalizado, entrada.soloAsistencia(),
+                entrada.idTraza(), entrada.soloAdministracion());
     }
 
     private static String filtroTexto(final String valor, final String nombre) {

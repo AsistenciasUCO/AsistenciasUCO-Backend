@@ -3,7 +3,6 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admi
 import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.dto.CambiarEstadoDecanoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.cambiarestadodecano.primaryports.CambiarEstadoDecanoInputPort;
-import co.edu.uco.asistenciasuco.application.exception.business.FeatureUnavailableException;
 import co.edu.uco.asistenciasuco.application.exception.business.ResourceNotFoundException;
 import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.ActualizarFacultadInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.actualizarfacultad.primaryports.dto.ActualizarFacultadDTO;
@@ -17,8 +16,6 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.dto.FacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.ConsultarInstitucionesInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.dto.InstitucionDTO;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.ConsultarParametrosInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.dto.ParametroDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
@@ -48,7 +45,6 @@ public final class AdminPortalController {
 
     private final ConsultarDecanosInputPort consultarDecanosInputPort;
     private final CrearDecanoInputPort crearDecanoInputPort;
-    private final ConsultarParametrosInputPort consultarParametrosInputPort;
     private final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort;
     private final ConsultarInstitucionesInputPort consultarInstitucionesInputPort;
     private final ConsultarFacultadesInputPort consultarFacultadesInputPort;
@@ -62,7 +58,6 @@ public final class AdminPortalController {
     public AdminPortalController(
             final ConsultarDecanosInputPort consultarDecanosInputPort,
             final CrearDecanoInputPort crearDecanoInputPort,
-            final ConsultarParametrosInputPort consultarParametrosInputPort,
             final EjecutarCierreMasivoInputPort ejecutarCierreMasivoInputPort,
             final ConsultarInstitucionesInputPort consultarInstitucionesInputPort,
             final ConsultarFacultadesInputPort consultarFacultadesInputPort,
@@ -75,7 +70,6 @@ public final class AdminPortalController {
     ) {
         this.consultarDecanosInputPort = consultarDecanosInputPort;
         this.crearDecanoInputPort = crearDecanoInputPort;
-        this.consultarParametrosInputPort = consultarParametrosInputPort;
         this.ejecutarCierreMasivoInputPort = ejecutarCierreMasivoInputPort;
         this.consultarInstitucionesInputPort = consultarInstitucionesInputPort;
         this.consultarFacultadesInputPort = consultarFacultadesInputPort;
@@ -93,6 +87,7 @@ public final class AdminPortalController {
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
 
+    @AuditableOperation(action = "CREAR_DECANO", resourceType = "DECANO", metadataRequestFields = {"idFacultad"})
     @PostMapping("/decanos")
     public ResponseEntity<ApiMessageResponse> crearDecano(@RequestBody final CrearDecanoRequest request) {
         crearDecanoInputPort.execute(new CrearDecanoDTO(
@@ -113,14 +108,9 @@ public final class AdminPortalController {
 
     // HU020/HU140 descartadas (decision de John 2026-11-06): sedes y espacios fisicos no se piden; se retiran sus stubs 501.
 
-    @GetMapping("/parametros")
-    public ResponseEntity<ApiListResponse<ParametroDTO>> consultarParametros() {
-        final var data = consultarParametrosInputPort.execute();
-        return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
-    }
-    @PutMapping("/parametros/{id}")
-    public ResponseEntity<ApiDataResponse<Void>> actualizarParametro(@PathVariable final UUID id) { throw unavailable("actualizar parametro"); }
+    // HU168 (CULM-001 D.3): los parametros viven en AdminParametroController (GET paginado, PUT y cambios).
 
+    @AuditableOperation(action = "CIERRE_MASIVO_PERIODO", resourceType = "PERIODO_ACADEMICO", resourceIdRequestField = "idPeriodoAcademico")
     @PostMapping("/cierre-masivo")
     public ResponseEntity<ApiMessageResponse> ejecutarCierreMasivo(@RequestBody final CierreMasivoRequest request) {
         ejecutarCierreMasivoInputPort.execute(new EjecutarCierreMasivoDTO(
@@ -142,6 +132,7 @@ public final class AdminPortalController {
         final var data = consultarFacultadesInputPort.execute();
         return ResponseEntity.ok(new ApiListResponse<>(true, data, data.size()));
     }
+    @AuditableOperation(action = "CREAR_FACULTAD", resourceType = "FACULTAD", resourceIdResponseField = "id")
     @PostMapping("/facultades")
     public ResponseEntity<ApiDataResponse<FacultadDTO>> crearFacultad(@RequestBody final CrearFacultadRequest request) {
         final UUID actorId = authenticatedUserResolver.requireAuthenticatedUserId();
@@ -173,6 +164,7 @@ public final class AdminPortalController {
                 ));
         return ResponseEntity.status(HttpStatus.CREATED).body(new ApiDataResponse<>(true, dto));
     }
+    @AuditableOperation(action = "ACTUALIZAR_FACULTAD", resourceType = "FACULTAD", resourceIdPathVariable = "id", metadataRequestFields = {"nombre", "idDecano"})
     @PutMapping("/facultades/{id}")
     public ResponseEntity<ApiDataResponse<FacultadDTO>> actualizarFacultad(
             @PathVariable final UUID id,
@@ -186,6 +178,7 @@ public final class AdminPortalController {
         ));
         return ResponseEntity.ok(new ApiDataResponse<>(true, releerFacultad(id)));
     }
+    @AuditableOperation(action = "CAMBIAR_ESTADO_FACULTAD", resourceType = "FACULTAD", resourceIdPathVariable = "id", metadataRequestFields = {"activa"})
     @PatchMapping("/facultades/{id}/estado")
     public ResponseEntity<ApiDataResponse<FacultadDTO>> cambiarEstadoFacultad(
             @PathVariable final UUID id,
@@ -210,10 +203,6 @@ public final class AdminPortalController {
                 .filter(f -> id.equals(f.id()))
                 .findFirst()
                 .orElseThrow(() -> new ResourceNotFoundException("La facultad especificada no existe en el sistema."));
-    }
-
-    private FeatureUnavailableException unavailable(final String operation) {
-        return new FeatureUnavailableException("La operacion de administrador no esta disponible: " + operation + ".");
     }
 
     public record CrearDecanoRequest(UUID tipoIdentificacionId, Integer numeroIdentificacion, String primerNombre,

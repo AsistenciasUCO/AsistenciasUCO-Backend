@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.GestionarPeriodoAcademicoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.gestionarperiodoacademico.primaryports.dto.GuardarPeriodoAcademicoDTO;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.request.GuardarPeriodoAcademicoRequest;
@@ -37,12 +38,14 @@ public final class AdminPeriodoAcademicoController {
         this.authenticatedUserResolver = Objects.requireNonNull(authenticatedUserResolver);
     }
 
+    @AuditableOperation(action = "CREAR_PERIODO_ACADEMICO", resourceType = "PERIODO_ACADEMICO", metadataRequestFields = {"nombre"})
     @PostMapping
     public ResponseEntity<ApiDataResponse<Void>> crear(@RequestBody final GuardarPeriodoAcademicoRequest request) {
         gestionarPeriodoAcademicoInputPort.crear(toDTO(null, request));
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
 
+    @AuditableOperation(action = "ACTUALIZAR_PERIODO_ACADEMICO", resourceType = "PERIODO_ACADEMICO", resourceIdPathVariable = "id", metadataRequestFields = {"nombre"})
     @PutMapping("/{id}")
     public ResponseEntity<ApiDataResponse<Void>> actualizar(
             @PathVariable final UUID id,
@@ -52,6 +55,7 @@ public final class AdminPeriodoAcademicoController {
         return ResponseEntity.ok(new ApiDataResponse<>(true, null));
     }
 
+    @AuditableOperation(action = "ELIMINAR_PERIODO_ACADEMICO", resourceType = "PERIODO_ACADEMICO", resourceIdPathVariable = "id")
     @DeleteMapping("/{id}")
     public ResponseEntity<ApiDataResponse<Void>> eliminar(@PathVariable final UUID id) {
         gestionarPeriodoAcademicoInputPort.eliminar(id, authenticatedUserResolver.requireAuthenticatedUserId());

@@ -13,7 +13,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.HorarioEstudianteProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.InstitucionProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.MateriaEstudianteProjection;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.ParametroProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PeriodoAcademicoProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.PlanEstudioProjection;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.projection.SesionMateriaEstudianteProjection;
@@ -28,7 +27,6 @@ import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sq
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.HorarioEstudianteJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.InstitucionJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.MateriaEstudianteJdbcBaseline;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.ParametroJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.PeriodoAcademicoJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.PlanEstudioJdbcBaseline;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.jpa.baseline.SesionMateriaEstudianteJdbcBaseline;
@@ -88,10 +86,6 @@ class AcademicQueryJpaParityIT {
 
         final List<InstitucionProjection> institucionesBefore = new InstitucionJdbcBaseline(named).consultarInstituciones();
         assertEquals(institucionesBefore, new InstitucionJpaRepository(entityManager).consultarInstituciones());
-
-        final List<ParametroProjection> parametrosBefore = new ParametroJdbcBaseline(named).consultarParametros();
-        assertEquals(parametrosBefore, new ParametroJpaRepository(entityManager).consultarParametros());
-        assertFalse(parametrosBefore.isEmpty(), "uv_parametro debe tener filas vivas.");
     }
 
     @Test

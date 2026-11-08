@@ -74,7 +74,8 @@ public interface ConsultasTransversalesQueryPort {
     }
 
     record FiltroAuditoria(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,
-                           String idRecurso, UUID idUsuarioActor, String resultado, boolean soloAsistencia) {
+                           String idRecurso, UUID idUsuarioActor, String resultado, boolean soloAsistencia,
+                           UUID idTraza, boolean soloAdministracion) {
     }
 
     record EventoAuditoriaProjection(UUID id, OffsetDateTime ocurridoEn, String idActor, String tipoActor,

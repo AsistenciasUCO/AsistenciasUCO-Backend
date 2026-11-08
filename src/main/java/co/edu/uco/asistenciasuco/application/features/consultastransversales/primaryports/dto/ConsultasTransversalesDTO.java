@@ -85,10 +85,13 @@ public final class ConsultasTransversalesDTO {
     public record FiltroConsolidadoDTO(UUID idPeriodoAcademico, UUID idPrograma, UUID idAsignatura, UUID idDocente) {
     }
 
-    /** Filtros de HU172; {@code soloAsistencia} nulo equivale a true (solo acciones de asistencia). */
+    /**
+     * Filtros de HU172; {@code soloAsistencia} nulo equivale a true (solo acciones de asistencia), salvo con
+     * {@code soloAdministracion} (CULM-001 D.6: solo rutas administrativas, excluyente con {@code soloAsistencia = true}).
+     */
     public record FiltroAuditoriaDTO(OffsetDateTime desde, OffsetDateTime hasta, String accion, String tipoRecurso,
                                      String idRecurso, UUID idUsuarioActor, String resultado,
-                                     Boolean soloAsistencia) {
+                                     Boolean soloAsistencia, UUID idTraza, Boolean soloAdministracion) {
     }
 
     /** HU155: estado de un catalogo de negocio; {@code catalogo} es SOLICITUD o ESTUDIANTE_GRUPO. */

@@ -22,7 +22,8 @@ import java.util.Optional;
  * <p>No se autoregistra con anotaciones de Spring (@Component/@Service). Es instanciado
  * y configurado exclusivamente por el Composition Root.</p>
  */
-public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPort {
+public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPort,
+        co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.InvalidableParameterCatalog {
 
     private final ConfigurationClient client;
     private final Cache<String, String> cache;
@@ -117,6 +118,7 @@ public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPo
     /**
      * Invalida la clave de un parámetro en la caché en memoria.
      */
+    @Override
     public void invalidateParameter(final String group, final String key) {
         if (group != null && !group.isBlank() && key != null && !key.isBlank()) {
             cache.invalidate(buildKey(group, key));
@@ -128,6 +130,7 @@ public class AzureAppConfigParameterCatalogAdapter implements ParameterCatalogPo
     /**
      * Invalida toda la cache local en memoria.
      */
+    @Override
     public void invalidateAll() {
         cache.invalidateAll();
     }

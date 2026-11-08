@@ -52,13 +52,13 @@ class ConsultasConsolidadoAuditoriaInteractorTest {
     @Test
     void T_172_INT_01_auditoria_solo_asistencia_nulo_es_true_y_mapea_evento() {
         when(useCase.consultarAuditoria(USUARIO, new FiltroAuditoria(null, AHORA, "CREAR_SESION", null, null, null,
-                null, true), 1, 10)).thenReturn(new Pagina<>(List.of(new EventoAuditoriaProjection(ID, AHORA,
+                null, true, null, false), 1, 10)).thenReturn(new Pagina<>(List.of(new EventoAuditoriaProjection(ID, AHORA,
                 USUARIO.toString(), "USER", "Ana", "CREAR_SESION", "SESION", "S1", "SUCCESS", ID, "POST",
                 "/api/v1/sesiones", 201, null, null, null, true)), 1));
         when(useCase.consultarAuditoria(USUARIO, null, null, null)).thenReturn(new Pagina<>(List.of(), 0));
 
         final var evento = interactor.consultarAuditoria(USUARIO, new FiltroAuditoriaDTO(null, AHORA, "CREAR_SESION",
-                null, null, null, null, null), 1, 10).elementos().getFirst();
+                null, null, null, null, null, null, null), 1, 10).elementos().getFirst();
 
         assertEquals("Ana", evento.nombreActor());
         assertTrue(evento.accionAsistencia());

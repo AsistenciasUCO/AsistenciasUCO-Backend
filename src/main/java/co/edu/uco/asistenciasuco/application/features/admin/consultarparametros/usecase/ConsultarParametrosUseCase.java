@@ -1,7 +1,7 @@
 package co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase;
 
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase.domain.ParametroDomain;
+import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.ConsultarParametrosInputPort;
 
-import java.util.List;
-
-public interface ConsultarParametrosUseCase { List<ParametroDomain> execute(); }
+/** Contrato del caso de uso HU168: consultar parametros. La implementacion vive en {@code usecase.impl}. */
+public interface ConsultarParametrosUseCase extends ConsultarParametrosInputPort {
+}

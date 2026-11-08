@@ -87,7 +87,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
                 (short) 201, null, null, null, true, 1}));
 
         final var pagina = repository.consultarAuditoria(EJECUTOR, new FiltroAuditoria(DESDE, HASTA, "CREAR_SESION",
-                null, null, null, "SUCCESS", true), 1, 10);
+                null, null, null, "SUCCESS", true, null, false), 1, 10);
 
         verify(entityManager).createNativeQuery(contains("EXEC dbo.usp_consultar_auditoria_eventos_paginado"));
         verify(query).setParameter("desdeUtc", DESDE);
@@ -131,7 +131,7 @@ class ConsultasConsolidadoAuditoriaJpaRepositoryTest {
         when(query.getResultList()).thenThrow(new PersistenceException("DBCODE=SEC_001|perfil requerido"));
 
         assertThrows(ForbiddenException.class, () -> repository.consultarAuditoria(EJECUTOR,
-                new FiltroAuditoria(DESDE, HASTA, null, null, null, null, null, true), 1, 10));
+                new FiltroAuditoria(DESDE, HASTA, null, null, null, null, null, true, null, false), 1, 10));
     }
 
     private static List<Object> filas(final Object[]... filas) {
