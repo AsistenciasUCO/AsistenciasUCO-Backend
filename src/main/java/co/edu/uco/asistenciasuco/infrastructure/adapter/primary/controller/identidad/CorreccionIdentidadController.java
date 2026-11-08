@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.identidad;
 
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.primaryports.CorreccionIdentidadInputPort;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.primaryports.dto.ConfiguracionCorreccionIdentidadDTO;
 import co.edu.uco.asistenciasuco.application.features.identidad.correccionidentidad.primaryports.dto.CorregirIdentidadDTO;
@@ -51,6 +52,7 @@ public final class CorreccionIdentidadController {
         return corregir(TIPO_ESTUDIANTE, idEstudiante, request);
     }
 
+    @AuditableOperation(action = "CORREGIR_IDENTIDAD_DECANO", resourceType = "DECANO", resourceIdPathVariable = "id", metadataRequestFields = {"motivo"})
     @PutMapping("/api/v1/admin/decanos/{id}/identidad")
     public ResponseEntity<ApiDataResponse<ResultadoCorreccionIdentidadDTO>> corregirDecano(
             @PathVariable final UUID id,

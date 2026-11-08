@@ -102,7 +102,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                  @idRecurso = :idRecurso,
                  @idUsuarioActor = :idUsuarioActor,
                  @resultado = :resultado,
-                 @soloAsistencia = :soloAsistencia
+                 @soloAsistencia = :soloAsistencia,
+                 @idCorrelacionEvento = :idCorrelacionEvento,
+                 @soloAdministracion = :soloAdministracion
             """;
     static final String SQL_COMPONENTES = """
             EXEC dbo.usp_consultar_componentes_formacion
@@ -217,7 +219,9 @@ public class ConsultasTransversalesJpaRepository implements ConsultasTransversal
                         .setParameter("idRecurso", filtro.idRecurso())
                         .setParameter("idUsuarioActor", filtro.idUsuarioActor())
                         .setParameter("resultado", filtro.resultado())
-                        .setParameter("soloAsistencia", filtro.soloAsistencia()), 17,
+                        .setParameter("soloAsistencia", filtro.soloAsistencia())
+                        .setParameter("idCorrelacionEvento", filtro.idTraza())
+                        .setParameter("soloAdministracion", filtro.soloAdministracion()), 17,
                 f -> new EventoAuditoriaProjection(NativeRowValues.uuid(f[0]), fechaHora(f[1]), texto(f[2]),
                         texto(f[3]), texto(f[4]), texto(f[5]), texto(f[6]), texto(f[7]), texto(f[8]),
                         NativeRowValues.uuid(f[9]), texto(f[10]), texto(f[11]), entero(f[12]), texto(f[13]),

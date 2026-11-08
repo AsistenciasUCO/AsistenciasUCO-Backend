@@ -20,12 +20,20 @@ import org.springframework.web.servlet.HandlerInterceptor;
 import org.springframework.web.servlet.HandlerMapping;
 
 import java.time.OffsetDateTime;
+import java.util.LinkedHashMap;
 import java.util.Map;
 import java.util.UUID;
 import java.util.Objects;
 
 @Component
 public final class AuditInterceptor implements HandlerInterceptor {
+
+    private static final org.slf4j.Logger LOGGER = org.slf4j.LoggerFactory.getLogger(AuditInterceptor.class);
+    private static final int MAX_VALUE_LENGTH = 240;
+    private static final int MAX_METADATA_LENGTH = 4096;
+    /** Denegacion por nombre exacto (minusculas): gana a la lista pedida; SensitiveDataSanitizer no cubre clave_inicial. */
+    private static final java.util.Set<String> DENIED_FIELDS = java.util.Set.of(
+            "password", "clave_inicial", "claveinicial", "token", "pin", "secret");
 
     private final AuditEventPublisher auditEventPublisher;
     private final ClientIpResolver clientIpResolver;
@@ -56,6 +64,21 @@ public final class AuditInterceptor implements HandlerInterceptor {
             return;
         }
 
+        try {
+            publish(request, response, exception, auditableOperation);
+        } catch (final RuntimeException failure) {
+            // La auditoria HTTP es de mejor esfuerzo: un fallo del publicador nunca cambia la respuesta (CULM-001 D.6).
+            LOGGER.warn("No fue posible publicar el evento de auditoria {}: {}", auditableOperation.action(),
+                    failure.getClass().getSimpleName());
+        }
+    }
+
+    private void publish(
+            final HttpServletRequest request,
+            final HttpServletResponse response,
+            final Exception exception,
+            final AuditableOperation auditableOperation
+    ) {
         final RequestActor actor = actorResolver.resolve(request);
         final TraceContextSnapshot traceContext = readTraceContext();
         auditEventPublisher.publish(new AuditEvent(
@@ -75,7 +98,7 @@ public final class AuditInterceptor implements HandlerInterceptor {
                 clientIpResolver.resolve(request),
                 safe(AuditRequestAttributes.errorCode(request), 120),
                 resolveOutcome(response, exception),
-                metadata()
+                metadata(request, auditableOperation)
         ));
     }
 
@@ -138,8 +161,66 @@ public final class AuditInterceptor implements HandlerInterceptor {
         );
     }
 
-    private Map<String, String> metadata() {
-        return Map.of("handlerType", "HTTP");
+    /**
+     * CULM-001 D.6: {@code handlerType} y los campos pedidos del cuerpo, con la denegacion por nombre exacto por encima de la
+     * lista pedida, 240 caracteres por valor y 4 KB en total.
+     */
+    private Map<String, String> metadata(final HttpServletRequest request, final AuditableOperation operation) {
+        final Map<String, String> metadata = new LinkedHashMap<>();
+        metadata.put("handlerType", "HTTP");
+        int total = "handlerType".length() + "HTTP".length();
+        final Object[][] fuentes = {
+                {operation.metadataRequestFields(), AuditRequestAttributes.requestBody(request)},
+                {operation.metadataResponseFields(), AuditRequestAttributes.responseBody(request)}
+        };
+        for (final Object[] fuente : fuentes) {
+            for (final String campo : (String[]) fuente[0]) {
+                if (esCampoDenegado(campo) || metadata.containsKey(campo)) {
+                    continue;
+                }
+                final String valor = readField(fuente[1], campo);
+                if (valor == null) {
+                    continue;
+                }
+                final String recortado = valor.length() > MAX_VALUE_LENGTH ? valor.substring(0, MAX_VALUE_LENGTH) : valor;
+                total += campo.length() + recortado.length();
+                if (total > MAX_METADATA_LENGTH) {
+                    return metadata;
+                }
+                metadata.put(campo, recortado);
+            }
+        }
+        return metadata;
+    }
+
+    static boolean esCampoDenegado(final String campo) {
+        return campo != null && DENIED_FIELDS.contains(campo.toLowerCase(java.util.Locale.ROOT));
+    }
+
+    /** Lee {@code campo} del cuerpo (getter o accesor de record); si no existe y hay {@code datos}, lo busca ahi. */
+    private String readField(final Object body, final String campo) {
+        if (ObjectHelper.isNull(body) || TextHelper.isNullOrBlank(campo)) {
+            return null;
+        }
+        Object valor = readProperty(body, campo);
+        if (valor == null) {
+            final Object datos = readProperty(body, "datos");
+            valor = datos == null ? null : readProperty(datos, campo);
+        }
+        return valor == null ? null : SensitiveDataSanitizer.sanitizeForLog(valor, MAX_VALUE_LENGTH);
+    }
+
+    private static Object readProperty(final Object target, final String property) {
+        final String capitalizada = Character.toUpperCase(property.charAt(0)) + property.substring(1);
+        for (final String nombre : new String[]{property, "get" + capitalizada, "is" + capitalizada}) {
+            try {
+                final java.lang.reflect.Method metodo = target.getClass().getMethod(nombre);
+                return metodo.invoke(target);
+            } catch (final ReflectiveOperationException | IllegalArgumentException ignorada) {
+                // prueba el siguiente nombre
+            }
+        }
+        return null;
     }
 
     private String safe(final Object value, final int maxLength) {

@@ -123,12 +123,20 @@ public final class ConsultasTransversalesInteractor implements ConsultasTransver
                                                             final Integer pagina, final Integer tamano) {
         final FiltroAuditoria consulta = filtro == null ? null : new FiltroAuditoria(filtro.desde(), filtro.hasta(),
                 filtro.accion(), filtro.tipoRecurso(), filtro.idRecurso(), filtro.idUsuarioActor(), filtro.resultado(),
-                !Boolean.FALSE.equals(filtro.soloAsistencia()));
+                soloAsistencia(filtro), filtro.idTraza(), Boolean.TRUE.equals(filtro.soloAdministracion()));
         return pagina(useCase.consultarAuditoria(usuario, consulta, pagina, tamano),
                 e -> new EventoAuditoriaDTO(e.id(), e.ocurridoEn(), e.idActor(), e.tipoActor(), e.nombreActor(),
                         e.accion(), e.tipoRecurso(), e.idRecurso(), e.resultado(), e.idTraza(), e.metodoHttp(),
                         e.ruta(), e.estadoHttp(), e.ipCliente(), e.codigoError(), e.metadatos(),
                         e.accionAsistencia()));
+    }
+
+    /** Sin {@code soloAsistencia} explicito vale true, salvo con {@code soloAdministracion} (excluyentes, D.6). */
+    private static boolean soloAsistencia(final FiltroAuditoriaDTO filtro) {
+        if (filtro.soloAsistencia() == null) {
+            return !Boolean.TRUE.equals(filtro.soloAdministracion());
+        }
+        return filtro.soloAsistencia();
     }
 
     @Override

@@ -1,5 +1,6 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin;
 
+import co.edu.uco.asistenciasuco.infrastructure.audit.web.AuditableOperation;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.validation.RequestValidationGuard;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResultBuilder;
 import co.edu.uco.asistenciasuco.crosscutting.validation.ValidationResult;
@@ -100,6 +101,7 @@ public class AdminNotificacionController {
         return ResponseEntity.ok(new ApiListResponse<>(true, responses, responses.size()));
     }
 
+    @AuditableOperation(action = "CREAR_VERSION_PLANTILLA", resourceType = "PLANTILLA_NOTIFICACION", resourceIdPathVariable = "tipo")
     @PostMapping("/plantillas/{tipo}/versiones")
     public ResponseEntity<ApiDataResponse<VersionPlantillaResponse>> crearVersion(
             @PathVariable final String tipo,
@@ -127,6 +129,7 @@ public class AdminNotificacionController {
         return builder.build();
     }
 
+    @AuditableOperation(action = "ACTIVAR_VERSION_PLANTILLA", resourceType = "PLANTILLA_NOTIFICACION", resourceIdPathVariable = "tipo")
     @PatchMapping("/plantillas/{tipo}/versiones/{version}/activar")
     public ResponseEntity<ApiMessageResponse> activarVersion(
             @PathVariable final String tipo,
@@ -190,6 +193,7 @@ public class AdminNotificacionController {
         return ResponseEntity.ok(new ApiDataResponse<>(true, response));
     }
 
+    @AuditableOperation(action = "REINTENTAR_NOTIFICACION", resourceType = "NOTIFICACION", resourceIdPathVariable = "id")
     @PostMapping("/cola/{id}/reintentar")
     public ResponseEntity<ApiMessageResponse> reintentar(
             @PathVariable final UUID id
@@ -199,6 +203,7 @@ public class AdminNotificacionController {
         return ResponseEntity.ok(new ApiMessageResponse(true, "Notificación encolada para reintento inmediato."));
     }
 
+    @AuditableOperation(action = "ENVIAR_NOTIFICACION_PRUEBA", resourceType = "NOTIFICACION", metadataRequestFields = {"tipo"})
     @PostMapping("/prueba")
     public ResponseEntity<ApiMessageResponse> enviarPrueba(
             @RequestBody(required = false) final EnviarCorreoPruebaRequest request

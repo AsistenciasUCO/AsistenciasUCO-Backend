@@ -70,7 +70,7 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
         useCase.consultarAuditoria(USUARIO, null, null, null);
 
         verify(port).consultarAuditoria(USUARIO, new FiltroAuditoria(AHORA_UTC.minusDays(7), AHORA_UTC, null, null,
-                null, null, null, true), 1, 10);
+                null, null, null, true, null, false), 1, 10);
     }
 
     @Test
@@ -80,11 +80,11 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
         when(port.consultarAuditoria(any(), any(), anyInt(), anyInt())).thenReturn(new Pagina<>(List.of(), 0));
 
         useCase.consultarAuditoria(USUARIO, new FiltroAuditoria(desde, hasta, " crear_sesion ", "  ", " S1 ", ID,
-                "failure", false), 3, 20);
+                "failure", false, null, false), 3, 20);
 
         verify(port).consultarAuditoria(USUARIO, new FiltroAuditoria(
                 OffsetDateTime.parse("2026-11-01T05:00:00Z"), OffsetDateTime.parse("2026-11-03T05:00:00Z"),
-                "CREAR_SESION", null, "S1", ID, "FAILURE", false), 3, 20);
+                "CREAR_SESION", null, "S1", ID, "FAILURE", false, null, false), 3, 20);
     }
 
     @Test
@@ -92,23 +92,23 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
         final OffsetDateTime hasta = OffsetDateTime.parse("2026-10-10T00:00:00Z");
         when(port.consultarAuditoria(any(), any(), anyInt(), anyInt())).thenReturn(new Pagina<>(List.of(), 0));
 
-        useCase.consultarAuditoria(USUARIO, new FiltroAuditoria(null, hasta, null, null, null, null, null, true), 1, 10);
+        useCase.consultarAuditoria(USUARIO, new FiltroAuditoria(null, hasta, null, null, null, null, null, true, null, false), 1, 10);
 
         verify(port).consultarAuditoria(USUARIO, new FiltroAuditoria(hasta.minusDays(7), hasta, null, null, null,
-                null, null, true), 1, 10);
+                null, null, true, null, false), 1, 10);
     }
 
     @Test
     void T_172_UC_04_auditoria_rechaza_rangos_invalidos_y_resultado_fuera_de_contrato() {
         final OffsetDateTime hasta = AHORA_UTC;
         assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(hasta, hasta, null, null, null, null, null, true), 1, 10));
+                new FiltroAuditoria(hasta, hasta, null, null, null, null, null, true, null, false), 1, 10));
         assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(hasta.minusDays(91), hasta, null, null, null, null, null, true), 1, 10));
+                new FiltroAuditoria(hasta.minusDays(91), hasta, null, null, null, null, null, true, null, false), 1, 10));
         assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(null, null, null, null, null, null, "OK", true), 1, 10));
+                new FiltroAuditoria(null, null, null, null, null, null, "OK", true, null, false), 1, 10));
         assertThrows(ValidationException.class, () -> useCase.consultarAuditoria(USUARIO,
-                new FiltroAuditoria(null, null, "A".repeat(121), null, null, null, null, true), 1, 10));
+                new FiltroAuditoria(null, null, "A".repeat(121), null, null, null, null, true, null, false), 1, 10));
         verifyNoInteractions(port);
     }
 
@@ -117,10 +117,10 @@ class ConsultasConsolidadoAuditoriaUseCaseImplTest {
         when(port.consultarAuditoria(any(), any(), anyInt(), anyInt())).thenReturn(new Pagina<>(List.of(), 0));
 
         useCase.consultarAuditoria(USUARIO, new FiltroAuditoria(AHORA_UTC.minusDays(90), AHORA_UTC, null, null, null,
-                null, "SUCCESS", true), 1, 10);
+                null, "SUCCESS", true, null, false), 1, 10);
 
         verify(port).consultarAuditoria(USUARIO, new FiltroAuditoria(AHORA_UTC.minusDays(90), AHORA_UTC, null, null,
-                null, null, "SUCCESS", true), 1, 10);
+                null, null, "SUCCESS", true, null, false), 1, 10);
     }
 
     @Test

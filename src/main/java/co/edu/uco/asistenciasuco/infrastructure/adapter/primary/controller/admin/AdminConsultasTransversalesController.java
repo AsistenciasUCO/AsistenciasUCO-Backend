@@ -9,6 +9,7 @@ import co.edu.uco.asistenciasuco.application.features.consultastransversales.pri
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FichaUnificadaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.FiltroAuditoriaDTO;
 import co.edu.uco.asistenciasuco.application.features.consultastransversales.primaryports.dto.ConsultasTransversalesDTO.PaginaDTO;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.admin.response.EventoAuditoriaResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiDataResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.controller.response.ApiListResponse;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.primary.security.contract.AuthenticatedUserResolver;
@@ -95,7 +96,7 @@ public final class AdminConsultasTransversalesController {
 
     /** HU172: rastro de auditoria; sin rango se consultan los ultimos 7 dias (maximo 90). */
     @GetMapping("/auditoria")
-    public ResponseEntity<ApiListResponse<EventoAuditoriaDTO>> consultarAuditoria(
+    public ResponseEntity<ApiListResponse<EventoAuditoriaResponse>> consultarAuditoria(
             @RequestParam(name = "desde", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final OffsetDateTime desde,
             @RequestParam(name = "hasta", required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) final OffsetDateTime hasta,
             @RequestParam(name = "accion", required = false) final String accion,
@@ -104,11 +105,14 @@ public final class AdminConsultasTransversalesController {
             @RequestParam(name = "idUsuarioActor", required = false) final UUID idUsuarioActor,
             @RequestParam(name = "resultado", required = false) final String resultado,
             @RequestParam(name = "soloAsistencia", required = false) final Boolean soloAsistencia,
+            @RequestParam(name = "idCorrelacion", required = false) final UUID idCorrelacion,
+            @RequestParam(name = "soloAdministracion", required = false) final Boolean soloAdministracion,
             @RequestParam(name = "pagina", required = false) final Integer pagina,
             @RequestParam(name = "tamano", required = false) final Integer tamano
     ) {
-        return lista(inputPort.consultarAuditoria(usuario(), new FiltroAuditoriaDTO(desde, hasta, accion, tipoRecurso,
-                idRecurso, idUsuarioActor, resultado, soloAsistencia), pagina, tamano));
+        final PaginaDTO<EventoAuditoriaDTO> eventos = inputPort.consultarAuditoria(usuario(), new FiltroAuditoriaDTO(desde, hasta, accion, tipoRecurso,
+                idRecurso, idUsuarioActor, resultado, soloAsistencia, idCorrelacion, soloAdministracion), pagina, tamano);
+        return lista(new PaginaDTO<>(eventos.elementos().stream().map(EventoAuditoriaResponse::from).toList(), eventos.total()));
     }
 
     private UUID usuario() {
