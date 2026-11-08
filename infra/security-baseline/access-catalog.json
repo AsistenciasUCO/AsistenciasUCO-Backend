@@ -48,6 +48,7 @@
     {"method": "POST", "path": "/api/v1/admin/notificaciones/prueba", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": "NOTIF-002B/TD-069: gestion de correos institucionales; el SP exige el perfil ADMINISTRADOR y el cuerpo no expone direcciones de destinatarios."},
     {"method": "GET", "path": "/api/v1/admin/parametros", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "PUT", "path": "/api/v1/admin/parametros/{id}", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
+    {"method": "GET", "path": "/api/v1/admin/parametros/{id}/cambios", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "POST", "path": "/api/v1/admin/periodos-academicos", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "DELETE", "path": "/api/v1/admin/periodos-academicos/{id}", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},
     {"method": "PUT", "path": "/api/v1/admin/periodos-academicos/{id}", "roles": ["ADMINISTRADOR"], "access": "ROLES", "ownership": null},

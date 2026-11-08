@@ -5,7 +5,7 @@ import co.edu.uco.asistenciasuco.application.secondaryports.catalog.MessageCatal
 import co.edu.uco.asistenciasuco.application.secondaryports.catalog.ParameterCatalogPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.vault.SecretVaultPort;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigMessageCatalogAdapter;
-import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.azure.AzureAppConfigParameterCatalogAdapter;
+import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.InvalidableParameterCatalog;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.messageucolab.MessageUcoLabMessageCatalogAdapter;
 import co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.vault.azure.AzureKeyVaultAdapter;
 
@@ -31,7 +31,7 @@ public class CompositeCatalogInvalidationAdapter implements CatalogInvalidationP
 
     @Override
     public void invalidateParameter(final String group, final String key) {
-        if (parameterCatalogPort instanceof AzureAppConfigParameterCatalogAdapter adapter) {
+        if (parameterCatalogPort instanceof InvalidableParameterCatalog adapter) {
             adapter.invalidateParameter(group, key);
         }
     }
@@ -54,7 +54,7 @@ public class CompositeCatalogInvalidationAdapter implements CatalogInvalidationP
 
     @Override
     public void invalidateAll() {
-        if (parameterCatalogPort instanceof AzureAppConfigParameterCatalogAdapter adapter) {
+        if (parameterCatalogPort instanceof InvalidableParameterCatalog adapter) {
             adapter.invalidateAll();
         }
         if (messageCatalogPort instanceof AzureAppConfigMessageCatalogAdapter adapter) {

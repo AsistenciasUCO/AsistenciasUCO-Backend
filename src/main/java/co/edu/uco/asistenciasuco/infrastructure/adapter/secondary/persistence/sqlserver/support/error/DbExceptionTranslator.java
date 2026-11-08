@@ -3,6 +3,7 @@ package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.s
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.docente.exception.DocenteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.estudiante.exception.EstudianteErrorCode;
@@ -42,7 +43,8 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_ESTUDIANTE_NO_PERTENECE_SESION,
             SecurityErrorCode.FORBIDDEN,
             AsistenciaQrErrorCode.AQR_002,
-            AsistenciaQrErrorCode.AQR_004
+            AsistenciaQrErrorCode.AQR_004,
+            ParametroErrorCode.PRM_003
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
@@ -57,6 +59,7 @@ public final class DbExceptionTranslator {
             CatalogoErrorCode.TPR_001,
             CatalogoErrorCode.ARE_001,
             FestivoErrorCode.FES_007,
+            ParametroErrorCode.PRM_002,
             TomaAsistenciaErrorCode.TOM_001,
             AsistenciaQrErrorCode.AQR_001,
             AsistenciaQrErrorCode.AQR_010,
@@ -99,6 +102,10 @@ public final class DbExceptionTranslator {
             AsistenciaQrErrorCode.AQR_003,
             AsistenciaQrErrorCode.AQR_005,
             AsistenciaQrErrorCode.AQR_006,
+            ParametroErrorCode.PRM_008,
+            ParametroErrorCode.PRM_010,
+            ParametroErrorCode.PRM_012,
+            ParametroErrorCode.AUD_001,
             CommonErrorCode.CONFLICT
     );
     private static final Set<ErrorDefinition> VALIDATION_CODES = Set.of(
@@ -120,6 +127,12 @@ public final class DbExceptionTranslator {
             FestivoErrorCode.FES_006,
             TomaAsistenciaErrorCode.TOM_002,
             AsistenciaQrErrorCode.AQR_007,
+            ParametroErrorCode.PRM_004,
+            ParametroErrorCode.PRM_005,
+            ParametroErrorCode.PRM_006,
+            ParametroErrorCode.PRM_007,
+            ParametroErrorCode.PRM_009,
+            ParametroErrorCode.AUD_002,
             CommonErrorCode.VALIDATION_ERROR
     );
 

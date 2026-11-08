@@ -29,10 +29,6 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarinstitucion
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.interactor.ConsultarInstitucionesInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.ConsultarInstitucionesUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.impl.ConsultarInstitucionesUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.ConsultarParametrosInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.interactor.ConsultarParametrosInteractor;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase.ConsultarParametrosUseCase;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase.impl.ConsultarParametrosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
@@ -52,7 +48,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQuery
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadCommandPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.InstitucionQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.ParametroQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
@@ -89,8 +84,6 @@ public class AdminWiringConfiguration {
                 usuarioRepositoryPort, passwordEncoderPort, identityProviderPort);
     }
     @Bean CrearDecanoInputPort crearDecanoInputPort(final CrearDecanoUseCase useCase) { return new CrearDecanoInteractor(useCase); }
-    @Bean ConsultarParametrosUseCase consultarParametrosUseCase(final ParametroQueryPort port) { return new ConsultarParametrosUseCaseImpl(port); }
-    @Bean ConsultarParametrosInputPort consultarParametrosInputPort(final ConsultarParametrosUseCase useCase) { return new ConsultarParametrosInteractor(useCase); }
     @Bean ConsultarInstitucionesUseCase consultarInstitucionesUseCase(final InstitucionQueryPort port) { return new ConsultarInstitucionesUseCaseImpl(port); }
     @Bean ConsultarInstitucionesInputPort consultarInstitucionesInputPort(final ConsultarInstitucionesUseCase useCase) { return new ConsultarInstitucionesInteractor(useCase); }
     @Bean ConsultarFacultadesUseCase consultarFacultadesUseCase(final FacultadQueryPort port) { return new ConsultarFacultadesUseCaseImpl(port); }

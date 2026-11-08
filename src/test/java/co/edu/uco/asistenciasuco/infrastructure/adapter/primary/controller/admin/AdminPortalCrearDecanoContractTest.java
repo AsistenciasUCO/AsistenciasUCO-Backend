@@ -7,7 +7,6 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarareas.prima
 import co.edu.uco.asistenciasuco.application.features.admin.consultardecanos.primaryports.ConsultarDecanosInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.ConsultarFacultadesInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.ConsultarInstitucionesInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.ConsultarParametrosInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.CrearDecanoUseCase;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.domain.CrearDecanoDomain;
@@ -36,7 +35,7 @@ class AdminPortalCrearDecanoContractTest {
     private final AuthenticatedUserResolver authenticatedUserResolver = () -> ADMINISTRADOR_AUTENTICADO;
     private final AdminPortalController controller = new AdminPortalController(
             mock(ConsultarDecanosInputPort.class), new CrearDecanoInteractor(useCase),
-            mock(ConsultarParametrosInputPort.class), mock(EjecutarCierreMasivoInputPort.class),
+            mock(EjecutarCierreMasivoInputPort.class),
             mock(ConsultarInstitucionesInputPort.class), mock(ConsultarFacultadesInputPort.class),
             mock(CrearFacultadInputPort.class), mock(ActualizarFacultadInputPort.class),
             mock(CambiarEstadoFacultadInputPort.class), mock(ConsultarAreasInputPort.class),

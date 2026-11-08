@@ -8,8 +8,6 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.usecase.impl.ConsultarFacultadesUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.interactor.ConsultarInstitucionesInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.usecase.impl.ConsultarInstitucionesUseCaseImpl;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.interactor.ConsultarParametrosInteractor;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.usecase.impl.ConsultarParametrosUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.interactor.CrearDecanoInteractor;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.usecase.impl.CrearDecanoUseCaseImpl;
 import co.edu.uco.asistenciasuco.application.features.admin.ejecutarcierremasivo.primaryports.interactor.EjecutarCierreMasivoInteractor;
@@ -20,7 +18,6 @@ import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoComma
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.DecanoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.FacultadQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.InstitucionQueryPort;
-import co.edu.uco.asistenciasuco.application.secondaryports.academic.ParametroQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.academic.PeriodoAcademicoQueryPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.identity.IdentityProviderPort;
 import co.edu.uco.asistenciasuco.application.secondaryports.repository.UsuarioRepositoryPort;
@@ -45,10 +42,6 @@ class AdminWiringConfigurationTest {
                 mock(UsuarioRepositoryPort.class), mock(PasswordEncoderPort.class), mock(IdentityProviderPort.class));
         assertInstanceOf(CrearDecanoUseCaseImpl.class, crearDecanoUseCase);
         assertInstanceOf(CrearDecanoInteractor.class, config.crearDecanoInputPort(crearDecanoUseCase));
-
-        final var consultarParametrosUseCase = config.consultarParametrosUseCase(mock(ParametroQueryPort.class));
-        assertInstanceOf(ConsultarParametrosUseCaseImpl.class, consultarParametrosUseCase);
-        assertInstanceOf(ConsultarParametrosInteractor.class, config.consultarParametrosInputPort(consultarParametrosUseCase));
 
         final var consultarInstitucionesUseCase = config.consultarInstitucionesUseCase(mock(InstitucionQueryPort.class));
         assertInstanceOf(ConsultarInstitucionesUseCaseImpl.class, consultarInstitucionesUseCase);

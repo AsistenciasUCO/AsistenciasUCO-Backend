@@ -23,7 +23,8 @@ import java.util.concurrent.ConcurrentHashMap;
 @ConditionalOnProperty(prefix = "app.adapters.parameter-catalog", name = "provider", havingValue = "sqlserver")
 // CULM-001 A.2-6: proveedor real; los consumidores reciben el decorador con valores por defecto (DEC-018).
 @Qualifier("parameterCatalogDelegado")
-public class ParameterCatalogJpaRepository implements ParameterCatalogPort {
+public class ParameterCatalogJpaRepository implements ParameterCatalogPort,
+        co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.catalog.InvalidableParameterCatalog {
 
     static final String HQL_PARAMETRO = "select p.valor from UvParametroEntity p where p.grupo = :grupo and p.clave = :clave";
     private final EntityManager entityManager;
@@ -88,6 +89,19 @@ public class ParameterCatalogJpaRepository implements ParameterCatalogPort {
             return (T) Double.valueOf(rawValue.trim());
         }
         throw new IllegalArgumentException("Tipo no soportado: " + targetType.getName());
+    }
+
+    /** CULM-001 D.3: tras editar un parametro, la siguiente lectura vuelve a la vista uv_parametro. */
+    @Override
+    public void invalidateParameter(final String group, final String key) {
+        if (group != null && key != null) {
+            cache.remove(new ParameterKey(group.trim(), key.trim()));
+        }
+    }
+
+    @Override
+    public void invalidateAll() {
+        cache.clear();
     }
 
     private Optional<String> buscarParametro(final String grupo, final String clave) {

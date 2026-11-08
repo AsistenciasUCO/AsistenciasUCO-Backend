@@ -16,8 +16,6 @@ import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.
 import co.edu.uco.asistenciasuco.application.features.admin.consultarfacultades.primaryports.dto.FacultadDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.ConsultarInstitucionesInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.consultarinstituciones.primaryports.dto.InstitucionDTO;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.ConsultarParametrosInputPort;
-import co.edu.uco.asistenciasuco.application.features.admin.consultarparametros.primaryports.dto.ParametroDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.CrearDecanoInputPort;
 import co.edu.uco.asistenciasuco.application.features.admin.creardecano.primaryports.dto.CrearDecanoDTO;
 import co.edu.uco.asistenciasuco.application.features.admin.crearfacultad.primaryports.CrearFacultadInputPort;
@@ -69,7 +67,6 @@ class AdminPortalControllerTest {
 
     private final ConsultarDecanosInputPort consultarDecanos = mock(ConsultarDecanosInputPort.class);
     private final CrearDecanoInputPort crearDecano = mock(CrearDecanoInputPort.class);
-    private final ConsultarParametrosInputPort consultarParametros = mock(ConsultarParametrosInputPort.class);
     private final EjecutarCierreMasivoInputPort ejecutarCierreMasivo = mock(EjecutarCierreMasivoInputPort.class);
     private final ConsultarInstitucionesInputPort consultarInstituciones = mock(ConsultarInstitucionesInputPort.class);
     private final ConsultarFacultadesInputPort consultarFacultades = mock(ConsultarFacultadesInputPort.class);
@@ -80,7 +77,7 @@ class AdminPortalControllerTest {
     private final AuthenticatedUserResolver identity = () -> ACTOR;
     private final CambiarEstadoDecanoInputPort cambiarEstadoDecano = mock(CambiarEstadoDecanoInputPort.class);
     private final AdminPortalController controller = new AdminPortalController(consultarDecanos, crearDecano,
-            consultarParametros, ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad,
+            ejecutarCierreMasivo, consultarInstituciones, consultarFacultades, crearFacultad,
             actualizarFacultad, cambiarEstadoFacultad, consultarAreas, cambiarEstadoDecano, identity);
     private final MockMvc mvc = MockMvcBuilders.standaloneSetup(controller)
             .setControllerAdvice(new GlobalExceptionHandler(codigo -> java.util.Optional.empty())).build();
@@ -111,16 +108,6 @@ class AdminPortalControllerTest {
         verify(crearDecano).execute(captor.capture());
         assertEquals("Ana", captor.getValue().primerNombre());
         assertEquals(FACULTAD, captor.getValue().idFacultad());
-    }
-
-    @Test
-    void consultarParametros_serializa_lista_del_puerto() throws Exception {
-        when(consultarParametros.execute()).thenReturn(List.of(new ParametroDTO(UUID.randomUUID(), "GRUPO",
-                "clave", "valor", "STRING", "defecto", true)));
-
-        mvc.perform(get("/api/v1/admin/parametros"))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.datos[0].clave").value("clave"));
     }
 
     @Test
@@ -318,17 +305,6 @@ class AdminPortalControllerTest {
                 .flatMap(Arrays::stream);
     }
 
-    @Test
-    void endpoints_no_implementados_lanzan_featureUnavailable() {
-        final List<Executable> operations = List.of(
-                () -> controller.actualizarParametro(FACULTAD)
-        );
-
-        for (final var operation : operations) {
-            assertEquals("FEATURE_UNAVAILABLE",
-                    assertThrows(FeatureUnavailableException.class, operation).getCode());
-        }
-    }
 
     // CULM-001 A.2-8 (A2-B-13): PATCH /decanos/{id}/toggle deja de ser 501 y devuelve la fila del decano con su estado nuevo.
     @Test

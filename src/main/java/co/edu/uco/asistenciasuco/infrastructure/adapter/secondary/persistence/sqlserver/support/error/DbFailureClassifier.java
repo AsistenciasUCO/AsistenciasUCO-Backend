@@ -8,6 +8,7 @@ import co.edu.uco.asistenciasuco.application.features.asistenciaqr.exception.Asi
 import co.edu.uco.asistenciasuco.application.features.tomaasistencia.exception.TomaAsistenciaErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
 import co.edu.uco.asistenciasuco.application.features.decano.exception.CoordinadorErrorCode;
 import co.edu.uco.asistenciasuco.application.features.grupo.exception.GrupoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.sesion.exception.SesionErrorCode;
@@ -201,6 +202,19 @@ final class DbFailureClassifier {
             case "AQR_006" -> AsistenciaQrErrorCode.AQR_006;
             case "AQR_007" -> AsistenciaQrErrorCode.AQR_007;
             case "AQR_010" -> AsistenciaQrErrorCode.AQR_010;
+            // CULM-001 D.3/D.6: edicion de parametros (HU168) y consulta de auditoria (HU172); el codigo de la DB se expone tal cual.
+            case "PRM_002" -> ParametroErrorCode.PRM_002;
+            case "PRM_003" -> ParametroErrorCode.PRM_003;
+            case "PRM_004" -> ParametroErrorCode.PRM_004;
+            case "PRM_005" -> ParametroErrorCode.PRM_005;
+            case "PRM_006" -> ParametroErrorCode.PRM_006;
+            case "PRM_007" -> ParametroErrorCode.PRM_007;
+            case "PRM_008" -> ParametroErrorCode.PRM_008;
+            case "PRM_009" -> ParametroErrorCode.PRM_009;
+            case "PRM_010" -> ParametroErrorCode.PRM_010;
+            case "PRM_012" -> ParametroErrorCode.PRM_012;
+            case "AUD_001" -> ParametroErrorCode.AUD_001;
+            case "AUD_002" -> ParametroErrorCode.AUD_002;
             case "FES_001" -> FestivoErrorCode.FES_001;
             case "FES_002" -> FestivoErrorCode.FES_002;
             case "FES_003" -> FestivoErrorCode.FES_003;
