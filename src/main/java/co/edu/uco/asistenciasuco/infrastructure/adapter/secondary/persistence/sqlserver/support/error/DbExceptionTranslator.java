@@ -1,6 +1,7 @@
 package co.edu.uco.asistenciasuco.infrastructure.adapter.secondary.persistence.sqlserver.support.error;
 
 import co.edu.uco.asistenciasuco.application.features.asistencia.exception.AsistenciaErrorCode;
+import co.edu.uco.asistenciasuco.application.features.admin.exception.AdmisionEstudianteErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.CatalogoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.DecanoErrorCode;
 import co.edu.uco.asistenciasuco.application.features.admin.exception.ParametroErrorCode;
@@ -44,7 +45,8 @@ public final class DbExceptionTranslator {
             SecurityErrorCode.FORBIDDEN,
             AsistenciaQrErrorCode.AQR_002,
             AsistenciaQrErrorCode.AQR_004,
-            ParametroErrorCode.PRM_003
+            ParametroErrorCode.PRM_003,
+            AdmisionEstudianteErrorCode.ADS_003
     );
     private static final Set<ErrorDefinition> NOT_FOUND_CODES = Set.of(
             UsuarioErrorCode.ERR_USUARIO_NO_EXISTE,
@@ -78,6 +80,8 @@ public final class DbExceptionTranslator {
             AsistenciaErrorCode.ERR_RECLAMO_YA_RESUELTO,
             AsistenciaErrorCode.ERR_RECLAMO_ASISTENCIA_NO_JUSTIFICABLE,
             AsistenciaErrorCode.ERR_RECLAMO_SIN_DETALLE_ASISTENCIA,
+            AdmisionEstudianteErrorCode.ADS_002,
+            AdmisionEstudianteErrorCode.ADS_004,
             AsistenciaErrorCode.ERR_PLAZO_JUSTIFICACION_VENCIDO,
             UsuarioErrorCode.ERR_USUARIO_INACTIVO,
             EstudianteErrorCode.ERR_ESTUDIANTE_INACTIVO,
@@ -134,6 +138,8 @@ public final class DbExceptionTranslator {
             ParametroErrorCode.PRM_007,
             ParametroErrorCode.PRM_009,
             ParametroErrorCode.AUD_002,
+            AdmisionEstudianteErrorCode.ADS_005,
+            AdmisionEstudianteErrorCode.ADS_006,
             CommonErrorCode.VALIDATION_ERROR
     );
 

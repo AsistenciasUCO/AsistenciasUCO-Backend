@@ -52,6 +52,16 @@ public final class CorreccionIdentidadController {
         return corregir(TIPO_ESTUDIANTE, idEstudiante, request);
     }
 
+    /** CULM-001 D.4 (HU156, OBS-6): el administrador corrige al estudiante de un programa de su institucion. */
+    @AuditableOperation(action = "CORREGIR_IDENTIDAD_ESTUDIANTE", resourceType = "ESTUDIANTE", resourceIdPathVariable = "idEstudiante", metadataRequestFields = {"motivo"})
+    @PutMapping("/api/v1/admin/estudiantes/{idEstudiante}/identidad")
+    public ResponseEntity<ApiDataResponse<ResultadoCorreccionIdentidadDTO>> corregirEstudianteComoAdministrador(
+            @PathVariable final UUID idEstudiante,
+            @RequestBody final CorregirIdentidadRequest request
+    ) {
+        return corregir(TIPO_ESTUDIANTE, idEstudiante, request);
+    }
+
     @AuditableOperation(action = "CORREGIR_IDENTIDAD_DECANO", resourceType = "DECANO", resourceIdPathVariable = "id", metadataRequestFields = {"motivo"})
     @PutMapping("/api/v1/admin/decanos/{id}/identidad")
     public ResponseEntity<ApiDataResponse<ResultadoCorreccionIdentidadDTO>> corregirDecano(
